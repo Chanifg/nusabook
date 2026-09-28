@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Edge against localhost:3000",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Launch Brave against localhost:3000",
+            "type": "chrome",
+            "request": "launch",
+            "runtimeExecutable": "C:\\Users\\HYPE 7 AMD X8-1\\AppData\\Local\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        },
+    ]
+}

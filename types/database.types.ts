@@ -124,13 +124,37 @@ export interface AgentPayout {
 export interface Database {
   public: {
     Tables: {
-      profiles: { Row: Profile };
-      travel_agents: { Row: TravelAgent };
-      tour_packages: { Row: TourPackage };
-      trip_schedules: { Row: TripSchedule };
-      bookings: { Row: Booking };
-      booking_passengers: { Row: BookingPassenger };
-      agent_payouts: { Row: AgentPayout };
+      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
+      travel_agents: { Row: TravelAgent; Insert: Partial<TravelAgent>; Update: Partial<TravelAgent> };
+      tour_packages: { Row: TourPackage; Insert: Partial<TourPackage>; Update: Partial<TourPackage> };
+      trip_schedules: { Row: TripSchedule; Insert: Partial<TripSchedule>; Update: Partial<TripSchedule> };
+      bookings: { Row: Booking; Insert: Partial<Booking>; Update: Partial<Booking> };
+      booking_passengers: { Row: BookingPassenger; Insert: Partial<BookingPassenger>; Update: Partial<BookingPassenger> };
+      agent_payouts: { Row: AgentPayout; Insert: Partial<AgentPayout>; Update: Partial<AgentPayout> };
+    };
+    Functions: {
+      reserve_trip_quota: {
+        Args: {
+          p_schedule_id: string;
+          p_pax: number;
+        };
+        Returns: boolean;
+      };
+      release_trip_quota: {
+        Args: {
+          p_schedule_id: string;
+          p_pax: number;
+        };
+        Returns: void;
+      };
+      confirm_trip_quota: {
+        Args: {
+          p_schedule_id: string;
+          p_pax: number;
+        };
+        Returns: void;
+      };
     };
   };
 }
+

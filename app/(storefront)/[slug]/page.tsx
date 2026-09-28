@@ -105,13 +105,23 @@ export default async function StorefrontPage({
                 <p className="text-3xl font-extrabold text-brand-700 mt-1">{formatRupiah(sampleTrip.price)}</p>
               </div>
 
-              <Link
-                href={`/${slug}/booking?trip=sunrise-lava-tour-merapi`}
-                className="w-full mt-6 py-3.5 px-6 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold flex items-center justify-center gap-2 shadow-sm transition"
-              >
-                Pesan Kursi Sekarang
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+              <div className="w-full flex flex-col gap-2.5 mt-6">
+                <Link
+                  href={`/${slug}/packages/sunrise-lava-tour-merapi`}
+                  className="w-full py-2.5 px-4 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                >
+                  Lihat Detail & Jadwal
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+
+                <Link
+                  href={`/${slug}/booking?trip=sunrise-lava-tour-merapi`}
+                  className="w-full py-3.5 px-6 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold flex items-center justify-center gap-2 shadow-sm transition text-sm"
+                >
+                  Pesan Kursi Sekarang
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
