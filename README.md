@@ -160,3 +160,11 @@ npm run build
 - **Ully Najma Hansani** (Chief Creative Officer)
 
 Afiliasi: **Universitas Tidar, Magelang (P2MW 2026)**
+
+---
+
+## Roadmap & Pembagian Tugas Tim
+
+Untuk panduan pengerjaan modul secara simultan dan paralel oleh tim pengembang (5 jalur kerja independen), silakan merujuk pada dokumen:
+👉 **[docs/TEAM_SIMULTANEOUS_TASKS.md](docs/TEAM_SIMULTANEOUS_TASKS.md)**
+
