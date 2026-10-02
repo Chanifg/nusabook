@@ -50,10 +50,17 @@ export default function HomePage() {
 
       <div className="flex flex-col sm:flex-row gap-4">
         <Link
-          href="/pesona-merapi"
+          href="/explore"
           className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-brand-700 hover:bg-brand-900 text-white font-medium shadow-sm transition"
         >
-          Lihat Contoh Storefront Mitra
+          Jelajahi Portal Wisata
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+        <Link
+          href="/pesona-merapi"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-medium shadow-sm transition"
+        >
+          Lihat Storefront Mitra
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
