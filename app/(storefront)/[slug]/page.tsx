@@ -29,7 +29,7 @@ export default async function StorefrontPage({
     .select("*, trip_schedules(*)")
     .eq("agent_id", agentData.id)
     .eq("is_published", true)) as any;
-  const packages = pkgData || [];
+  const packages: any[] = pkgData || [];
 
   const businessName = agentData.business_name;
   const city = agentData.city || "";
@@ -270,7 +270,7 @@ export default async function StorefrontPage({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {packages.length > 0 ? (
-              packages.map((pkg) => {
+              packages.map((pkg: any) => {
                 const isPrivate = pkg.category === "private_trip";
                 const schedule = pkg.trip_schedules?.[0];
                 const price = schedule?.price_per_pax || 375000;

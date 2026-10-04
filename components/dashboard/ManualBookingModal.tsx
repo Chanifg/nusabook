@@ -108,7 +108,7 @@ export function ManualBookingModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-container-lowest">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <MaterialIcon name="receipt_long" size={20} />
+              <MaterialIcon name="receipt_long" className="text-[20px]" />
             </span>
             <div>
               <h3 className="font-title-md text-title-md text-on-surface font-bold">
@@ -125,7 +125,7 @@ export function ManualBookingModal({
             className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-container-high transition"
             aria-label="Tutup Modal"
           >
-            <MaterialIcon name="close" size={22} />
+            <MaterialIcon name="close" className="text-[22px]" />
           </button>
         </div>
 
@@ -133,7 +133,7 @@ export function ManualBookingModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error font-body-sm flex items-center gap-2">
-              <MaterialIcon name="error_outline" size={18} />
+              <MaterialIcon name="error_outline" className="text-[18px]" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -274,7 +274,7 @@ export function ManualBookingModal({
                 <span>Menyimpan...</span>
               ) : (
                 <>
-                  <MaterialIcon name="check_circle" size={18} />
+                  <MaterialIcon name="check_circle" className="text-[18px]" />
                   <span>Konfirmasi & Cetak Pesanan</span>
                 </>
               )}
