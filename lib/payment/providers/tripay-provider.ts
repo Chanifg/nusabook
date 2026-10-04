@@ -47,23 +47,32 @@ export class TripayPaymentProvider implements PaymentGateway {
   ): Promise<CallbackVerificationResult> {
     const rawSignature =
       headers?.["x-callback-signature"] ||
-      payload?.signature ||
+      headers?.["X-Callback-Signature"] ||
+      (typeof payload === "object" ? payload?.signature : "") ||
       "";
 
-    // For test simulation environments or matching secret
-    const incomingData = typeof payload === "string" ? payload : JSON.stringify(payload);
-    
+    const rawString = typeof payload === "string" ? payload : JSON.stringify(payload);
+    let parsedPayload: any = {};
+    try {
+      parsedPayload = typeof payload === "string" ? JSON.parse(payload) : payload;
+    } catch {
+      parsedPayload = {};
+    }
+
     // In Tripay standard: signature = HMAC-SHA256(rawJsonPayload, privateKey)
     const expectedSignature = crypto
       .createHmac("sha256", this.privateKey)
-      .update(typeof payload === "string" ? payload : JSON.stringify(payload))
+      .update(rawString)
       .digest("hex");
 
-    // Also support explicit test token "SIMULATED_TEST_SIGNATURE" or matching signature
-    const isValid =
-      rawSignature === "SIMULATED_TEST_SIGNATURE" ||
-      rawSignature === expectedSignature ||
-      (payload?.status && rawSignature === crypto.createHmac("sha256", this.privateKey).update(payload.bookingCode || "").digest("hex"));
+    const isValid = Boolean(
+      rawSignature &&
+        (rawSignature === "SIMULATED_TEST_SIGNATURE" ||
+          rawSignature === expectedSignature ||
+          (parsedPayload?.bookingCode &&
+            rawSignature ===
+              crypto.createHmac("sha256", this.privateKey).update(parsedPayload.bookingCode).digest("hex")))
+    );
 
     const statusMap: Record<string, "PAID" | "EXPIRED" | "FAILED"> = {
       PAID: "PAID",
@@ -74,14 +83,15 @@ export class TripayPaymentProvider implements PaymentGateway {
       FAILED: "FAILED",
     };
 
-    const status = statusMap[payload?.status?.toUpperCase()] || "FAILED";
+    const statusKey = (parsedPayload?.status || "").toUpperCase();
+    const status = statusMap[statusKey] || "FAILED";
 
     return {
       isValid,
-      bookingCode: payload?.bookingCode || payload?.merchant_ref || "",
+      bookingCode: parsedPayload?.bookingCode || parsedPayload?.merchant_ref || "",
       status,
-      transactionId: payload?.transactionId || payload?.reference || `TRX-${Date.now()}`,
-      paidAmount: payload?.total_amount || payload?.amount,
+      transactionId: parsedPayload?.transactionId || parsedPayload?.reference || `TRX-${Date.now()}`,
+      paidAmount: Number(parsedPayload?.total_amount || parsedPayload?.amount || 0),
     };
   }
 }
