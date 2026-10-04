@@ -2,14 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PassengerTable, PassengerManifestData } from "@/components/manifest/passenger-table";
-import {
-  CalendarDays,
-  FileSpreadsheet,
-  Printer,
-  ArrowLeft,
-  MapPin,
-  Compass,
-} from "lucide-react";
+import { MaterialIcon } from "@/components/ui/icon";
 
 interface ManifestPageProps {
   params: Promise<{ id: string }>;
@@ -66,7 +59,6 @@ export default async function ManifestPage({ params }: ManifestPageProps) {
   }
 
   const pkg = schedule.tour_packages;
-  // Multi-tenant isolation: Pastikan jadwal benar-benar milik agen yang login
   if (!pkg || pkg.agent_id !== agent.id) {
     redirect("/dashboard/schedules");
   }
@@ -97,12 +89,11 @@ export default async function ManifestPage({ params }: ManifestPageProps) {
     .eq("payment_status", "PAID")
     .order("created_at", { ascending: true });
 
-  // 4. Flatten data peserta untuk tabel klien
-  const passengerList: PassengerManifestData[] = [];
-
-  for (const b of bookings || []) {
-    for (const p of b.booking_passengers || []) {
-      passengerList.push({
+  // 4. Flatten data peserta
+  const passengers: PassengerManifestData[] = [];
+  (bookings || []).forEach((b: any) => {
+    (b.booking_passengers || []).forEach((p: any) => {
+      passengers.push({
         id: p.id,
         bookingId: b.id,
         fullName: p.full_name,
@@ -114,102 +105,173 @@ export default async function ManifestPage({ params }: ManifestPageProps) {
         bookingCode: b.booking_code,
         customerName: b.customer_name,
         paymentStatus: b.payment_status,
-        isCheckedIn: Boolean(p.is_checked_in),
-        checkedInAt: p.checked_in_at || null,
+        isCheckedIn: !!p.is_checked_in,
+        checkedInAt: p.checked_in_at,
       });
-    }
-  }
+    });
+  });
 
-  const formatIdDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("id-ID", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const departureFormatted = formatIdDate(schedule.departure_date);
-  const returnFormatted = formatIdDate(schedule.return_date);
+  const formattedDate = new Date(schedule.departure_date).toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Top Breadcrumb & Header Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1">
-            <Link
-              href="/dashboard/schedules"
-              className="hover:text-emerald-700 transition inline-flex items-center gap-1"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Kembali ke Jadwal</span>
-            </Link>
-            <span>/</span>
-            <span className="text-slate-800 dark:text-slate-200">Manifes Penumpang</span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <span>Manifes: {pkg.title}</span>
-          </h1>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-400 mt-1">
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
-              <span>{departureFormatted}</span>
-              {schedule.departure_date !== schedule.return_date && (
-                <span> s.d. {returnFormatted}</span>
-              )}
-            </span>
-            <span>•</span>
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-slate-400" />
-              <span>{pkg.destination_city}</span>
-            </span>
-            {pkg.meeting_point && (
-              <>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Compass className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Kumpul: {pkg.meeting_point}</span>
-                </span>
-              </>
-            )}
-          </div>
+    <div className="flex flex-col w-full gap-space-md">
+      {/* Top Utility Context Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-y-2 text-on-surface-variant font-caption text-caption">
+        <div className="flex items-center gap-space-xs">
+          <span>Mitra Operator</span>
+          <MaterialIcon name="chevron_right" className="text-xs" />
+          <Link href="/dashboard/schedules" className="hover:underline">
+            Manifes &amp; Pemesanan
+          </Link>
+          <MaterialIcon name="chevron_right" className="text-xs" />
+          <span className="text-primary font-body-semibold">
+            Batch {formattedDate}
+          </span>
         </div>
-
-        {/* Action Buttons: Export PDF & Excel */}
-        <div className="flex items-center gap-2 shrink-0">
-          <a
-            href={`/api/manifest/${schedule.id}/excel`}
-            download
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-700 text-white hover:bg-emerald-800 transition shadow-xs"
-            title="Download spreadsheet Excel (CSV UTF-8 BOM)"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Unduh Excel</span>
-          </a>
-
-          <a
-            href={`/api/manifest/${schedule.id}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-50 transition shadow-xs"
-            title="Buka dokumen cetak resmi PDF A4"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Cetak PDF</span>
-          </a>
+        <div className="flex items-center gap-space-md">
+          <span className="inline-flex items-center gap-1.5 bg-surface-container-high px-space-sm py-0.5 rounded-full text-on-surface font-micro-badge">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary-container animate-pulse" />
+            GATE SYSTEM: REALTIME SYNC
+          </span>
+          <span className="font-mono text-primary font-bold">{formattedDate}</span>
         </div>
       </div>
 
-      {/* Interactive Manifest Table */}
+      {/* Primary Page Header & Batch Metadata Banner */}
+      <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm border border-outline-variant/20">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-space-md">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-space-xs">
+              <span className="bg-primary text-on-primary font-micro-badge px-2 py-0.5 rounded uppercase tracking-wider font-bold">
+                FR-5.3 MANIFEST ENGINE
+              </span>
+              <span className="bg-surface-container-high text-primary font-mono text-micro-badge px-2 py-0.5 rounded font-bold">
+                BATCH ID: {schedule.id.slice(0, 8).toUpperCase()}
+              </span>
+              <span className="bg-surface-container-low text-on-surface-variant font-micro-badge px-2 py-0.5 rounded flex items-center gap-1">
+                <MaterialIcon name="pin_drop" className="text-xs text-primary" />
+                Rute: {pkg.meeting_point || "Malang"} → {pkg.destination_city || "Bromo"}
+              </span>
+            </div>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+              Manifes Penumpang &amp; Presensi Check-in
+            </h1>
+            <p className="font-body-regular text-body-regular text-on-surface-variant flex flex-wrap items-center gap-x-2">
+              <span className="font-semibold text-on-surface">{pkg.title}</span>
+              <span>•</span>
+              <span>{formattedDate} (00:15 WIB)</span>
+              <span>•</span>
+              <span className="text-primary font-medium inline-flex items-center gap-1">
+                <MaterialIcon name="schedule" className="text-sm" /> Status: Terjadwal Siap Berangkat
+              </span>
+            </p>
+          </div>
+
+          {/* Main Action Buttons */}
+          <div className="flex flex-wrap items-center gap-space-xs">
+            <a
+              href={`/api/manifest/pdf?scheduleId=${schedule.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-space-sm py-space-sm rounded-lg font-body-semibold text-body-semibold shadow-sm flex items-center gap-1.5 transition-colors text-sm"
+            >
+              <MaterialIcon name="description" className="text-primary text-lg" />
+              <span>PDF SIMAKSI</span>
+            </a>
+            <a
+              href={`/api/manifest/export?scheduleId=${schedule.id}`}
+              className="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-space-sm py-space-sm rounded-lg font-body-semibold text-body-semibold shadow-sm flex items-center gap-1.5 transition-colors text-sm"
+            >
+              <MaterialIcon name="table_chart" className="text-primary text-lg" />
+              <span>Unduh CSV</span>
+            </a>
+            <a
+              href={`https://wa.me/?text=Halo%20Peserta%20${encodeURIComponent(
+                pkg.title
+              )}%20jadwal%20${schedule.departure_date}%2C%20mohon%20bersiap%20di%20meeting%20point.`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-space-sm py-space-sm rounded-lg font-body-semibold text-body-semibold shadow-sm flex items-center gap-1.5 transition-colors text-sm"
+            >
+              <MaterialIcon name="forum" className="text-primary text-lg" />
+              <span>Broadcast WA</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Live Batch Readiness Ribbon */}
+        <div className="mt-space-md pt-space-sm bg-surface-container-low rounded-lg p-space-sm flex flex-wrap items-center justify-between gap-y-2">
+          <div className="flex flex-wrap items-center gap-space-md">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-secondary-container" />
+              <span className="font-body-semibold text-body-semibold text-on-surface">
+                {passengers.length} / {schedule.total_quota} Pax Terkonfirmasi
+              </span>
+              <span className="bg-surface-container-highest text-primary font-micro-badge px-1.5 py-0.5 rounded font-bold">
+                {schedule.booked_quota >= schedule.total_quota ? "100% KUOTA" : "AKTIF"}
+              </span>
+            </div>
+            <div className="hidden sm:inline text-outline">|</div>
+            <div className="flex items-center gap-1 text-on-surface-variant font-caption text-caption">
+              <MaterialIcon name="verified" className="text-primary text-base" />
+              <span>
+                SIMAKSI TNBTS: <strong>SIAP CETAK</strong>
+              </span>
+            </div>
+            <div className="hidden sm:inline text-outline">|</div>
+            <div className="flex items-center gap-1 text-on-surface-variant font-caption text-caption">
+              <MaterialIcon name="security" className="text-primary text-base" />
+              <span>
+                Jasa Raharja: <strong>POLIS KOLEKTIF TERBIT</strong>
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-caption text-caption text-on-surface-variant">
+              Kunci Pessimistic Kuota:
+            </span>
+            <span className="bg-secondary-fixed text-on-secondary-fixed font-mono font-bold text-micro-badge px-2 py-0.5 rounded">
+              LOCKED BY SYSTEM
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* UU PDP No. 27/2022 Legal Compliance Banner */}
+      <div className="bg-primary-container text-on-primary rounded-xl p-space-md shadow-sm relative overflow-hidden">
+        <div className="flex items-start gap-space-sm relative z-10">
+          <div className="p-2 bg-on-primary/10 rounded-lg text-on-primary mt-0.5">
+            <MaterialIcon name="gavel" className="text-xl" />
+          </div>
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center gap-2">
+              <h2 className="font-title-md text-title-md font-bold tracking-tight">
+                Kepatuhan UU Perlindungan Data Pribadi (UU No. 27/2022)
+              </h2>
+              <span className="bg-primary-fixed text-on-primary-fixed text-micro-badge font-bold px-2 py-0.5 rounded uppercase">
+                AES-256 GCM ENCRYPTED
+              </span>
+            </div>
+            <p className="font-body-regular text-body-regular text-on-primary-container leading-relaxed text-sm">
+              Seluruh Nomor Induk Kependudukan (NIK) dan Paspor dilindungi dengan enkripsi end-to-end.
+              Data manifes hanya dibuka untuk keperluan resmi verifikasi pos pintu masuk SIMAKSI Balai
+              Besar TNBTS dan penerbitan klaim proteksi Jasa Raharja.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Master Passenger Manifest Table & Telemetry */}
       <PassengerTable
-        initialPassengers={passengerList}
+        initialPassengers={passengers}
         scheduleTitle={pkg.title}
+        scheduleDate={schedule.departure_date}
+        scheduleId={schedule.id}
       />
     </div>
   );

@@ -4,22 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { MaterialIcon } from "@/components/ui/icon";
 import type { TourPackage } from "@/types/database.types";
-import {
-  Package,
-  ArrowLeft,
-  Save,
-  Loader2,
-  AlertCircle,
-  CheckCircle2,
-  Plus,
-  Trash2,
-  Calendar,
-  Clock,
-  Sparkles,
-  MapPin,
-  Compass,
-} from "lucide-react";
 
 export interface ItineraryActivity {
   time?: string;
@@ -49,25 +35,43 @@ export function PackageForm({
   // Basic Information
   const [title, setTitle] = useState(initialData?.title || "");
   const [slug, setSlug] = useState(initialData?.slug || "");
-  const [isSlugManual, setIsSlugManual] = useState(isEditing);
   const [category, setCategory] = useState<"open_trip" | "private_trip">(
     initialData?.category || "open_trip"
   );
   const [destinationCity, setDestinationCity] = useState(
-    initialData?.destination_city || ""
+    initialData?.destination_city || "Kab. Probolinggo (Bromo)"
   );
-  const [durationDays, setDurationDays] = useState(
-    initialData?.duration_days || 1
-  );
-  const [durationNights, setDurationNights] = useState(
-    initialData?.duration_nights || 0
-  );
+  const [durationDays, setDurationDays] = useState(initialData?.duration_days || 1);
+  const [durationNights, setDurationNights] = useState(initialData?.duration_nights || 0);
   const [meetingPoint, setMeetingPoint] = useState(
-    initialData?.meeting_point || ""
+    initialData?.meeting_point || "Stasiun Malang Kotabaru"
   );
-  const [description, setDescription] = useState(
-    initialData?.description || ""
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [thumbnailUrl, setThumbnailUrl] = useState(
+    initialData?.thumbnail_url ||
+      "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80"
   );
+  const [activeStep, setActiveStep] = useState(1);
+
+  // Inclusions & Exclusions
+  const [inclusions, setInclusions] = useState<string[]>(
+    Array.isArray(initialData?.facilities_included) && initialData.facilities_included.length > 0
+      ? (initialData.facilities_included as string[])
+      : [
+          "Jeep Hardtop 4x4 & BBM Bromo",
+          "Tiket Masuk TNBTS & SIMAKSI",
+          "Asuransi Wisata Jasa Raharja",
+          "Tour Leader / Kru Lapangan",
+        ]
+  );
+  const [newInclusion, setNewInclusion] = useState("");
+
+  const [exclusions, setExclusions] = useState<string[]>(
+    Array.isArray(initialData?.facilities_excluded) && initialData.facilities_excluded.length > 0
+      ? (initialData.facilities_excluded as string[])
+      : ["Pengeluaran pribadi & jajan", "Sewa kuda di Laut Pasir"]
+  );
+  const [newExclusion, setNewExclusion] = useState("");
 
   // Dynamic Itinerary State
   const parseInitialItinerary = (): ItineraryDay[] => {
@@ -77,812 +81,713 @@ export function PackageForm({
           day: 1,
           activities: [
             {
-              time: "08:00",
-              title: "Kumpul dan Briefing",
-              description: "Pertemuan di meeting point dan persiapan perjalanan.",
+              time: "00:15",
+              title: "Meeting Point & Penataan Logistik",
+              description: "Berkumpul di meeting point, presensi QR boarding pass.",
+            },
+            {
+              time: "03:30",
+              title: "Tiba di Penanjakan 1 Bromo",
+              description: "Persiapan spot golden sunrise dan foto Milky Way.",
             },
           ],
         },
       ];
     }
-
-    // Check if format is day-based or flat activity list
     const firstItem = initialData.itinerary[0];
     if (firstItem && typeof firstItem === "object" && "day" in firstItem) {
       return initialData.itinerary as unknown as ItineraryDay[];
     }
-
-    // Convert flat list into day 1
     return [
       {
         day: 1,
         activities: initialData.itinerary.map((act: any) => ({
-          time: act.time || "",
-          title: act.title || act.activity || "Aktivitas Perjalanan",
-          description: act.description || act.desc || "",
+          time: act.time || "08:00",
+          title: act.title || "Aktivitas",
+          description: act.description || "",
         })),
       },
     ];
   };
 
-  const [itinerary, setItinerary] = useState<ItineraryDay[]>(
-    parseInitialItinerary()
-  );
-
-  // Dynamic Facilities
-  const [facilitiesIncluded, setFacilitiesIncluded] = useState<string[]>(
-    initialData?.facilities_included || [
-      "Transportasi AC / Armada Jeep",
-      "Tiket Masuk Wisata",
-      "Pemandu Lokal Berpengalaman",
-      "Air Mineral",
-    ]
-  );
-  const [facilitiesExcluded, setFacilitiesExcluded] = useState<string[]>(
-    initialData?.facilities_excluded || [
-      "Pengeluaran Pribadi",
-      "Tips Pemandu / Kru",
-      "Asuransi Tambahan",
-    ]
-  );
-
-  const [newIncludedItem, setNewIncludedItem] = useState("");
-  const [newExcludedItem, setNewExcludedItem] = useState("");
-
-  // Additional Fields
-  const [cancellationPolicy, setCancellationPolicy] = useState(
-    initialData?.cancellation_policy ||
-      "Pembatalan hingga H-3 keberangkatan mendapatkan pengembalian 50%. Pembatalan kurang dari 48 jam tidak dapat di-refund."
-  );
-  const [thumbnailUrl, setThumbnailUrl] = useState(
-    initialData?.thumbnail_url || ""
-  );
-  const [isPublished, setIsPublished] = useState(
-    initialData ? initialData.is_published : true
-  );
-
-  // Status & Validation
-  const [isLoading, setIsLoading] = useState(false);
+  const [itinerary, setItinerary] = useState<ItineraryDay[]>(parseInitialItinerary);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [slugChecking, setSlugChecking] = useState(false);
-  const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
 
-  // Slug generator helper
-  const generateSlug = (text: string) => {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/[\s-]+/g, "-");
+  // Auto-generate slug from title if new
+  useEffect(() => {
+    if (!isEditing && title) {
+      const generated = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .slice(0, 60);
+      setSlug(generated);
+    }
+  }, [title, isEditing]);
+
+  const handleAddInclusion = () => {
+    if (newInclusion.trim()) {
+      setInclusions([...inclusions, newInclusion.trim()]);
+      setNewInclusion("");
+    }
   };
 
-  // Auto generate slug
-  useEffect(() => {
-    if (!isSlugManual && title.trim()) {
-      setSlug(generateSlug(title));
-    }
-  }, [title, isSlugManual]);
+  const handleRemoveInclusion = (idx: number) => {
+    setInclusions(inclusions.filter((_, i) => i !== idx));
+  };
 
-  // Live slug uniqueness verification in current agent scope
-  useEffect(() => {
-    if (!slug.trim()) {
-      setIsSlugAvailable(null);
+  const handleAddExclusion = () => {
+    if (newExclusion.trim()) {
+      setExclusions([...exclusions, newExclusion.trim()]);
+      setNewExclusion("");
+    }
+  };
+
+  const handleRemoveExclusion = (idx: number) => {
+    setExclusions(exclusions.filter((_, i) => i !== idx));
+  };
+
+  const handleAddActivity = (dayIndex: number) => {
+    const updated = [...itinerary];
+    updated[dayIndex].activities.push({
+      time: "10:00",
+      title: "Kunjungan Destinasi",
+      description: "Rincian agenda kegiatan.",
+    });
+    setItinerary(updated);
+  };
+
+  const handleSave = async (publish: boolean) => {
+    if (!title.trim()) {
+      setErrorMessage("Nama paket wisata wajib diisi");
+      return;
+    }
+    if (!destinationCity.trim()) {
+      setErrorMessage("Kota destinasi wajib diisi");
       return;
     }
 
-    const checkSlug = async () => {
-      setSlugChecking(true);
-      try {
-        let query = supabase
-          .from("tour_packages")
-          .select("id")
-          .eq("agent_id", agentId)
-          .eq("slug", slug.trim());
-
-        if (isEditing && initialData?.id) {
-          query = query.neq("id", initialData.id);
-        }
-
-        const { data, error } = await query.maybeSingle();
-
-        if (error) {
-          setIsSlugAvailable(true);
-        } else {
-          setIsSlugAvailable(!data);
-        }
-      } catch {
-        setIsSlugAvailable(true);
-      } finally {
-        setSlugChecking(false);
-      }
-    };
-
-    const timeout = setTimeout(checkSlug, 350);
-    return () => clearTimeout(timeout);
-  }, [slug, agentId, isEditing, initialData?.id]);
-
-  // Itinerary helper methods
-  const addDay = () => {
-    setItinerary((prev) => [
-      ...prev,
-      {
-        day: prev.length + 1,
-        activities: [
-          {
-            time: "08:00",
-            title: "Aktivitas Hari Ini",
-            description: "Deskripsi kegiatan perjalanan.",
-          },
-        ],
-      },
-    ]);
-  };
-
-  const removeDay = (dayIndex: number) => {
-    if (itinerary.length <= 1) return;
-    setItinerary((prev) =>
-      prev
-        .filter((_, idx) => idx !== dayIndex)
-        .map((item, idx) => ({ ...item, day: idx + 1 }))
-    );
-  };
-
-  const addActivity = (dayIndex: number) => {
-    setItinerary((prev) =>
-      prev.map((dayItem, idx) => {
-        if (idx !== dayIndex) return dayItem;
-        return {
-          ...dayItem,
-          activities: [
-            ...dayItem.activities,
-            { time: "10:00", title: "Kegiatan Baru", description: "" },
-          ],
-        };
-      })
-    );
-  };
-
-  const removeActivity = (dayIndex: number, actIndex: number) => {
-    setItinerary((prev) =>
-      prev.map((dayItem, idx) => {
-        if (idx !== dayIndex) return dayItem;
-        return {
-          ...dayItem,
-          activities: dayItem.activities.filter((_, aIdx) => aIdx !== actIndex),
-        };
-      })
-    );
-  };
-
-  const updateActivity = (
-    dayIndex: number,
-    actIndex: number,
-    field: keyof ItineraryActivity,
-    val: string
-  ) => {
-    setItinerary((prev) =>
-      prev.map((dayItem, idx) => {
-        if (idx !== dayIndex) return dayItem;
-        return {
-          ...dayItem,
-          activities: dayItem.activities.map((act, aIdx) => {
-            if (aIdx !== actIndex) return act;
-            return { ...act, [field]: val };
-          }),
-        };
-      })
-    );
-  };
-
-  // Facilities helper methods
-  const addIncludedFacility = () => {
-    if (!newIncludedItem.trim()) return;
-    setFacilitiesIncluded((prev) => [...prev, newIncludedItem.trim()]);
-    setNewIncludedItem("");
-  };
-
-  const removeIncludedFacility = (index: number) => {
-    setFacilitiesIncluded((prev) => prev.filter((_, idx) => idx !== index));
-  };
-
-  const addExcludedFacility = () => {
-    if (!newExcludedItem.trim()) return;
-    setFacilitiesExcluded((prev) => [...prev, newExcludedItem.trim()]);
-    setNewExcludedItem("");
-  };
-
-  const removeExcludedFacility = (index: number) => {
-    setFacilitiesExcluded((prev) => prev.filter((_, idx) => idx !== index));
-  };
-
-  // Submit Handler
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    setIsSubmitting(true);
     setErrorMessage(null);
-
-    // Validation
-    if (
-      !title.trim() ||
-      !slug.trim() ||
-      !destinationCity.trim() ||
-      !meetingPoint.trim() ||
-      !description.trim()
-    ) {
-      setErrorMessage("Silakan lengkapi seluruh kolom informasi utama paket wisata.");
-      return;
-    }
-
-    if (durationDays < 1) {
-      setErrorMessage("Durasi perjalanan minimal 1 hari.");
-      return;
-    }
-
-    if (isSlugAvailable === false) {
-      setErrorMessage("Slug paket wisata sudah digunakan oleh paket lain di akun Anda.");
-      return;
-    }
-
-    setIsLoading(true);
 
     const payload = {
       agent_id: agentId,
       title: title.trim(),
-      slug: slug.trim().toLowerCase(),
+      slug: slug.trim() || title.toLowerCase().replace(/\s+/g, "-"),
       category,
       destination_city: destinationCity.trim(),
-      duration_days: Number(durationDays),
-      duration_nights: Number(durationNights),
+      duration_days: durationDays,
+      duration_nights: durationNights,
       meeting_point: meetingPoint.trim(),
       description: description.trim(),
-      itinerary,
-      facilities_included: facilitiesIncluded,
-      facilities_excluded: facilitiesExcluded,
-      cancellation_policy: cancellationPolicy.trim() || null,
-      thumbnail_url: thumbnailUrl.trim() || null,
-      is_published: isPublished,
-      updated_at: new Date().toISOString(),
+      thumbnail_url: thumbnailUrl.trim(),
+      facilities_included: inclusions,
+      facilities_excluded: exclusions,
+      itinerary: itinerary as any,
+      is_published: publish,
     };
 
     try {
       if (isEditing && initialData?.id) {
-        // Update package
         const { error } = await supabase
           .from("tour_packages")
-          .update(payload as any)
-          .eq("id", initialData.id)
-          .eq("agent_id", agentId);
+          .update(payload)
+          .eq("id", initialData.id);
 
-        if (error) {
-          console.error("Update package error:", error);
-          setErrorMessage("Gagal memperbarui paket wisata: " + error.message);
-          setIsLoading(false);
-          return;
-        }
+        if (error) throw error;
       } else {
-        // Create new package
-        const { error } = await supabase
-          .from("tour_packages")
-          .insert(payload as any);
-
-        if (error) {
-          console.error("Create package error:", error);
-          setErrorMessage("Gagal membuat paket wisata: " + error.message);
-          setIsLoading(false);
-          return;
-        }
+        const { error } = await supabase.from("tour_packages").insert(payload);
+        if (error) throw error;
       }
 
       router.push("/dashboard/packages");
       router.refresh();
-    } catch (err) {
-      console.error("Fatal form error:", err);
-      setErrorMessage("Terjadi kesalahan sistem saat menyimpan data.");
-      setIsLoading(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan paket.";
+      setErrorMessage(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Back Button & Title */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/dashboard/packages"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-brand-700 transition"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Kembali ke Daftar Paket</span>
-        </Link>
+    <div className="flex flex-col w-full gap-space-md">
+      {/* Top Command Ribbon / Header */}
+      <div className="flex flex-col gap-space-sm mb-space-lg">
+        <div className="flex flex-wrap items-center justify-between gap-space-md">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-space-xs text-caption font-caption text-on-surface-variant mb-1">
+              <span>Mitra Operator</span>
+              <MaterialIcon name="chevron_right" className="text-xs" />
+              <Link href="/dashboard/packages" className="hover:underline">
+                Manajemen Paket Wisata
+              </Link>
+              <MaterialIcon name="chevron_right" className="text-xs" />
+              <span className="text-primary font-body-semibold">
+                {isEditing ? "Edit Rincian Paket" : "Buat Paket Baru"}
+              </span>
+            </div>
+            <div className="flex items-center gap-space-sm">
+              <h1 className="font-headline-md text-headline-md text-on-surface font-bold">
+                {isEditing ? "Edit Paket Wisata" : "Tambah Paket Wisata Baru"}
+              </h1>
+              <span className="px-space-sm py-0.5 rounded-full bg-surface-container-high text-primary font-micro-badge text-micro-badge uppercase tracking-wider font-bold">
+                Modul FR-5.1
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-space-sm">
+            <Link
+              href="/dashboard/packages"
+              className="px-space-md py-space-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-body-semibold text-body-semibold transition-colors flex items-center gap-1 shadow-sm text-sm"
+            >
+              <MaterialIcon name="close" className="text-lg" />
+              <span>Batalkan</span>
+            </Link>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => handleSave(false)}
+              className="px-space-md py-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface-variant font-body-semibold text-body-semibold transition-colors flex items-center gap-1 shadow-sm text-sm disabled:opacity-50"
+            >
+              <MaterialIcon name="bookmark_border" className="text-lg" />
+              <span>Simpan Draf</span>
+            </button>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => handleSave(true)}
+              className="px-space-md py-space-sm rounded-lg bg-secondary-container hover:bg-secondary text-on-primary font-body-semibold text-body-semibold transition-all shadow-sm flex items-center gap-1.5 group text-sm disabled:opacity-50"
+            >
+              <MaterialIcon name="rocket_launch" className="text-lg" />
+              <span>{isSubmitting ? "Memproses..." : "Publikasikan Paket"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Stepper Navigation Tab Strip */}
+        <div className="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm overflow-x-auto border border-outline-variant/20">
+          <div className="grid grid-cols-5 min-w-[760px] gap-space-xs">
+            {[
+              { num: 1, label: "Info Dasar & Destinasi" },
+              { num: 2, label: "Rute & Itinerary Jam" },
+              { num: 3, label: "Fasilitas & Inklusi" },
+              { num: 4, label: "Kuota & Pricing Tier" },
+              { num: 5, label: "SIMAKSI & Asuransi" },
+            ].map((step) => {
+              const isActive = activeStep === step.num;
+              return (
+                <button
+                  key={step.num}
+                  type="button"
+                  onClick={() => setActiveStep(step.num)}
+                  className={`flex items-center gap-space-sm p-space-sm rounded-lg text-left transition-all ${
+                    isActive
+                      ? "bg-primary-container text-on-primary shadow-sm"
+                      : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"
+                  }`}
+                >
+                  <div
+                    className={`flex items-center justify-center w-7 h-7 rounded-full font-body-semibold text-xs ${
+                      isActive
+                        ? "bg-on-primary/20 text-on-primary"
+                        : "bg-surface-container-highest text-primary"
+                    }`}
+                  >
+                    {step.num}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-micro-badge text-[10px] uppercase tracking-wider opacity-80">
+                      Langkah {step.num}
+                    </span>
+                    <span className="font-body-semibold text-xs truncate leading-tight">
+                      {step.label}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-          {isEditing ? "Edit Paket Wisata" : "Buat Paket Wisata Baru"}
-        </h2>
-        <span className="text-xs text-slate-500">
-          Kolom bertanda bintang (*) wajib diisi.
-        </span>
-      </div>
-
-      {/* Error Banner */}
       {errorMessage && (
-        <div className="rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-800 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
-          <div className="flex-1 font-medium">{errorMessage}</div>
+        <div className="p-4 rounded-xl bg-error-container text-on-error-container flex items-center gap-2">
+          <MaterialIcon name="error" className="text-xl" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Section 1: Informasi Utama */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-          <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
-            1. Informasi Utama Paket
-          </h3>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Nama Paket Wisata *
-            </label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Contoh: Sunrise Lava Tour Merapi & Bunker Kaliadem"
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Slug */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Slug URL Paket *
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={slug}
-                  onChange={(e) => {
-                    setIsSlugManual(true);
-                    setSlug(generateSlug(e.target.value));
-                  }}
-                  placeholder="sunrise-lava-tour-merapi"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 pr-20 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  {slugChecking ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                  ) : isSlugAvailable === true ? (
-                    <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Tersedia
-                    </span>
-                  ) : isSlugAvailable === false ? (
-                    <span className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      Terpakai
-                    </span>
-                  ) : null}
+      {/* Form Canvas: 12-Column Responsive Workspace */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg pb-16">
+        {/* Main Left Panel (8 cols) */}
+        <div className="lg:col-span-8 flex flex-col gap-space-lg">
+          {/* Step 1: Info Dasar */}
+          <section className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md border border-outline-variant/20">
+            <div className="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <div className="flex items-center gap-space-sm">
+                <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+                  <MaterialIcon name="edit_note" className="text-lg" />
+                </div>
+                <div>
+                  <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    Informasi Dasar Paket
+                  </h2>
+                  <p className="font-caption text-caption text-on-surface-variant">
+                    Konfigurasi metadata penamaan, SEO slug, dan spesifikasi grup perjalanan.
+                  </p>
                 </div>
               </div>
+              <span className="font-micro-badge text-micro-badge px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface-variant">
+                REQ-FUNC-TOUR-01
+              </span>
             </div>
 
-            {/* Category */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Kategori Paket *
-              </label>
-              <select
-                value={category}
-                onChange={(e) =>
-                  setCategory(e.target.value as "open_trip" | "private_trip")
-                }
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-              >
-                <option value="open_trip">Open Trip (Gabungan)</option>
-                <option value="private_trip">Private Trip (Rombongan Khusus)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Destination City */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Kota Destinasi *
+            {/* Judul Paket */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-body-semibold text-body-semibold text-on-surface flex items-center justify-between">
+                <span>
+                  Nama / Judul Paket Wisata <span className="text-error">*</span>
+                </span>
+                <span className="font-caption text-caption text-on-surface-variant">
+                  Maks 80 Karakter
+                </span>
               </label>
               <input
                 type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Contoh: Open Trip Bromo Golden Sunrise & Kawah Aktif"
+                className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular text-body-regular focus:bg-surface-container-lowest outline-none focus:ring-1 focus:ring-primary border border-outline-variant/30 text-sm"
                 required
-                value={destinationCity}
-                onChange={(e) => setDestinationCity(e.target.value)}
-                placeholder="Yogyakarta / Sleman"
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
               />
             </div>
 
-            {/* Duration Days */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Durasi Hari *
+            {/* Slug URL */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-body-semibold text-body-semibold text-on-surface">
+                Slug URL SEO
+              </label>
+              <div className="flex items-center rounded-lg bg-surface-container-high px-space-md py-space-sm text-caption font-caption text-on-surface-variant">
+                <span className="font-body-regular text-outline select-none">
+                  nusabook.id/pesona/
+                </span>
+                <input
+                  type="text"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  className="w-full bg-transparent font-body-semibold text-primary outline-none px-1 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Kategori Paket Selector */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-body-semibold text-body-semibold text-on-surface">
+                Kategori Perjalanan <span className="text-error">*</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <label
+                  className={`relative flex items-start gap-space-sm p-space-md rounded-xl cursor-pointer transition-all border ${
+                    category === "open_trip"
+                      ? "bg-primary-fixed/30 border-primary"
+                      : "bg-surface-container-low border-transparent hover:bg-surface-container"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="trip_category"
+                    checked={category === "open_trip"}
+                    onChange={() => setCategory("open_trip")}
+                    className="mt-1 accent-primary w-4 h-4 cursor-pointer"
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-body-semibold text-body-semibold text-primary flex items-center gap-1">
+                      Open Trip (Publik)
+                      <MaterialIcon name="groups" className="text-base text-secondary-container" />
+                    </span>
+                    <span className="font-caption text-caption text-on-surface-variant mt-0.5">
+                      Penjualan per kursi (pax individual). Konkurensi kuota real-time terkunci
+                      pesimis saat checkout.
+                    </span>
+                  </div>
+                </label>
+
+                <label
+                  className={`relative flex items-start gap-space-sm p-space-md rounded-xl cursor-pointer transition-all border ${
+                    category === "private_trip"
+                      ? "bg-secondary-fixed/30 border-secondary"
+                      : "bg-surface-container-low border-transparent hover:bg-surface-container"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="trip_category"
+                    checked={category === "private_trip"}
+                    onChange={() => setCategory("private_trip")}
+                    className="mt-1 accent-secondary w-4 h-4 cursor-pointer"
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-body-semibold text-body-semibold text-secondary flex items-center gap-1">
+                      Private Charter
+                      <MaterialIcon name="directions_car" className="text-base" />
+                    </span>
+                    <span className="font-caption text-caption text-on-surface-variant mt-0.5">
+                      Pemesanan satu rombongan flat. Alokasi satu unit armada shuttle dan tour guide
+                      eksklusif.
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Kota Destinasi & Meeting Point */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body-semibold text-body-semibold text-on-surface">
+                  Kota / Kawasan Destinasi
+                </label>
+                <input
+                  type="text"
+                  value={destinationCity}
+                  onChange={(e) => setDestinationCity(e.target.value)}
+                  placeholder="Contoh: Kab. Probolinggo (Bromo)"
+                  className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular border border-outline-variant/30 text-sm outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body-semibold text-body-semibold text-on-surface">
+                  Titik Kumpul Utama (Meeting Point)
+                </label>
+                <input
+                  type="text"
+                  value={meetingPoint}
+                  onChange={(e) => setMeetingPoint(e.target.value)}
+                  placeholder="Contoh: Stasiun Malang Kotabaru"
+                  className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular border border-outline-variant/30 text-sm outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            {/* Durasi Perjalanan */}
+            <div className="grid grid-cols-2 gap-space-md">
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body-semibold text-body-semibold text-on-surface">
+                  Durasi (Hari)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(parseInt(e.target.value) || 1)}
+                  className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular border border-outline-variant/30 text-sm outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body-semibold text-body-semibold text-on-surface">
+                  Durasi (Malam)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={durationNights}
+                  onChange={(e) => setDurationNights(parseInt(e.target.value) || 0)}
+                  className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular border border-outline-variant/30 text-sm outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            {/* URL Thumbnail Foto */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-body-semibold text-body-semibold text-on-surface">
+                URL Banner / Foto Cover
               </label>
               <input
-                type="number"
-                min={1}
-                required
-                value={durationDays}
-                onChange={(e) => setDurationDays(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
+                type="text"
+                value={thumbnailUrl}
+                onChange={(e) => setThumbnailUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular border border-outline-variant/30 text-sm outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
-            {/* Duration Nights */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Durasi Malam
+            {/* Deskripsi */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-body-semibold text-body-semibold text-on-surface">
+                Deskripsi Lengkap Paket
               </label>
-              <input
-                type="number"
-                min={0}
-                required
-                value={durationNights}
-                onChange={(e) => setDurationNights(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
+              <textarea
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Jelaskan daya tarik wisata, pemandangan, dan keunggulan paket..."
+                className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular border border-outline-variant/30 text-sm outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
-          </div>
+          </section>
 
-          {/* Meeting Point */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Titik Kumpul (Meeting Point) *
-            </label>
-            <input
-              type="text"
-              required
-              value={meetingPoint}
-              onChange={(e) => setMeetingPoint(e.target.value)}
-              placeholder="Basecamp Jeep Kaliurang, Sleman (04:00 WIB)"
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Deskripsi Lengkap Paket *
-            </label>
-            <textarea
-              required
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ceritakan keunggulan paket wisata, spot foto menarik, dan pengalaman yang didapatkan wisatawan..."
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-            />
-          </div>
-        </div>
-
-        {/* Section 2: Dynamic Itinerary Builder */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">
-                2. Rencana Perjalanan (Itinerary)
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Susun jadwal agenda bertahap per hari beserta jam kegiatannya.
-              </p>
+          {/* Section 2: Itinerary */}
+          <section className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md border border-outline-variant/20">
+            <div className="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <div className="flex items-center gap-space-sm">
+                <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+                  <MaterialIcon name="schedule" className="text-lg" />
+                </div>
+                <div>
+                  <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    Rute &amp; Itinerary Perjalanan
+                  </h2>
+                  <p className="font-caption text-caption text-on-surface-variant">
+                    Susun timeline aktivitas agar calon wisatawan memahami alur perjalanan.
+                  </p>
+                </div>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={addDay}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50 hover:border-brand-100 transition shadow-sm"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Tambah Hari</span>
-            </button>
-          </div>
 
-          <div className="space-y-6">
-            {itinerary.map((dayItem, dayIdx) => (
-              <div
-                key={dayIdx}
-                className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5 space-y-4"
-              >
+            {itinerary.map((dayGroup, dIdx) => (
+              <div key={dayGroup.day} className="flex flex-col gap-space-sm p-4 bg-surface-container-low rounded-xl">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-700 bg-brand-50 border border-brand-100 px-2.5 py-1 rounded-lg">
-                    Hari Ke-{dayItem.day}
+                  <span className="font-body-semibold text-primary font-bold">
+                    Hari ke-{dayGroup.day}
                   </span>
-                  {itinerary.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeDay(dayIdx)}
-                      className="text-xs font-semibold text-rose-600 hover:text-rose-700 inline-flex items-center gap-1"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      <span>Hapus Hari</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleAddActivity(dIdx)}
+                    className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline"
+                  >
+                    <MaterialIcon name="add" className="text-xs" /> Tambah Aktivitas
+                  </button>
                 </div>
 
-                {/* Activities in this day */}
-                <div className="space-y-3">
-                  {dayItem.activities.map((act, actIdx) => (
+                <div className="flex flex-col gap-2">
+                  {dayGroup.activities.map((act, aIdx) => (
                     <div
-                      key={actIdx}
-                      className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-white p-3 rounded-xl border border-slate-200 shadow-xs"
+                      key={aIdx}
+                      className="p-3 bg-surface-container-lowest rounded-lg border border-outline-variant/30 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
                     >
-                      <div className="sm:col-span-2">
-                        <label className="block text-[10px] font-semibold text-slate-500 uppercase mb-0.5">
-                          Waktu / Jam
-                        </label>
-                        <input
-                          type="text"
-                          value={act.time || ""}
-                          onChange={(e) =>
-                            updateActivity(dayIdx, actIdx, "time", e.target.value)
-                          }
-                          placeholder="04:00"
-                          className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-brand-700 focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-4">
-                        <label className="block text-[10px] font-semibold text-slate-500 uppercase mb-0.5">
-                          Judul Aktivitas *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={act.title}
-                          onChange={(e) =>
-                            updateActivity(dayIdx, actIdx, "title", e.target.value)
-                          }
-                          placeholder="Spot Sunrise Kaliadem"
-                          className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-brand-700 focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-5">
-                        <label className="block text-[10px] font-semibold text-slate-500 uppercase mb-0.5">
-                          Keterangan Aktivitas
-                        </label>
-                        <input
-                          type="text"
-                          value={act.description}
-                          onChange={(e) =>
-                            updateActivity(
-                              dayIdx,
-                              actIdx,
-                              "description",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Briefing keselamatan dan menikmati golden sunrise."
-                          className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-brand-700 focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-1 flex items-end justify-center pb-1">
-                        <button
-                          type="button"
-                          onClick={() => removeActivity(dayIdx, actIdx)}
-                          disabled={dayItem.activities.length <= 1}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 disabled:opacity-30 transition"
-                          title="Hapus aktivitas"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      <input
+                        type="text"
+                        value={act.time}
+                        onChange={(e) => {
+                          const updated = [...itinerary];
+                          updated[dIdx].activities[aIdx].time = e.target.value;
+                          setItinerary(updated);
+                        }}
+                        placeholder="Jam (08:00)"
+                        className="sm:col-span-2 px-2 py-1 rounded bg-surface-container-low text-xs font-mono outline-none border border-outline-variant/20"
+                      />
+                      <input
+                        type="text"
+                        value={act.title}
+                        onChange={(e) => {
+                          const updated = [...itinerary];
+                          updated[dIdx].activities[aIdx].title = e.target.value;
+                          setItinerary(updated);
+                        }}
+                        placeholder="Nama Kegiatan"
+                        className="sm:col-span-4 px-2 py-1 rounded bg-surface-container-low text-xs font-semibold outline-none border border-outline-variant/20"
+                      />
+                      <input
+                        type="text"
+                        value={act.description}
+                        onChange={(e) => {
+                          const updated = [...itinerary];
+                          updated[dIdx].activities[aIdx].description = e.target.value;
+                          setItinerary(updated);
+                        }}
+                        placeholder="Keterangan singkat kegiatan..."
+                        className="sm:col-span-5 px-2 py-1 rounded bg-surface-container-low text-xs outline-none border border-outline-variant/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...itinerary];
+                          updated[dIdx].activities = updated[dIdx].activities.filter(
+                            (_, i) => i !== aIdx
+                          );
+                          setItinerary(updated);
+                        }}
+                        className="sm:col-span-1 p-1 text-on-surface-variant hover:text-error text-center"
+                      >
+                        <MaterialIcon name="delete" className="text-sm" />
+                      </button>
                     </div>
                   ))}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => addActivity(dayIdx)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-900 pt-1"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Tambah Aktivitas di Hari Ke-{dayItem.day}</span>
-                </button>
               </div>
             ))}
-          </div>
-        </div>
+          </section>
 
-        {/* Section 3: Fasilitas Included & Excluded */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
-            3. Fasilitas Paket Perjalanan
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Fasilitas Termasuk */}
-            <div className="space-y-3">
-              <label className="block text-xs font-semibold text-emerald-800 uppercase tracking-wider">
-                Fasilitas Sudah Termasuk (Included)
-              </label>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newIncludedItem}
-                  onChange={(e) => setNewIncludedItem(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addIncludedFacility();
-                    }
-                  }}
-                  placeholder="Contoh: Tiket Masuk & Retribusi"
-                  className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={addIncludedFacility}
-                  className="rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition"
-                >
-                  Tambah
-                </button>
+          {/* Section 3: Inklusi & Eksklusi */}
+          <section className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md border border-outline-variant/20">
+            <div className="flex items-center gap-space-sm pb-space-xs border-b border-surface-container-low">
+              <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+                <MaterialIcon name="task_alt" className="text-lg" />
               </div>
-
-              <div className="space-y-1.5 pt-1">
-                {facilitiesIncluded.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-emerald-50/70 border border-emerald-100 px-3 py-1.5 text-xs text-emerald-900"
-                  >
-                    <span>{item}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeIncludedFacility(idx)}
-                      className="text-emerald-700 hover:text-rose-600"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+              <div>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  Fasilitas &amp; Inklusi Paket
+                </h2>
+                <p className="font-caption text-caption text-on-surface-variant">
+                  Transparansi fasilitas yang ditanggung dan tidak ditanggung untuk mencegah sengketa.
+                </p>
               </div>
             </div>
 
-            {/* Fasilitas Tidak Termasuk */}
-            <div className="space-y-3">
-              <label className="block text-xs font-semibold text-rose-800 uppercase tracking-wider">
-                Fasilitas Belum Termasuk (Excluded)
-              </label>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newExcludedItem}
-                  onChange={(e) => setNewExcludedItem(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addExcludedFacility();
-                    }
-                  }}
-                  placeholder="Contoh: Pengeluaran Pribadi"
-                  className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={addExcludedFacility}
-                  className="rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition"
-                >
-                  Tambah
-                </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+              {/* Inclusions */}
+              <div className="flex flex-col gap-2">
+                <span className="font-body-semibold text-primary font-bold text-sm">
+                  Termasuk (Inclusions)
+                </span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newInclusion}
+                    onChange={(e) => setNewInclusion(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddInclusion())}
+                    placeholder="Contoh: Tiket Masuk TNBTS"
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-surface-container-low text-xs border border-outline-variant/30 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddInclusion}
+                    className="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold"
+                  >
+                    Tambah
+                  </button>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  {inclusions.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low text-xs text-on-surface"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <MaterialIcon name="check" className="text-xs text-primary" /> {item}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveInclusion(idx)}
+                        className="text-outline hover:text-error"
+                      >
+                        <MaterialIcon name="close" className="text-xs" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="space-y-1.5 pt-1">
-                {facilitiesExcluded.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-rose-50/70 border border-rose-100 px-3 py-1.5 text-xs text-rose-900"
+              {/* Exclusions */}
+              <div className="flex flex-col gap-2">
+                <span className="font-body-semibold text-secondary font-bold text-sm">
+                  Tidak Termasuk (Exclusions)
+                </span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newExclusion}
+                    onChange={(e) => setNewExclusion(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddExclusion())}
+                    placeholder="Contoh: Pengeluaran pribadi"
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-surface-container-low text-xs border border-outline-variant/30 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddExclusion}
+                    className="px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-xs font-semibold"
                   >
-                    <span>{item}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeExcludedFacility(idx)}
-                      className="text-rose-700 hover:text-rose-900"
+                    Tambah
+                  </button>
+                </div>
+                <div className="flex flex-col gap-1 mt-1">
+                  {exclusions.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low text-xs text-on-surface"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                      <span className="flex items-center gap-1.5">
+                        <MaterialIcon name="close" className="text-xs text-outline" /> {item}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExclusion(idx)}
+                        className="text-outline hover:text-error"
+                      >
+                        <MaterialIcon name="close" className="text-xs" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
 
-        {/* Section 4: Gambar, Kebijakan, dan Publikasi */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-          <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
-            4. Pengaturan Publikasi & Kebijakan
-          </h3>
+        {/* Right Sidebar (4 cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-space-lg">
+          {/* Live Preview Card */}
+          <section className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/20 flex flex-col gap-space-sm">
+            <span className="font-caption text-caption uppercase text-on-surface-variant font-bold tracking-wider">
+              Pratinjau Kartu Marketplace
+            </span>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              URL Thumbnail / Foto Utama Paket
-            </label>
-            <input
-              type="url"
-              value={thumbnailUrl}
-              onChange={(e) => setThumbnailUrl(e.target.value)}
-              placeholder="https://images.unsplash.com/photo-..."
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-            />
-            <p className="text-[11px] text-slate-500 mt-1">
-              Gunakan tautan gambar resolusi tinggi (16:9 atau 4:3) untuk tampilan menarik di etalase wisatawan.
+            <div className="rounded-xl overflow-hidden bg-surface-container-low border border-outline-variant/20 shadow-sm flex flex-col">
+              <div className="relative h-44 w-full bg-surface-container">
+                <img
+                  src={thumbnailUrl}
+                  alt={title || "Paket"}
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary text-on-primary font-micro-badge text-micro-badge font-bold uppercase">
+                  {category === "private_trip" ? "PRIVATE TRIP" : "OPEN TRIP"}
+                </span>
+                <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 backdrop-blur-sm text-white font-mono text-[10px]">
+                  {durationDays}D{durationNights > 0 ? `${durationNights}N` : ""}
+                </span>
+              </div>
+
+              <div className="p-4 flex flex-col gap-2">
+                <h3 className="font-title-md text-title-md font-bold text-on-surface line-clamp-2">
+                  {title || "Judul Paket Wisata"}
+                </h3>
+                <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+                  <MaterialIcon name="pin_drop" className="text-sm text-primary" />
+                  <span>{destinationCity}</span>
+                </div>
+                <div className="pt-2 border-t border-surface-container flex items-center justify-between">
+                  <span className="text-xs text-on-surface-variant">Mulai Dari:</span>
+                  <span className="text-base font-bold text-primary font-headline-sm">
+                    Rp 375.000
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Transparansi Escrow & Komisi 2% Flat */}
+          <section className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/20 flex flex-col gap-space-sm">
+            <div className="flex items-center gap-2">
+              <MaterialIcon name="shield" className="text-primary text-xl" />
+              <span className="font-title-md text-title-md text-on-surface font-bold">
+                Jaminan Perlindungan Escrow
+              </span>
+            </div>
+            <p className="font-caption text-caption text-on-surface-variant leading-relaxed">
+              Pembayaran dari wisatawan disimpan aman di NusaBook Safe Vault. Dana cair otomatis ke
+              rekening mitra H+1 setelah presensi check-in selesai dipindai.
             </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Kebijakan Pembatalan & Refund
-            </label>
-            <textarea
-              rows={2}
-              value={cancellationPolicy}
-              onChange={(e) => setCancellationPolicy(e.target.value)}
-              placeholder="Jelaskan batas waktu pembatalan yang diperbolehkan..."
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-            />
-          </div>
-
-          {/* Toggle Publish */}
-          <div className="pt-2">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isPublished}
-                onChange={(e) => setIsPublished(e.target.checked)}
-                className="h-5 w-5 rounded-md border-slate-300 text-brand-700 focus:ring-brand-700"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-900">
-                  Terbitkan Langsung ke Storefront (Live)
-                </span>
-                <span className="text-xs text-slate-500">
-                  Jika tidak dicentang, paket disimpan sebagai Draf dan tidak terlihat oleh wisatawan.
-                </span>
-              </div>
-            </label>
-          </div>
+            <div className="p-3 bg-surface-container-low rounded-lg flex items-center justify-between text-xs">
+              <span>Potongan Layanan Platform:</span>
+              <strong className="text-primary font-bold">2.0% Flat</strong>
+            </div>
+          </section>
         </div>
-
-        {/* Submit Bar */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Link
-            href="/dashboard/packages"
-            className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
-          >
-            Batal
-          </Link>
-
-          <button
-            type="submit"
-            disabled={isLoading || isSlugAvailable === false}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-900 transition disabled:opacity-60"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Menyimpan Paket...</span>
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                <span>{isEditing ? "Perbarui Paket Wisata" : "Simpan Paket Wisata"}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

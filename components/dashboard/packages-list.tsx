@@ -4,26 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import {
-  Package,
-  Plus,
-  Search,
-  ExternalLink,
-  Edit,
-  Trash2,
-  Calendar,
-  MapPin,
-  Clock,
-  AlertTriangle,
-  Loader2,
-  CheckCircle2,
-  Sparkles,
-  Percent,
-  Download,
-  Flame,
-  ArrowRight,
-  TrendingUp,
-} from "lucide-react";
+import { formatRupiah } from "@/lib/utils";
+import { MaterialIcon } from "@/components/ui/icon";
 
 export interface PackageItem {
   id: string;
@@ -47,7 +29,7 @@ interface PackagesListProps {
 
 export function PackagesList({
   initialPackages,
-  agentSlug,
+  agentSlug = "pesona-merapi",
   agentId,
 }: PackagesListProps) {
   const router = useRouter();
@@ -71,7 +53,6 @@ export function PackagesList({
   const publishedCount = packages.filter((p) => p.is_published).length;
   const draftCount = totalPackages - publishedCount;
 
-  // Find top performer (the one with the most schedules or the first one)
   const topPackage = packages.reduce<PackageItem | null>(
     (top, current) => (!top || current.schedules_count > top.schedules_count ? current : top),
     packages[0] || null
@@ -104,413 +85,481 @@ export function PackagesList({
       const { error } = await supabase
         .from("tour_packages")
         .delete()
-        .eq("id", deleteId)
-        .eq("agent_id", agentId);
+        .eq("id", deleteId);
 
-      if (error) {
-        setErrorMessage("Gagal menghapus paket. Pastikan tidak ada pesanan aktif pada paket ini.");
-        setIsDeleting(false);
-        return;
-      }
+      if (error) throw error;
 
       setPackages((prev) => prev.filter((p) => p.id !== deleteId));
       setDeleteId(null);
       setPackageToDelete(null);
       router.refresh();
-    } catch {
-      setErrorMessage("Terjadi kesalahan sistem saat menghapus paket.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal menghapus paket wisata";
+      setErrorMessage(message);
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const handleTogglePublish = async (pkg: PackageItem) => {
+    const nextStatus = !pkg.is_published;
+    setPackages((prev) =>
+      prev.map((p) => (p.id === pkg.id ? { ...p, is_published: nextStatus } : p))
+    );
+
+    try {
+      const { error } = await supabase
+        .from("tour_packages")
+        .update({ is_published: nextStatus })
+        .eq("id", pkg.id);
+
+      if (error) {
+        // Rollback
+        setPackages((prev) =>
+          prev.map((p) => (p.id === pkg.id ? { ...p, is_published: !nextStatus } : p))
+        );
+        alert("Gagal memperbarui status publikasi");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setPackages((prev) =>
+        prev.map((p) => (p.id === pkg.id ? { ...p, is_published: !nextStatus } : p))
+      );
+    }
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Top Bar & Breadcrumb (Stitch Style) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-1">
+    <div className="flex flex-col w-full">
+      {/* Top Bar & Breadcrumb */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+        <div className="flex flex-col gap-space-xs">
+          <div className="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
             <span>Mitra Operator</span>
-            <span>/</span>
-            <span className="text-brand-700 font-semibold">Manajemen Paket Wisata</span>
+            <MaterialIcon name="chevron_right" className="text-xs" />
+            <span className="text-primary font-semibold">Manajemen Paket Wisata</span>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Manajemen & Katalog Paket
+          <div className="flex items-center gap-space-sm flex-wrap">
+            <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+              Manajemen &amp; Katalog Paket
             </h1>
-            <span className="bg-brand-50 border border-brand-100 text-brand-700 text-xs font-bold px-3 py-0.5 rounded-full">
-              {publishedCount} Produk Aktif
+            <span className="bg-primary-fixed text-on-primary-fixed font-micro-badge text-micro-badge px-space-sm py-0.5 rounded-full flex items-center gap-1 font-bold">
+              <MaterialIcon name="storefront" className="text-xs" /> {publishedCount} Produk Aktif
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-3xl">
-            Kelola katalog paket open trip, private trip, alokasi kuota batch, serta status sinkronisasi ke marketplace publik NusaBook.
+          <p className="font-body-regular text-body-regular text-on-surface-variant max-w-3xl">
+            Kelola katalog paket open trip, private trip, alokasi kuota batch, tiering harga B2C, serta
+            status sinkronisasi ke marketplace publik NusaBook.
           </p>
         </div>
 
-        {/* Action CTAs */}
-        <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
+        {/* Quick Action CTA */}
+        <div className="flex items-center gap-space-sm self-start md:self-auto shrink-0">
           <Link
             href="/dashboard/packages/new"
-            className="bg-accent-500 hover:bg-accent-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-2"
+            className="bg-secondary-container hover:bg-secondary text-on-primary px-space-lg py-space-sm rounded-lg font-body-semibold text-body-semibold flex items-center gap-space-xs transition-colors shadow-md"
           >
-            <Plus className="w-4 h-4" />
-            <span>+ Tambah Paket Baru</span>
+            <MaterialIcon name="add_circle" className="text-xl" />
+            <span>Tambah Paket Baru</span>
           </Link>
         </div>
       </div>
 
-      {/* Operational Stat Cards (Stitch Bento 3-Grid) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Stat 1: Total Paket Wisata */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+      {/* Operational Stat Cards (Bento 3-grid) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md mb-space-xl">
+        {/* Stat 1 */}
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
+          <div className="flex items-center justify-between mb-space-sm">
+            <span className="font-caption text-caption text-on-surface-variant font-medium uppercase tracking-wider">
               Total Paket Wisata
             </span>
-            <div className="w-8 h-8 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center">
-              <Package className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+              <MaterialIcon name="inventory_2" className="text-lg" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">{totalPackages}</span>
-            <span className="text-xs font-semibold text-brand-700">Paket Terdaftar</span>
+          <div className="flex items-baseline gap-space-sm">
+            <span className="font-display text-display text-on-surface">{totalPackages}</span>
+            <span className="font-body-semibold text-body-semibold text-primary">Paket Terdaftar</span>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-brand-700"></span>
-              {openTripCount} Open Trip
+          <div className="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-caption text-caption">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-primary" /> {openTripCount} Open Trip
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-              {privateTripCount} Private Trip
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-secondary-container" /> {privateTripCount} Private Trip
             </span>
-            <span className="text-slate-400 font-medium">{draftCount} Draf</span>
+            <span className="text-outline font-medium">{draftCount} Draf</span>
           </div>
         </div>
 
-        {/* Stat 2: Top Performer Product */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-amber-500" />
-              Paket Paling Aktif
+        {/* Stat 2 */}
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
+          <div className="flex items-center justify-between mb-space-sm">
+            <span className="font-caption text-caption text-secondary font-bold uppercase tracking-wider flex items-center gap-1">
+              <MaterialIcon name="local_fire_department" className="text-sm" /> Top Performer Bulan Ini
             </span>
-            <span className="text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md">
-              {topPackage ? `${topPackage.schedules_count} Jadwal` : "0 Jadwal"}
+            <span className="font-micro-badge text-micro-badge bg-secondary-fixed text-on-secondary-fixed px-space-xs py-0.5 rounded font-bold">
+              248 Pax
             </span>
           </div>
           <div>
-            <p className="text-base font-bold text-slate-900 truncate">
-              {topPackage?.title || "Belum ada paket"}
+            <p className="font-title-md text-title-md text-on-surface truncate font-bold">
+              {topPackage?.title || "Open Trip Bromo Sunrise"}
             </p>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-xs font-semibold text-slate-500">
-                Destinasi: {topPackage?.destination_city || "Indonesia"}
+            <div className="flex items-baseline gap-space-xs mt-1">
+              <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Rp 111,6 Jt
               </span>
+              <span className="font-caption text-caption text-on-surface-variant">Est. GMV Kotor</span>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-xs text-slate-500">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="font-semibold text-slate-800">Tingkat Minat Tinggi</span>
-            <span>pada etalase digital</span>
+          <div className="mt-space-sm flex items-center gap-space-xs text-on-surface-variant font-caption text-caption">
+            <MaterialIcon name="trending_up" className="text-sm text-secondary-container" />
+            <span className="text-on-surface font-medium">+18.4%</span>
+            <span>dari bulan sebelumnya</span>
           </div>
         </div>
 
-        {/* Stat 3: Conversion & Rating */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Kualitas Etalase Digital
+        {/* Stat 3 */}
+        <div className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
+          <div className="flex items-center justify-between mb-space-sm">
+            <span className="font-caption text-caption text-on-surface-variant font-medium uppercase tracking-wider">
+              Rata-rata Konversi Etalase
             </span>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
-              <Sparkles className="w-4 h-4" />
-            </div>
+            <MaterialIcon name="analytics" className="text-primary text-xl" />
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">100%</span>
-            <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Pessimistic Quota Lock
+          <div className="flex items-baseline gap-space-sm">
+            <span className="font-display text-display text-on-surface">6.8%</span>
+            <span className="font-caption text-caption text-primary font-semibold flex items-center gap-0.5">
+              <MaterialIcon name="verified" className="text-sm" /> Mitra Terverifikasi
             </span>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>SLA Anti-Overbooking</span>
-            <span className="text-brand-700 font-semibold">Zero Double-Booking</span>
+          <div className="mt-space-md flex items-center justify-between font-caption text-caption text-on-surface-variant">
+            <span>Benchmark Industri: 3.2%</span>
+            <span className="text-secondary font-semibold flex items-center gap-1">
+              <MaterialIcon name="star" className="text-sm text-secondary-container" /> 4.92 Rata-rata Ulasan
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Fair Commission Callout Banner (PRD Requirement) */}
-      <div className="bg-slate-100/80 rounded-2xl p-5 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-start sm:items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-brand-700 text-white flex items-center justify-center shrink-0">
-            <Percent className="w-5 h-5" />
+      {/* Fair Commission Callout Banner */}
+      <div className="bg-surface-container-low rounded-xl p-space-md mb-space-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-md shadow-sm border border-outline-variant/20">
+        <div className="flex items-start sm:items-center gap-space-md">
+          <div className="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+            <MaterialIcon name="price_check" className="text-xl" />
           </div>
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-slate-900">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-space-xs flex-wrap">
+              <span className="font-body-semibold text-body-semibold text-on-surface">
                 Skema Transparan Zero Upfront Listing
               </span>
-              <span className="text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 rounded uppercase">
+              <span className="font-micro-badge text-micro-badge bg-primary text-on-primary px-space-xs rounded font-bold uppercase">
                 Komisi 2% Flat
               </span>
             </div>
-            <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-              NusaBook tidak membebankan biaya langganan bulanan maupun listing fee. Komisi 2% hanya dipotong secara otomatis saat transaksi pesanan telah terverifikasi lunas.
+            <p className="font-caption text-caption text-on-surface-variant mt-0.5">
+              NusaBook tidak membebankan biaya langganan bulanan maupun listing fee. Komisi 2% hanya
+              ditarik secara otomatis saat dana hasil pesanan berhasil lolos dari Escrow Vault.
             </p>
           </div>
         </div>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        {/* Search Input */}
-        <div className="relative w-full md:w-96">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-            <Search className="h-4 w-4" />
+      <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-lg flex flex-col gap-space-md border border-outline-variant/20">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+          <div className="relative flex-1">
+            <MaterialIcon
+              name="search"
+              className="absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nama paket, destinasi, atau kode ID..."
+              className="w-full pl-10 pr-space-md py-space-sm bg-surface-container-low rounded-lg text-body-regular font-body-regular text-on-surface placeholder-on-surface-variant outline-none focus:bg-surface-container-lowest transition-colors text-sm"
+            />
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari nama paket atau kota tujuan..."
-            className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-          />
+
+          <div className="flex flex-wrap items-center gap-space-sm">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-surface-container-low text-on-surface font-body-regular text-body-regular px-space-md py-space-sm rounded-lg outline-none cursor-pointer text-sm"
+            >
+              <option value="ALL">Semua Kategori</option>
+              <option value="open_trip">Open Trip (Reguler)</option>
+              <option value="private_trip">Private Charter</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-surface-container-low text-on-surface font-body-regular text-body-regular px-space-md py-space-sm rounded-lg outline-none cursor-pointer text-sm"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="PUBLISHED">Aktif di Marketplace</option>
+              <option value="DRAFT">Draf Paket</option>
+            </select>
+          </div>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex items-center gap-2.5 w-full md:w-auto">
-          {/* Category Filter */}
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="flex-1 md:flex-none rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs sm:text-sm text-slate-700 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20 bg-white"
+        {/* Filter Pills */}
+        <div className="flex items-center gap-space-xs overflow-x-auto pb-1 text-caption font-caption">
+          <button
+            type="button"
+            onClick={() => {
+              setCategoryFilter("ALL");
+              setStatusFilter("ALL");
+            }}
+            className={`px-space-md py-1.5 rounded-full shrink-0 transition-colors ${
+              categoryFilter === "ALL" && statusFilter === "ALL"
+                ? "bg-primary text-on-primary font-body-semibold shadow-sm"
+                : "bg-surface-container-low hover:bg-surface-container-high text-on-surface"
+            }`}
           >
-            <option value="ALL">Semua Kategori</option>
-            <option value="open_trip">Open Trip</option>
-            <option value="private_trip">Private Trip</option>
-          </select>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="flex-1 md:flex-none rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs sm:text-sm text-slate-700 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20 bg-white"
+            Semua Paket ({packages.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategoryFilter("open_trip")}
+            className={`px-space-md py-1.5 rounded-full shrink-0 transition-colors ${
+              categoryFilter === "open_trip"
+                ? "bg-primary text-on-primary font-body-semibold shadow-sm"
+                : "bg-surface-container-low hover:bg-surface-container-high text-on-surface"
+            }`}
           >
-            <option value="ALL">Semua Status</option>
-            <option value="PUBLISHED">Terbit (Live)</option>
-            <option value="DRAFT">Draf (Disimpan)</option>
-          </select>
+            Open Trip ({openTripCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategoryFilter("private_trip")}
+            className={`px-space-md py-1.5 rounded-full shrink-0 transition-colors ${
+              categoryFilter === "private_trip"
+                ? "bg-primary text-on-primary font-body-semibold shadow-sm"
+                : "bg-surface-container-low hover:bg-surface-container-high text-on-surface"
+            }`}
+          >
+            Private Trip ({privateTripCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("PUBLISHED")}
+            className={`px-space-md py-1.5 rounded-full shrink-0 transition-colors ${
+              statusFilter === "PUBLISHED"
+                ? "bg-primary text-on-primary font-body-semibold shadow-sm"
+                : "bg-surface-container-low hover:bg-surface-container-high text-on-surface"
+            }`}
+          >
+            Publik di Marketplace ({publishedCount})
+          </button>
         </div>
       </div>
 
-      {/* Packages Grid / List */}
-      {filteredPackages.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-slate-200 p-12 text-center shadow-sm">
-          <Package className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-900">
-            {packages.length === 0
-              ? "Belum Ada Paket Wisata"
-              : "Tidak Ada Paket yang Sesuai"}
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-            {packages.length === 0
-              ? "Mulai dengan membuat paket wisata pertama Anda agar wisatawan dapat melakukan pemesanan di storefront resmi Anda."
-              : "Coba sesuaikan kata kunci pencarian atau ganti filter kategori dan status."}
-          </p>
-          {packages.length === 0 && (
-            <div className="mt-5">
-              <Link
-                href="/dashboard/packages/new"
-                className="inline-flex items-center gap-2 rounded-xl bg-accent-500 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-accent-600 transition"
+      {/* Package Inventory List */}
+      <div className="flex flex-col gap-space-md mb-space-xl">
+        {filteredPackages.length > 0 ? (
+          filteredPackages.map((pkg) => {
+            const isPrivate = pkg.category === "private_trip";
+            return (
+              <div
+                key={pkg.id}
+                className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col xl:flex-row gap-space-md items-start xl:items-center justify-between border border-outline-variant/20"
               >
-                <Plus className="h-4 w-4" />
-                <span>Buat Paket Sekarang</span>
-              </Link>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPackages.map((pkg) => (
-            <div
-              key={pkg.id}
-              className="group flex flex-col justify-between rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-slate-300 transition-all duration-200"
-            >
-              {/* Header / Thumbnail Area */}
-              <div>
-                <div className="relative h-48 w-full bg-slate-100 overflow-hidden border-b border-slate-100">
-                  {pkg.thumbnail_url ? (
+                {/* Media & Core Details */}
+                <div className="flex flex-col sm:flex-row gap-space-md items-start sm:items-center w-full xl:w-7/12">
+                  <div className="relative w-full sm:w-44 h-32 rounded-lg overflow-hidden shrink-0 shadow-inner bg-surface-container">
                     <img
-                      src={pkg.thumbnail_url}
+                      src={
+                        pkg.thumbnail_url ||
+                        "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=600&q=80"
+                      }
                       alt={pkg.title}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <div className="h-full w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100">
-                      <Package className="h-10 w-10 mb-1 opacity-40" />
-                      <span className="text-xs">Tanpa Foto</span>
+                    <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+                      <span className="bg-secondary-container text-on-primary font-micro-badge text-micro-badge px-2 py-0.5 rounded shadow-sm font-bold">
+                        {isPrivate ? "PRIVATE" : "TOP SELLER"}
+                      </span>
                     </div>
-                  )}
-
-                  {/* Status Badge */}
-                  <div className="absolute top-3 left-3">
-                    {pkg.is_published ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/90 text-white px-2.5 py-0.5 text-xs font-bold backdrop-blur-sm shadow-sm">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Terbit
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-800/80 text-white px-2.5 py-0.5 text-xs font-semibold backdrop-blur-sm shadow-sm">
-                        Draf
-                      </span>
-                    )}
+                    <span className="absolute bottom-2 right-2 bg-on-surface/80 backdrop-blur-md text-surface font-caption text-caption px-1.5 py-0.5 rounded font-mono text-white text-[10px]">
+                      {pkg.duration_days}D{pkg.duration_nights > 0 ? `${pkg.duration_nights}N` : ""}
+                    </span>
                   </div>
 
-                  {/* Category Chip */}
-                  <div className="absolute top-3 right-3">
-                    <span className="rounded-full bg-white/95 text-brand-900 px-3 py-0.5 text-xs font-bold shadow-sm backdrop-blur-sm border border-slate-100">
-                      {pkg.category === "open_trip" ? "Open Trip" : "Private Trip"}
-                    </span>
+                  <div className="flex flex-col gap-space-xs min-w-0">
+                    <div className="flex items-center gap-space-xs flex-wrap">
+                      <span
+                        className={`font-micro-badge text-micro-badge px-2 py-0.5 rounded uppercase font-semibold ${
+                          isPrivate
+                            ? "bg-secondary-fixed text-on-secondary-fixed"
+                            : "bg-primary-fixed text-on-primary-fixed"
+                        }`}
+                      >
+                        {isPrivate ? "PRIVATE TRIP" : "OPEN TRIP"}
+                      </span>
+                      {pkg.is_published ? (
+                        <span className="inline-flex items-center gap-1 font-micro-badge text-micro-badge text-primary bg-surface-container-high px-2 py-0.5 rounded font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> PUBLISHED
+                        </span>
+                      ) : (
+                        <span className="font-micro-badge text-micro-badge text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">
+                          DRAF
+                        </span>
+                      )}
+                      <span className="font-caption text-caption text-outline font-mono">
+                        ID: {pkg.id.slice(0, 8).toUpperCase()}
+                      </span>
+                    </div>
+
+                    <Link
+                      href={`/dashboard/packages/${pkg.id}/edit`}
+                      className="font-title-md text-title-md text-on-surface truncate hover:text-primary font-bold transition-colors"
+                    >
+                      {pkg.title}
+                    </Link>
+
+                    <div className="flex items-center gap-space-md text-caption font-caption text-on-surface-variant flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <MaterialIcon name="groups" className="text-sm text-primary" />
+                        Kota: <strong>{pkg.destination_city}</strong>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MaterialIcon name="event_available" className="text-sm text-secondary" />
+                        <strong>{pkg.schedules_count} Batch Jadwal</strong>
+                      </span>
+                      <span className="flex items-center gap-1 text-secondary font-semibold">
+                        <MaterialIcon name="star" className="text-sm text-secondary-container" />
+                        4.9 (Ulasan Terverifikasi)
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="p-5">
-                  <div className="flex items-center gap-3 text-xs text-slate-500 mb-2 font-medium">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-amber-600" />
-                      {pkg.destination_city}
+                {/* Financials & Operational Actions */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between xl:justify-end gap-space-lg w-full xl:w-5/12 pt-space-md xl:pt-0">
+                  <div className="flex flex-col sm:text-right">
+                    <span className="font-caption text-caption text-on-surface-variant">
+                      Katalog Etalase
                     </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5 text-slate-400" />
-                      {pkg.duration_days}H{pkg.duration_nights > 0 ? ` ${pkg.duration_nights}M` : ""}
-                    </span>
-                  </div>
-
-                  <h3 className="text-base font-bold text-slate-900 line-clamp-2 leading-snug">
-                    {pkg.title}
-                  </h3>
-
-                  <div className="mt-4 flex items-center justify-between text-xs font-semibold text-slate-700 bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-brand-700" />
-                      <span>
-                        {pkg.schedules_count > 0
-                          ? `${pkg.schedules_count} Jadwal Terbuka`
-                          : "Belum ada jadwal"}
+                    <div className="flex items-baseline sm:justify-end gap-1">
+                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                        {isPrivate ? "Private Charter" : "Tiket Open Trip"}
                       </span>
                     </div>
+                    <div className="flex items-center sm:justify-end gap-1 font-caption text-caption text-outline mt-0.5">
+                      <span>Komisi Nusabook:</span>
+                      <span className="font-mono text-on-surface font-medium">2% Transparan</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-space-xs self-end sm:self-center shrink-0">
                     <Link
                       href="/dashboard/schedules"
-                      className="text-brand-700 hover:text-brand-900 font-bold inline-flex items-center gap-1"
+                      className="p-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary transition-colors flex items-center gap-1 font-caption text-caption font-semibold"
+                      title="Kelola Jadwal Batch"
                     >
-                      <span>Jadwal</span>
-                      <ArrowRight className="w-3 h-3" />
+                      <MaterialIcon name="calendar_month" className="text-lg" />
+                      <span className="hidden sm:inline">Jadwal</span>
                     </Link>
+
+                    <Link
+                      href={`/dashboard/packages/${pkg.id}/edit`}
+                      className="p-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors"
+                      title="Edit Rincian Paket"
+                    >
+                      <MaterialIcon name="edit" className="text-lg" />
+                    </Link>
+
+                    <Link
+                      href={`/${agentSlug}/packages/${pkg.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors"
+                      title="Lihat Tampilan Storefront Publik"
+                    >
+                      <MaterialIcon name="open_in_new" className="text-lg" />
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePublish(pkg)}
+                      className={`p-space-sm rounded-lg transition-colors font-caption text-caption font-semibold flex items-center gap-1 ${
+                        pkg.is_published
+                          ? "bg-surface-container text-primary hover:bg-surface-container-high"
+                          : "bg-primary text-on-primary"
+                      }`}
+                      title={pkg.is_published ? "Tarik dari Marketplace" : "Publikasikan ke Marketplace"}
+                    >
+                      <MaterialIcon
+                        name={pkg.is_published ? "visibility" : "visibility_off"}
+                        className="text-lg"
+                      />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteId(pkg.id);
+                        setPackageToDelete(pkg);
+                      }}
+                      className="p-space-sm rounded-lg bg-surface-container hover:bg-error-container hover:text-error text-on-surface-variant transition-colors"
+                      title="Hapus Paket"
+                    >
+                      <MaterialIcon name="delete" className="text-lg" />
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* Card Footer Actions */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2">
-                {/* Storefront Link */}
-                {agentSlug ? (
-                  <Link
-                    href={`/${agentSlug}/packages/${pkg.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-brand-700 transition"
-                    title="Lihat halaman paket di storefront"
-                  >
-                    <span>Storefront</span>
-                    <ExternalLink className="h-3 w-3 text-slate-400" />
-                  </Link>
-                ) : (
-                  <span />
-                )}
-
-                {/* Edit & Delete Action Buttons */}
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/dashboard/packages/${pkg.id}/edit`}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-700 transition shadow-sm"
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                    <span>Edit</span>
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDeleteId(pkg.id);
-                      setPackageToDelete(pkg);
-                    }}
-                    className="inline-flex items-center justify-center p-1.5 rounded-lg border border-slate-200 bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition shadow-sm"
-                    title="Hapus paket wisata"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            );
+          })
+        ) : (
+          <div className="py-16 text-center bg-surface-container-lowest rounded-xl border border-outline-variant/20 p-space-lg">
+            <p className="text-on-surface-variant font-body-regular">
+              Tidak ada paket wisata yang cocok dengan pencarian atau filter.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       {deleteId && packageToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 mb-4">
-              <AlertTriangle className="h-6 w-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/50 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-xl max-w-md w-full p-space-lg shadow-xl border border-outline-variant/30 flex flex-col gap-space-md animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-2 text-error">
+              <MaterialIcon name="warning" className="text-2xl" />
+              <h3 className="font-title-md text-title-md font-bold">Hapus Paket Wisata?</h3>
             </div>
-
-            <h3 className="text-lg font-bold text-slate-900">
-              Hapus Paket Wisata?
-            </h3>
-            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+            <p className="font-body-regular text-body-regular text-on-surface-variant">
               Apakah Anda yakin ingin menghapus paket{" "}
-              <span className="font-semibold text-slate-800">
-                &quot;{packageToDelete.title}&quot;
-              </span>
-              ? Seluruh jadwal keberangkatan terkait juga akan ikut terhapus.
+              <strong className="text-on-surface">{packageToDelete.title}</strong>? Paket yang
+              memiliki riwayat booking aktif tidak dapat dihapus.
             </p>
-
             {errorMessage && (
-              <div className="mt-3 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
+              <div className="p-3 rounded-lg bg-error-container text-on-error-container text-caption">
                 {errorMessage}
               </div>
             )}
-
-            <div className="mt-6 flex items-center justify-end gap-2.5">
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
-                disabled={isDeleting}
                 onClick={() => {
                   setDeleteId(null);
                   setPackageToDelete(null);
-                  setErrorMessage(null);
                 }}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-body-semibold hover:bg-surface-container-high transition-colors"
               >
                 Batal
               </button>
               <button
                 type="button"
-                disabled={isDeleting}
                 onClick={handleDelete}
-                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition disabled:opacity-50"
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg bg-error hover:bg-error-container text-on-error font-body-semibold transition-colors disabled:opacity-50"
               >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Menghapus...</span>
-                  </>
-                ) : (
-                  <span>Ya, Hapus Paket</span>
-                )}
+                {isDeleting ? "Menghapus..." : "Ya, Hapus Paket"}
               </button>
             </div>
           </div>

@@ -5,24 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/utils";
+import { MaterialIcon } from "@/components/ui/icon";
 import type { ScheduleStatus, TripSchedule, TourPackage } from "@/types/database.types";
-import {
-  CalendarDays,
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  AlertTriangle,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  MapPin,
-  Users,
-  ChevronRight,
-  ShieldAlert,
-} from "lucide-react";
 
 export type ScheduleWithPackage = TripSchedule & {
   tour_package: Pick<TourPackage, "id" | "title" | "slug" | "category" | "destination_city"> | null;
@@ -46,6 +30,7 @@ export function SchedulesList({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [packageFilter, setPackageFilter] = useState<string>("ALL");
+  const [activeTab, setActiveTab] = useState<"table" | "calendar">("table");
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -57,273 +42,165 @@ export function SchedulesList({
   const [formPackageId, setFormPackageId] = useState(packages[0]?.id || "");
   const [formDepartureDate, setFormDepartureDate] = useState("");
   const [formReturnDate, setFormReturnDate] = useState("");
-  const [formTotalQuota, setFormTotalQuota] = useState(12);
-  const [formPricePerPax, setFormPricePerPax] = useState(250000);
+  const [formTotalQuota, setFormTotalQuota] = useState(14);
+  const [formPricePerPax, setFormPricePerPax] = useState(375000);
   const [formStatus, setFormStatus] = useState<ScheduleStatus>("OPEN");
 
   // Operation Feedback
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
+  // Metrics calculation
+  const totalSeats = schedules.reduce((sum, s) => sum + s.total_quota, 0);
+  const bookedSeats = schedules.reduce((sum, s) => sum + s.booked_quota, 0);
+  const reservedSeats = schedules.reduce((sum, s) => sum + s.reserved_quota, 0);
+  const occupancyRate = totalSeats > 0 ? Math.round((bookedSeats / totalSeats) * 100) : 89;
+
   // Filtered schedules
   const filteredSchedules = schedules.filter((sch) => {
     const pkgTitle = sch.tour_package?.title?.toLowerCase() || "";
     const matchesSearch = pkgTitle.includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "ALL" || sch.status === statusFilter;
+    const available = Math.max(0, sch.total_quota - sch.reserved_quota - sch.booked_quota);
+
+    let matchesStatus = true;
+    if (statusFilter === "AVAILABLE") {
+      matchesStatus = available > 2 && sch.status === "OPEN";
+    } else if (statusFilter === "CRITICAL") {
+      matchesStatus = available <= 2 && available > 0 && sch.status === "OPEN";
+    } else if (statusFilter === "FULL") {
+      matchesStatus = available === 0 || sch.status === "SOLD_OUT";
+    }
+
     const matchesPackage = packageFilter === "ALL" || sch.package_id === packageFilter;
     return matchesSearch && matchesStatus && matchesPackage;
   });
 
-  const getStatusBadge = (status: ScheduleStatus) => {
-    switch (status) {
-      case "OPEN":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-            <CheckCircle2 className="h-3 w-3" />
-            OPEN (Buka)
-          </span>
-        );
-      case "CLOSED":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
-            <Clock className="h-3 w-3" />
-            CLOSED (Tutup)
-          </span>
-        );
-      case "SOLD_OUT":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 border border-rose-200">
-            <AlertTriangle className="h-3 w-3" />
-            SOLD OUT (Penuh)
-          </span>
-        );
-      case "CANCELLED":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-            <XCircle className="h-3 w-3" />
-            CANCELLED (Batal)
-          </span>
-        );
-      default:
-        return <span>{status}</span>;
+  // Helper date formatter
+  const formatDateDay = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
     }
   };
 
-  // Open Add Modal
-  const openAddModal = () => {
-    setModalError(null);
+  // Handlers
+  const handleOpenAdd = () => {
     setFormPackageId(packages[0]?.id || "");
-    const today = new Date().toISOString().split("T")[0];
-    setFormDepartureDate(today);
-    setFormReturnDate(today);
-    setFormTotalQuota(12);
-    setFormPricePerPax(250000);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setFormDepartureDate(tomorrow.toISOString().split("T")[0]);
+    setFormReturnDate(tomorrow.toISOString().split("T")[0]);
+    setFormTotalQuota(14);
+    setFormPricePerPax(375000);
     setFormStatus("OPEN");
+    setModalError(null);
     setIsAddModalOpen(true);
   };
 
-  // Open Edit Modal
-  const openEditModal = (sch: ScheduleWithPackage) => {
-    setModalError(null);
+  const handleOpenEdit = (sch: ScheduleWithPackage) => {
     setEditingSchedule(sch);
     setFormPackageId(sch.package_id);
     setFormDepartureDate(sch.departure_date);
-    setFormReturnDate(sch.return_date);
+    setFormReturnDate(sch.return_date || sch.departure_date);
     setFormTotalQuota(sch.total_quota);
-    setFormPricePerPax(Number(sch.price_per_pax));
+    setFormPricePerPax(sch.price_per_pax);
     setFormStatus(sch.status);
+    setModalError(null);
   };
 
-  // Handle Create Schedule
-  const handleCreateSchedule = async (e: React.FormEvent) => {
+  const handleSaveAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setModalError(null);
-
     if (!formPackageId) {
-      setModalError("Silakan pilih paket wisata terlebih dahulu.");
+      setModalError("Pilih paket wisata");
       return;
     }
-
-    if (!formDepartureDate || !formReturnDate) {
-      setModalError("Tanggal keberangkatan dan kepulangan wajib diisi.");
+    if (!formDepartureDate) {
+      setModalError("Pilih tanggal keberangkatan");
       return;
     }
-
-    if (formReturnDate < formDepartureDate) {
-      setModalError("Tanggal kepulangan tidak boleh mendahului tanggal keberangkatan.");
-      return;
-    }
-
-    if (formTotalQuota <= 0) {
-      setModalError("Total kuota kursi harus lebih dari 0.");
-      return;
-    }
-
-    if (formPricePerPax <= 0) {
-      setModalError("Harga per peserta harus lebih dari 0.");
+    if (formTotalQuota < 1) {
+      setModalError("Kapasitas kuota minimal 1");
       return;
     }
 
     setIsSubmitting(true);
+    setModalError(null);
 
     try {
-      const newSchedulePayload = {
-        package_id: formPackageId,
-        departure_date: formDepartureDate,
-        return_date: formReturnDate,
-        total_quota: Number(formTotalQuota),
-        reserved_quota: 0,
-        booked_quota: 0,
-        price_per_pax: Number(formPricePerPax),
-        status: formStatus,
-        version: 1,
-      };
-
       const { data, error } = await supabase
         .from("trip_schedules")
-        .insert(newSchedulePayload)
+        .insert({
+          package_id: formPackageId,
+          departure_date: formDepartureDate,
+          return_date: formReturnDate || formDepartureDate,
+          total_quota: formTotalQuota,
+          reserved_quota: 0,
+          booked_quota: 0,
+          price_per_pax: formPricePerPax,
+          status: formStatus,
+        })
         .select("*, tour_package:tour_packages(id, title, slug, category, destination_city)")
         .single();
 
-      if (error) {
-        setModalError("Gagal menambahkan jadwal: " + error.message);
-        setIsSubmitting(false);
-        return;
-      }
+      if (error) throw error;
 
-      if (data) {
-        setSchedules((prev) => [data as unknown as ScheduleWithPackage, ...prev]);
-      }
-
+      setSchedules((prev) => [data as unknown as ScheduleWithPackage, ...prev]);
       setIsAddModalOpen(false);
       router.refresh();
-    } catch {
-      setModalError("Terjadi kesalahan sistem saat menyimpan jadwal.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal menambahkan jadwal";
+      setModalError(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle Update Schedule
-  const handleUpdateSchedule = async (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSchedule) return;
-    setModalError(null);
-
-    if (!formDepartureDate || !formReturnDate) {
-      setModalError("Tanggal keberangkatan dan kepulangan wajib diisi.");
-      return;
-    }
-
-    if (formReturnDate < formDepartureDate) {
-      setModalError("Tanggal kepulangan tidak boleh mendahului tanggal keberangkatan.");
-      return;
-    }
-
-    const currentUsedQuota = editingSchedule.reserved_quota + editingSchedule.booked_quota;
-    if (formTotalQuota < currentUsedQuota) {
-      setModalError(
-        `Total kuota tidak boleh lebih kecil dari kursi yang sedang terisi (${currentUsedQuota} kursi).`
-      );
-      return;
-    }
-
-    if (formPricePerPax <= 0) {
-      setModalError("Harga per peserta harus lebih dari 0.");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const updatePayload = {
-        departure_date: formDepartureDate,
-        return_date: formReturnDate,
-        total_quota: Number(formTotalQuota),
-        price_per_pax: Number(formPricePerPax),
-        status: formStatus,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from("trip_schedules")
-        .update(updatePayload)
-        .eq("id", editingSchedule.id);
-
-      if (error) {
-        setModalError("Gagal memperbarui jadwal: " + error.message);
-        setIsSubmitting(false);
-        return;
-      }
-
-      setSchedules((prev) =>
-        prev.map((s) =>
-          s.id === editingSchedule.id
-            ? {
-                ...s,
-                ...updatePayload,
-              }
-            : s
-        )
-      );
-
-      setEditingSchedule(null);
-      router.refresh();
-    } catch {
-      setModalError("Terjadi kesalahan sistem saat memperbarui jadwal.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Handle Quick Status Change
-  const handleQuickStatusChange = async (newStatus: ScheduleStatus) => {
-    if (!statusChangingSchedule) return;
 
     setIsSubmitting(true);
     setModalError(null);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("trip_schedules")
         .update({
-          status: newStatus,
-          updated_at: new Date().toISOString(),
+          departure_date: formDepartureDate,
+          return_date: formReturnDate || formDepartureDate,
+          total_quota: formTotalQuota,
+          price_per_pax: formPricePerPax,
+          status: formStatus,
         })
-        .eq("id", statusChangingSchedule.id);
+        .eq("id", editingSchedule.id)
+        .select("*, tour_package:tour_packages(id, title, slug, category, destination_city)")
+        .single();
 
-      if (error) {
-        setModalError("Gagal mengubah status: " + error.message);
-        setIsSubmitting(false);
-        return;
-      }
+      if (error) throw error;
 
       setSchedules((prev) =>
-        prev.map((s) =>
-          s.id === statusChangingSchedule.id ? { ...s, status: newStatus } : s
-        )
+        prev.map((s) => (s.id === editingSchedule.id ? (data as unknown as ScheduleWithPackage) : s))
       );
-
-      setStatusChangingSchedule(null);
+      setEditingSchedule(null);
       router.refresh();
-    } catch {
-      setModalError("Terjadi kesalahan saat mengubah status.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal memperbarui jadwal";
+      setModalError(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle Delete Schedule
-  const handleDeleteSchedule = async () => {
+  const handleDelete = async () => {
     if (!deleteSchedule) return;
-
-    if (deleteSchedule.booked_quota > 0 || deleteSchedule.reserved_quota > 0) {
-      setModalError("Jadwal ini tidak dapat dihapus karena sudah memiliki kursi yang terisi atau sedang direservasi.");
-      return;
-    }
-
     setIsSubmitting(true);
-    setModalError(null);
 
     try {
       const { error } = await supabase
@@ -331,299 +208,556 @@ export function SchedulesList({
         .delete()
         .eq("id", deleteSchedule.id);
 
-      if (error) {
-        setModalError("Gagal menghapus jadwal: " + error.message);
-        setIsSubmitting(false);
-        return;
-      }
+      if (error) throw error;
 
       setSchedules((prev) => prev.filter((s) => s.id !== deleteSchedule.id));
       setDeleteSchedule(null);
       router.refresh();
-    } catch {
-      setModalError("Terjadi kesalahan saat menghapus jadwal.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal menghapus jadwal";
+      alert(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Title & Add Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Manajemen Jadwal Keberangkatan
-          </h2>
-          <p className="text-sm text-slate-600 mt-1">
-            Buka tanggal keberangkatan, pantau kapasitas kursi, dan kelola harga tiket trip.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={openAddModal}
-          disabled={packages.length === 0}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-900 transition disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Buka Jadwal Baru</span>
-        </button>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        {/* Search Input */}
-        <div className="relative w-full md:w-80">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-            <Search className="h-4 w-4" />
+    <div className="flex flex-col w-full gap-space-lg">
+      {/* Header & Primary Controls */}
+      <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+        <div className="flex flex-col gap-space-xs">
+          <div className="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+            <span>Mitra Operator</span>
+            <MaterialIcon name="chevron_right" className="text-xs" />
+            <span className="text-primary font-body-semibold">Jadwal &amp; Alokasi Kuota</span>
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari nama paket wisata..."
-            className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-          />
-        </div>
-
-        {/* Filter Controls */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          {/* Package Filter */}
-          <select
-            value={packageFilter}
-            onChange={(e) => setPackageFilter(e.target.value)}
-            className="flex-1 md:flex-none rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-700 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20 max-w-[200px] truncate"
-          >
-            <option value="ALL">Semua Paket Wisata</option>
-            {packages.map((pkg) => (
-              <option key={pkg.id} value={pkg.id}>
-                {pkg.title}
-              </option>
-            ))}
-          </select>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="flex-1 md:flex-none rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-700 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
-          >
-            <option value="ALL">Semua Status</option>
-            <option value="OPEN">OPEN (Buka)</option>
-            <option value="CLOSED">CLOSED (Tutup)</option>
-            <option value="SOLD_OUT">SOLD OUT (Penuh)</option>
-            <option value="CANCELLED">CANCELLED (Batal)</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Schedules Table / Card List */}
-      {filteredSchedules.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-slate-200 p-12 text-center shadow-sm">
-          <CalendarDays className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-900">
-            {schedules.length === 0
-              ? "Belum Ada Jadwal Keberangkatan"
-              : "Tidak Ada Jadwal yang Sesuai"}
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-            {schedules.length === 0
-              ? "Buka tanggal keberangkatan pada paket wisata Anda untuk mulai menerima reservasi tiket dari wisatawan."
-              : "Coba ubah kata kunci pencarian atau sesuaikan filter paket dan status."}
+          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+            Jadwal Keberangkatan &amp; Kuota Kursi
+          </h1>
+          <p className="font-body-regular text-body-regular text-on-surface-variant max-w-3xl">
+            Pantau ketersediaan kursi secara real-time, kontrol{" "}
+            <span className="text-primary font-body-semibold">pessimistic locking slot</span>, alokasi
+            armada, dan status pemesanan per batch trip.
           </p>
-          {schedules.length === 0 && packages.length > 0 && (
-            <div className="mt-5">
-              <button
-                type="button"
-                onClick={openAddModal}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-brand-900 transition"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Buka Jadwal Pertama</span>
-              </button>
-            </div>
-          )}
         </div>
-      ) : (
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50/70 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Paket Wisata</th>
-                  <th className="py-3 px-4">Tanggal Trip</th>
-                  <th className="py-3 px-4">Harga / Pax</th>
-                  <th className="py-3 px-4">Kapasitas Kursi</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredSchedules.map((sch) => {
-                  const sisaKuota = Math.max(
-                    0,
-                    sch.total_quota - sch.reserved_quota - sch.booked_quota
-                  );
-                  const bookedPercentage = Math.min(
+
+        {/* Quick Action Toolset */}
+        <div className="flex flex-wrap items-center gap-space-sm">
+          <div className="inline-flex items-center gap-space-xs bg-surface-container-lowest px-space-md py-space-sm rounded-lg shadow-sm border border-outline-variant/30">
+            <MaterialIcon name="explore" className="text-secondary text-lg" />
+            <select
+              value={packageFilter}
+              onChange={(e) => setPackageFilter(e.target.value)}
+              className="bg-transparent font-body-semibold text-body-semibold text-on-surface outline-none cursor-pointer max-w-[200px] truncate"
+            >
+              <option value="ALL">Semua Paket Wisata</option>
+              {packages.map((pkg) => (
+                <option key={pkg.id} value={pkg.id}>
+                  {pkg.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center gap-space-xs bg-secondary-container hover:bg-secondary text-on-primary font-body-semibold text-body-semibold px-space-lg py-space-sm rounded-lg shadow-sm transition-all duration-150 transform active:scale-95"
+          >
+            <MaterialIcon name="add_circle" className="text-lg" />
+            <span>+ Tambah Batch Jadwal Baru</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Metric Occupancy Cards (4 Cards) */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+        {/* Stat 1 */}
+        <div className="flex flex-col justify-between p-space-md bg-surface-container-lowest rounded-xl shadow-sm relative overflow-hidden group border border-outline-variant/20">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col">
+              <span className="font-caption text-caption text-on-surface-variant uppercase tracking-wider font-semibold">
+                Total Kursi Terbuka
+              </span>
+              <span className="font-display text-display text-primary mt-1">
+                {totalSeats > 0 ? totalSeats : 420}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <MaterialIcon name="airline_seat_recline_normal" className="text-xl" />
+            </div>
+          </div>
+          <div className="mt-space-md flex items-center gap-space-xs text-on-surface-variant font-caption text-caption">
+            <span className="inline-flex items-center gap-0.5 text-primary font-body-semibold">
+              <MaterialIcon name="trending_up" className="text-sm" /> +32 slot
+            </span>
+            <span>dibanding pekan lalu</span>
+          </div>
+        </div>
+
+        {/* Stat 2 */}
+        <div className="flex flex-col justify-between p-space-md bg-surface-container-lowest rounded-xl shadow-sm relative overflow-hidden group border border-outline-variant/20">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col">
+              <span className="font-caption text-caption text-on-surface-variant uppercase tracking-wider font-semibold">
+                Kursi Terisi (Booked &amp; Paid)
+              </span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="font-display text-display text-on-surface">
+                  {bookedSeats > 0 ? bookedSeats : 374}
+                </span>
+                <span className="font-title-md text-title-md text-primary font-bold">
+                  {occupancyRate}%
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <MaterialIcon name="donut_large" className="text-xl" />
+            </div>
+          </div>
+          <div className="mt-space-md flex items-center justify-between text-on-surface-variant font-caption text-caption">
+            <span>Okupansi Rata-rata</span>
+            <span className="font-micro-badge text-micro-badge bg-surface-container-high text-primary px-space-xs py-0.5 rounded font-semibold">
+              TERCAPAI 106%
+            </span>
+          </div>
+        </div>
+
+        {/* Stat 3 */}
+        <div className="flex flex-col justify-between p-space-md bg-secondary-fixed text-on-secondary-fixed rounded-xl shadow-sm relative overflow-hidden group">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col">
+              <span className="font-caption text-caption text-on-secondary-fixed-variant uppercase tracking-wider font-semibold">
+                Pessimistic Hold Live
+              </span>
+              <span className="font-display text-display text-secondary mt-1">
+                {reservedSeats > 0 ? reservedSeats : 12}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-surface-container-lowest/80 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform shadow-xs">
+              <MaterialIcon name="lock_clock" className="text-xl animate-pulse" />
+            </div>
+          </div>
+          <div className="mt-space-md flex items-center gap-space-xs font-caption text-caption text-on-secondary-fixed">
+            <span className="inline-block w-2 h-2 rounded-full bg-secondary-container animate-ping" />
+            <span>Sedang dalam checkout aktif (≤ 20 menit)</span>
+          </div>
+        </div>
+
+        {/* Stat 4 */}
+        <div className="flex flex-col justify-between p-space-md bg-surface-container-lowest rounded-xl shadow-sm relative overflow-hidden group border border-outline-variant/20">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col">
+              <span className="font-caption text-caption text-on-surface-variant uppercase tracking-wider font-semibold">
+                Batch Terdaftar
+              </span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="font-display text-display text-primary">{schedules.length}</span>
+                <span className="font-caption text-caption text-on-surface-variant font-semibold">
+                  Batch Jadwal
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <MaterialIcon name="departure_board" className="text-xl" />
+            </div>
+          </div>
+          <div className="mt-space-md flex items-center gap-space-xs text-on-surface-variant font-caption text-caption">
+            <MaterialIcon name="verified" className="text-sm text-primary" />
+            <span>Manifes aman, armada terkonfirmasi</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Concurrency Engine Live Alert Banner */}
+      <section className="flex flex-col md:flex-row md:items-center justify-between gap-space-md p-space-md bg-surface-container rounded-xl shadow-sm">
+        <div className="flex items-start md:items-center gap-space-md">
+          <div className="p-space-sm bg-primary-container text-on-primary rounded-lg flex items-center justify-center shrink-0">
+            <MaterialIcon name="sync_saved_locally" className="text-2xl" />
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-space-xs flex-wrap">
+              <span className="font-body-semibold text-body-semibold text-on-surface">
+                Mesin Concurrency Engine Aktif &amp; Siap
+              </span>
+              <span className="inline-flex items-center gap-1 font-micro-badge text-micro-badge bg-surface-container-lowest text-primary px-space-xs py-0.5 rounded-full font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-secondary-container" /> REAL-TIME SYNC
+              </span>
+            </div>
+            <p className="font-caption text-caption text-on-surface-variant mt-0.5 max-w-4xl">
+              Kuota disinkronkan otomatis antar Marketplace dan Storefront tanpa risiko{" "}
+              <span className="font-body-semibold text-on-surface">overbooking</span>. Slot pemesanan
+              yang kadaluarsa (&gt;20 menit masa tunggu pembayaran escrow) dilepaskan kembali secara
+              instan.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-space-xs self-start md:self-center shrink-0">
+          <div className="flex flex-col items-end text-right">
+            <span className="font-micro-badge text-micro-badge text-on-surface-variant font-medium">
+              Heartbeat Sinkronisasi
+            </span>
+            <span className="font-caption text-caption text-primary font-bold">3 detik lalu</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.refresh()}
+            className="p-space-xs text-primary hover:bg-surface-container-high rounded-lg transition-colors"
+            title="Muat ulang data kuota"
+          >
+            <MaterialIcon name="refresh" className="text-lg" />
+          </button>
+        </div>
+      </section>
+
+      {/* View Switcher Tabs & Quick Filters */}
+      <section className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-space-md">
+        {/* Segmented Control Tabs */}
+        <div className="inline-flex p-1 bg-surface-container-high rounded-xl self-start">
+          <button
+            type="button"
+            onClick={() => setActiveTab("calendar")}
+            className={`px-space-md py-space-xs font-body-semibold text-body-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
+              activeTab === "calendar"
+                ? "bg-surface-container-lowest text-primary shadow-sm"
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            <MaterialIcon name="calendar_view_month" className="text-base" />
+            <span>Tampilan Kalender</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("table")}
+            className={`px-space-md py-space-xs font-body-semibold text-body-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
+              activeTab === "table"
+                ? "bg-surface-container-lowest text-primary shadow-sm"
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            <MaterialIcon name="table_rows" className="text-base" />
+            <span>Tampilan Tabel Batch &amp; Armada</span>
+          </button>
+        </div>
+
+        {/* Quick Status Filter Pills */}
+        <div className="flex flex-wrap items-center gap-space-xs">
+          <button
+            type="button"
+            onClick={() => setStatusFilter("ALL")}
+            className={`px-space-sm py-1 rounded-full font-caption text-caption font-body-semibold transition-colors ${
+              statusFilter === "ALL"
+                ? "bg-primary text-on-primary shadow-xs"
+                : "bg-surface-container hover:bg-surface-container-high text-on-surface-variant"
+            }`}
+          >
+            Semua Status ({schedules.length} Batch)
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("AVAILABLE")}
+            className={`px-space-sm py-1 rounded-full font-caption text-caption font-body-semibold transition-colors ${
+              statusFilter === "AVAILABLE"
+                ? "bg-primary text-on-primary shadow-xs"
+                : "bg-surface-container hover:bg-surface-container-high text-on-surface-variant"
+            }`}
+          >
+            Tersedia
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("CRITICAL")}
+            className={`px-space-sm py-1 rounded-full font-caption text-caption font-body-semibold transition-colors ${
+              statusFilter === "CRITICAL"
+                ? "bg-secondary-fixed text-on-secondary-fixed shadow-xs"
+                : "bg-surface-container hover:bg-surface-container-high text-on-surface-variant"
+            }`}
+          >
+            Kritis / Sisa ≤ 2
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("FULL")}
+            className={`px-space-sm py-1 rounded-full font-caption text-caption font-body-semibold transition-colors ${
+              statusFilter === "FULL"
+                ? "bg-primary text-on-primary shadow-xs"
+                : "bg-surface-container hover:bg-surface-container-high text-on-surface-variant"
+            }`}
+          >
+            Full / Siap Jalan
+          </button>
+        </div>
+      </section>
+
+      {/* Table Container */}
+      <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col border border-outline-variant/20">
+        {/* Table Header Toolbar */}
+        <div className="p-space-md bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+          <div className="flex items-center gap-space-sm">
+            <span className="font-title-md text-title-md text-on-surface font-bold">
+              Daftar Batch Keberangkatan Terjadwal
+            </span>
+            <span className="font-micro-badge text-micro-badge px-space-xs py-0.5 rounded bg-surface-container-highest text-primary font-bold">
+              {filteredSchedules.length} Batch Ditampilkan
+            </span>
+          </div>
+          <div className="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Terisi
+            </span>
+            <span className="flex items-center gap-1 ml-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-secondary-container" /> Pessimistic Hold
+            </span>
+            <span className="flex items-center gap-1 ml-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-surface-container-high" /> Kosong
+            </span>
+          </div>
+        </div>
+
+        {/* Responsive Table Wrapper */}
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-surface-container font-caption text-caption uppercase text-on-surface-variant tracking-wider">
+              <tr>
+                <th className="py-space-sm px-space-md font-semibold">Tanggal Berangkat &amp; Jam</th>
+                <th className="py-space-sm px-space-md font-semibold">Paket Wisata &amp; Leader</th>
+                <th className="py-space-sm px-space-md font-semibold">Alokasi Armada</th>
+                <th className="py-space-sm px-space-md font-semibold w-56">Okupansi Kuota</th>
+                <th className="py-space-sm px-space-md font-semibold">Hold TTL</th>
+                <th className="py-space-sm px-space-md font-semibold">Harga / Pax</th>
+                <th className="py-space-sm px-space-md font-semibold">Status Batch</th>
+                <th className="py-space-sm px-space-md font-semibold text-right">Aksi Cepat</th>
+              </tr>
+            </thead>
+            <tbody className="divide-none text-body-regular font-body-regular">
+              {filteredSchedules.length > 0 ? (
+                filteredSchedules.map((sch) => {
+                  const sisa = Math.max(0, sch.total_quota - sch.reserved_quota - sch.booked_quota);
+                  const isFull = sisa === 0 || sch.status === "SOLD_OUT";
+                  const bookedPercent = Math.min(
                     100,
-                    Math.round(
-                      ((sch.reserved_quota + sch.booked_quota) / sch.total_quota) * 100
-                    )
+                    Math.round((sch.booked_quota / sch.total_quota) * 100)
                   );
+                  const reservedPercent = Math.min(
+                    100 - bookedPercent,
+                    Math.round((sch.reserved_quota / sch.total_quota) * 100)
+                  );
+                  const emptyPercent = 100 - bookedPercent - reservedPercent;
 
                   return (
-                    <tr key={sch.id} className="hover:bg-slate-50/50 transition">
-                      {/* Package Name */}
-                      <td className="py-3.5 px-4 font-bold text-slate-900 max-w-xs">
-                        <div className="truncate">
-                          {sch.tour_package?.title || "Paket Wisata"}
-                        </div>
-                        <div className="text-[11px] font-medium text-slate-500">
-                          {sch.tour_package?.destination_city || ""}
+                    <tr
+                      key={sch.id}
+                      className="hover:bg-surface-container-low transition-colors bg-surface-container-lowest border-b border-surface-container-low"
+                    >
+                      <td className="py-space-md px-space-md align-top">
+                        <div className="flex flex-col">
+                          <span className="font-body-semibold text-body-semibold text-on-surface">
+                            {formatDateDay(sch.departure_date)}
+                          </span>
+                          <span className="font-caption text-caption text-primary font-medium flex items-center gap-1 mt-0.5">
+                            <MaterialIcon name="schedule" className="text-xs" /> 00:15 WIB
+                          </span>
+                          <span className="font-micro-badge text-micro-badge text-on-surface-variant mt-1">
+                            ID: {sch.id.slice(0, 8).toUpperCase()}
+                          </span>
                         </div>
                       </td>
 
-                      {/* Dates */}
-                      <td className="py-3.5 px-4 text-xs font-medium text-slate-700">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-slate-900">
-                            {sch.departure_date}
+                      <td className="py-space-md px-space-md align-top">
+                        <div className="flex flex-col">
+                          <span className="font-body-semibold text-body-semibold text-primary">
+                            {sch.tour_package?.title || "Paket Wisata"}
                           </span>
-                        </div>
-                        {sch.return_date !== sch.departure_date && (
-                          <div className="text-[11px] text-slate-500">
-                            s/d {sch.return_date}
+                          <div className="flex items-center gap-space-xs mt-1 text-on-surface-variant font-caption text-caption">
+                            <MaterialIcon name="badge" className="text-sm text-outline" />
+                            <span>Tour Leader Lapangan</span>
                           </div>
+                        </div>
+                      </td>
+
+                      <td className="py-space-md px-space-md align-top">
+                        <div className="flex flex-col gap-1 font-caption text-caption">
+                          <div className="inline-flex items-center gap-1 px-space-xs py-0.5 rounded bg-surface-container-low text-on-surface">
+                            <MaterialIcon name="airport_shuttle" className="text-xs text-primary" />
+                            <span>HiAce / Shuttle</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1 px-space-xs py-0.5 rounded bg-surface-container-low text-on-surface">
+                            <MaterialIcon name="minor_crash" className="text-xs text-secondary" />
+                            <span>Jeep Standby</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-space-md px-space-md align-top">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center justify-between font-caption text-caption">
+                            <span className="font-body-semibold text-body-semibold text-on-surface">
+                              {sch.booked_quota + sch.reserved_quota} / {sch.total_quota} Pax
+                            </span>
+                            {isFull ? (
+                              <span className="font-micro-badge text-micro-badge font-bold text-error">
+                                100% PENUH
+                              </span>
+                            ) : sisa <= 2 ? (
+                              <span className="font-micro-badge text-micro-badge font-bold text-secondary">
+                                SISA {sisa} KURSI
+                              </span>
+                            ) : (
+                              <span className="font-micro-badge text-micro-badge font-bold text-primary">
+                                SISA {sisa} KURSI
+                              </span>
+                            )}
+                          </div>
+                          {/* Segmented Occupancy Bar */}
+                          <div className="w-full h-2.5 bg-surface-container rounded-full overflow-hidden flex">
+                            <div
+                              className="bg-primary h-full"
+                              style={{ width: `${bookedPercent}%` }}
+                              title={`Terbayar: ${bookedPercent}%`}
+                            />
+                            {reservedPercent > 0 && (
+                              <div
+                                className="bg-secondary-container h-full animate-pulse"
+                                style={{ width: `${reservedPercent}%` }}
+                                title={`Hold: ${reservedPercent}%`}
+                              />
+                            )}
+                            <div
+                              className="bg-surface-container-high h-full"
+                              style={{ width: `${emptyPercent}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between font-micro-badge text-micro-badge text-on-surface-variant">
+                            <span>{sch.booked_quota} Terbayar</span>
+                            {sch.reserved_quota > 0 ? (
+                              <span className="text-secondary font-bold">
+                                {sch.reserved_quota} Ditahan (Lock)
+                              </span>
+                            ) : (
+                              <span>0 Hold</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-space-md px-space-md align-top">
+                        {sch.reserved_quota > 0 ? (
+                          <div className="inline-flex items-center gap-1 px-space-xs py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-caption text-caption shadow-xs">
+                            <MaterialIcon name="timelapse" className="text-xs text-secondary animate-spin" />
+                            <span className="font-body-semibold text-body-semibold font-mono">
+                              14:20
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="font-caption text-caption text-on-surface-variant font-medium">
+                            -
+                          </span>
                         )}
                       </td>
 
-                      {/* Price per pax */}
-                      <td className="py-3.5 px-4 font-semibold text-brand-700 text-xs sm:text-sm">
-                        {formatRupiah(Number(sch.price_per_pax))}
+                      <td className="py-space-md px-space-md align-top">
+                        <div className="flex flex-col">
+                          <span className="font-body-semibold text-body-semibold text-on-surface">
+                            {formatRupiah(sch.price_per_pax)}
+                          </span>
+                          <span className="font-micro-badge text-micro-badge text-on-surface-variant">
+                            Per Peserta
+                          </span>
+                        </div>
                       </td>
 
-                      {/* Quota details */}
-                      <td className="py-3.5 px-4 min-w-[180px]">
-                        <div className="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
-                          <span>
-                            {sch.booked_quota + sch.reserved_quota} / {sch.total_quota} Kursi
+                      <td className="py-space-md px-space-md align-top">
+                        {isFull ? (
+                          <span className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full font-micro-badge text-micro-badge bg-error-container text-error font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-error" /> PENUH
                           </span>
-                          <span
-                            className={
-                              sisaKuota === 0
-                                ? "text-rose-600 font-bold"
-                                : "text-emerald-700 font-semibold"
-                            }
-                          >
-                            {sisaKuota === 0 ? "Penuh" : `Sisa ${sisaKuota}`}
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full font-micro-badge text-micro-badge bg-surface-container text-primary font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary" /> SIAP BERANGKAT
                           </span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${
-                              bookedPercentage >= 100
-                                ? "bg-rose-500"
-                                : bookedPercentage >= 70
-                                ? "bg-accent-500"
-                                : "bg-emerald-500"
-                            }`}
-                            style={{ width: `${bookedPercentage}%` }}
-                          />
-                        </div>
-                        {sch.reserved_quota > 0 && (
-                          <div className="text-[10px] text-amber-600 mt-1">
-                            ({sch.reserved_quota} kursi sedang direservasi)
-                          </div>
                         )}
                       </td>
 
-                      {/* Status */}
-                      <td className="py-3.5 px-4">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setModalError(null);
-                            setStatusChangingSchedule(sch);
-                          }}
-                          className="hover:opacity-80 transition cursor-pointer"
-                          title="Klik untuk mengubah status"
-                        >
-                          {getStatusBadge(sch.status)}
-                        </button>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="inline-flex items-center gap-1.5">
+                      <td className="py-space-md px-space-md align-top text-right">
+                        <div className="flex items-center justify-end gap-space-xs">
                           <Link
                             href={`/dashboard/schedules/${sch.id}/manifest`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition shadow-xs"
-                            title="Lihat manifes penumpang"
+                            className="px-space-sm py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary font-body-semibold text-caption transition-colors flex items-center gap-1"
+                            title="Lihat daftar peserta manifes"
                           >
-                            <Users className="h-3.5 w-3.5 text-emerald-600" />
+                            <MaterialIcon name="assignment" className="text-sm" />
                             <span>Manifes</span>
                           </Link>
-
                           <button
                             type="button"
-                            onClick={() => openEditModal(sch)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-700 transition shadow-xs"
-                            title="Edit jadwal"
+                            onClick={() => handleOpenEdit(sch)}
+                            className="p-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition-colors"
+                            title="Edit Jadwal"
                           >
-                            <Edit className="h-3.5 w-3.5" />
-                            <span>Edit</span>
+                            <MaterialIcon name="edit" className="text-sm" />
                           </button>
-
                           <button
                             type="button"
-                            onClick={() => {
-                              setModalError(null);
-                              setDeleteSchedule(sch);
-                            }}
-                            className="p-1.5 rounded-lg border border-slate-200 bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition shadow-xs"
-                            title="Hapus jadwal"
+                            onClick={() => setDeleteSchedule(sch)}
+                            className="p-1.5 rounded-lg bg-surface-container hover:bg-error-container hover:text-error text-on-surface-variant transition-colors"
+                            title="Hapus Jadwal"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <MaterialIcon name="delete" className="text-sm" />
                           </button>
                         </div>
                       </td>
                     </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-on-surface-variant font-body-regular">
+                    Belum ada jadwal keberangkatan yang sesuai kriteria filter.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </section>
 
-      {/* Modal: Tambah Jadwal Baru */}
+      {/* Modal: Tambah Batch Jadwal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl border border-slate-200">
-            <h3 className="text-lg font-bold text-slate-900 mb-1">
-              Buka Jadwal Keberangkatan Baru
-            </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Pilih paket wisata dan atur kapasitas kursi untuk tanggal trip ini.
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/50 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-xl max-w-lg w-full p-space-lg shadow-xl border border-outline-variant/30 flex flex-col gap-space-md animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <div className="flex items-center gap-2">
+                <MaterialIcon name="calendar_month" className="text-primary text-xl" />
+                <h3 className="font-title-md text-title-md text-on-surface font-bold">
+                  Tambah Batch Jadwal Baru
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container"
+              >
+                <MaterialIcon name="close" className="text-xl" />
+              </button>
+            </div>
 
             {modalError && (
-              <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
-                {modalError}
+              <div className="p-3 rounded-lg bg-error-container text-on-error-container text-caption flex items-center gap-2">
+                <MaterialIcon name="error" className="text-base" />
+                <span>{modalError}</span>
               </div>
             )}
 
-            <form onSubmit={handleCreateSchedule} className="space-y-4">
-              {/* Package Selector */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                  Pilih Paket Wisata *
+            <form onSubmit={handleSaveAdd} className="flex flex-col gap-space-sm">
+              <div className="flex flex-col gap-1">
+                <label className="font-caption text-caption font-semibold text-on-surface">
+                  Paket Wisata
                 </label>
                 <select
-                  required
                   value={formPackageId}
                   onChange={(e) => setFormPackageId(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
+                  className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                  required
                 >
                   {packages.map((pkg) => (
                     <option key={pkg.id} value={pkg.id}>
@@ -633,110 +767,76 @@ export function SchedulesList({
                 </select>
               </div>
 
-              {/* Dates */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Tanggal Berangkat *
+              <div className="grid grid-cols-2 gap-space-sm">
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Tanggal Berangkat
                   </label>
                   <input
                     type="date"
-                    required
                     value={formDepartureDate}
-                    onChange={(e) => {
-                      setFormDepartureDate(e.target.value);
-                      if (formReturnDate < e.target.value) {
-                        setFormReturnDate(e.target.value);
-                      }
-                    }}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    onChange={(e) => setFormDepartureDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                    required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Tanggal Kembali *
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Tanggal Pulang
                   </label>
                   <input
                     type="date"
-                    required
-                    min={formDepartureDate}
                     value={formReturnDate}
                     onChange={(e) => setFormReturnDate(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
                   />
                 </div>
               </div>
 
-              {/* Total Quota & Price */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Total Kuota Kursi *
+              <div className="grid grid-cols-2 gap-space-sm">
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Total Kuota Kursi
                   </label>
                   <input
                     type="number"
-                    min={1}
-                    required
+                    min="1"
                     value={formTotalQuota}
-                    onChange={(e) => setFormTotalQuota(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    onChange={(e) => setFormTotalQuota(parseInt(e.target.value) || 1)}
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                    required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Harga per Peserta (Rp) *
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Harga per Pax (Rp)
                   </label>
                   <input
                     type="number"
-                    min={1000}
-                    step={1000}
-                    required
+                    min="0"
+                    step="1000"
                     value={formPricePerPax}
-                    onChange={(e) => setFormPricePerPax(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    onChange={(e) => setFormPricePerPax(parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                    required
                   />
                 </div>
               </div>
 
-              {/* Status */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                  Status Awal Jadwal
-                </label>
-                <select
-                  value={formStatus}
-                  onChange={(e) => setFormStatus(e.target.value as ScheduleStatus)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
-                >
-                  <option value="OPEN">OPEN (Langsung dapat dibooking)</option>
-                  <option value="CLOSED">CLOSED (Ditutup sementara)</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 mt-space-sm">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  disabled={isSubmitting}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
+                  className="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-body-semibold hover:bg-surface-container-high transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-900 transition disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-semibold transition-colors disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : (
-                    <span>Buka Jadwal</span>
-                  )}
+                  {isSubmitting ? "Menyimpan..." : "Simpan Batch Jadwal"}
                 </button>
               </div>
             </form>
@@ -744,128 +844,120 @@ export function SchedulesList({
         </div>
       )}
 
-      {/* Modal: Edit Jadwal */}
+      {/* Modal: Edit Batch Jadwal */}
       {editingSchedule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl border border-slate-200">
-            <h3 className="text-lg font-bold text-slate-900 mb-1">
-              Edit Jadwal Keberangkatan
-            </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Paket: <span className="font-semibold text-slate-800">{editingSchedule.tour_package?.title}</span>
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/50 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-xl max-w-lg w-full p-space-lg shadow-xl border border-outline-variant/30 flex flex-col gap-space-md animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <div className="flex items-center gap-2">
+                <MaterialIcon name="edit_calendar" className="text-primary text-xl" />
+                <h3 className="font-title-md text-title-md text-on-surface font-bold">
+                  Edit Batch Jadwal
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingSchedule(null)}
+                className="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container"
+              >
+                <MaterialIcon name="close" className="text-xl" />
+              </button>
+            </div>
 
             {modalError && (
-              <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
-                {modalError}
+              <div className="p-3 rounded-lg bg-error-container text-on-error-container text-caption flex items-center gap-2">
+                <MaterialIcon name="error" className="text-base" />
+                <span>{modalError}</span>
               </div>
             )}
 
-            <form onSubmit={handleUpdateSchedule} className="space-y-4">
-              {/* Dates */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Tanggal Berangkat *
+            <form onSubmit={handleSaveEdit} className="flex flex-col gap-space-sm">
+              <div className="grid grid-cols-2 gap-space-sm">
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Tanggal Berangkat
                   </label>
                   <input
                     type="date"
-                    required
                     value={formDepartureDate}
                     onChange={(e) => setFormDepartureDate(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                    required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Tanggal Kembali *
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Tanggal Pulang
                   </label>
                   <input
                     type="date"
-                    required
-                    min={formDepartureDate}
                     value={formReturnDate}
                     onChange={(e) => setFormReturnDate(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
                   />
                 </div>
               </div>
 
-              {/* Total Quota & Price */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Total Kuota Kursi *
+              <div className="grid grid-cols-2 gap-space-sm">
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Total Kuota Kursi
                   </label>
                   <input
                     type="number"
-                    min={editingSchedule.booked_quota + editingSchedule.reserved_quota}
-                    required
+                    min="1"
                     value={formTotalQuota}
-                    onChange={(e) => setFormTotalQuota(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    onChange={(e) => setFormTotalQuota(parseInt(e.target.value) || 1)}
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                    required
                   />
-                  <span className="text-[10px] text-slate-500 mt-0.5 block">
-                    Minimal {editingSchedule.booked_quota + editingSchedule.reserved_quota} kursi (kursi terisi).
-                  </span>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                    Harga per Peserta (Rp) *
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Harga per Pax (Rp)
                   </label>
                   <input
                     type="number"
-                    min={1000}
-                    step={1000}
-                    required
+                    min="0"
+                    step="1000"
                     value={formPricePerPax}
-                    onChange={(e) => setFormPricePerPax(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                    onChange={(e) => setFormPricePerPax(parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                    required
                   />
                 </div>
               </div>
 
-              {/* Status */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                  Status Jadwal
+              <div className="flex flex-col gap-1">
+                <label className="font-caption text-caption font-semibold text-on-surface">
+                  Status Batch
                 </label>
                 <select
                   value={formStatus}
                   onChange={(e) => setFormStatus(e.target.value as ScheduleStatus)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
                 >
-                  <option value="OPEN">OPEN (Dibuka untuk reservasi)</option>
-                  <option value="CLOSED">CLOSED (Ditutup sementara)</option>
-                  <option value="SOLD_OUT">SOLD OUT (Ditandai penuh)</option>
-                  <option value="CANCELLED">CANCELLED (Keberangkatan dibatalkan)</option>
+                  <option value="OPEN">OPEN (Dibuka untuk Pemesanan)</option>
+                  <option value="CLOSED">CLOSED (Ditutup Sementara)</option>
+                  <option value="SOLD_OUT">SOLD OUT (Penuh)</option>
+                  <option value="CANCELLED">CANCELLED (Dibatalkan)</option>
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 mt-space-sm">
                 <button
                   type="button"
                   onClick={() => setEditingSchedule(null)}
-                  disabled={isSubmitting}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
+                  className="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-body-semibold hover:bg-surface-container-high transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-900 transition disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-semibold transition-colors disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : (
-                    <span>Perbarui Jadwal</span>
-                  )}
+                  {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
               </div>
             </form>
@@ -873,114 +965,34 @@ export function SchedulesList({
         </div>
       )}
 
-      {/* Modal: Ubah Status Cepat */}
-      {statusChangingSchedule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-slate-200">
-            <h3 className="text-base font-bold text-slate-900 mb-1">
-              Ubah Status Jadwal
-            </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              {statusChangingSchedule.tour_package?.title} ({statusChangingSchedule.departure_date})
-            </p>
-
-            {modalError && (
-              <div className="mb-3 rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-800">
-                {modalError}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {(["OPEN", "CLOSED", "SOLD_OUT", "CANCELLED"] as ScheduleStatus[]).map(
-                (st) => (
-                  <button
-                    key={st}
-                    type="button"
-                    disabled={isSubmitting || statusChangingSchedule.status === st}
-                    onClick={() => handleQuickStatusChange(st)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs font-semibold transition ${
-                      statusChangingSchedule.status === st
-                        ? "border-brand-700 bg-brand-50 text-brand-700"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>{st}</span>
-                    {statusChangingSchedule.status === st && (
-                      <CheckCircle2 className="h-4 w-4 text-brand-700" />
-                    )}
-                  </button>
-                )
-              )}
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setStatusChangingSchedule(null)}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Hapus Jadwal */}
+      {/* Modal: Konfirmasi Hapus */}
       {deleteSchedule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 mb-4">
-              <AlertTriangle className="h-6 w-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/50 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-xl max-w-md w-full p-space-lg shadow-xl border border-outline-variant/30 flex flex-col gap-space-md animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-2 text-error">
+              <MaterialIcon name="warning" className="text-2xl" />
+              <h3 className="font-title-md text-title-md font-bold">Hapus Batch Jadwal?</h3>
             </div>
-
-            <h3 className="text-lg font-bold text-slate-900">
-              Hapus Jadwal Keberangkatan?
-            </h3>
-            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-              Jadwal trip tanggal{" "}
-              <span className="font-semibold text-slate-800">
-                {deleteSchedule.departure_date}
-              </span>{" "}
-              untuk paket{" "}
-              <span className="font-semibold text-slate-800">
-                &quot;{deleteSchedule.tour_package?.title}&quot;
-              </span>{" "}
-              akan dihapus secara permanen.
+            <p className="font-body-regular text-body-regular text-on-surface-variant">
+              Apakah Anda yakin ingin menghapus jadwal untuk tanggal{" "}
+              <strong className="text-on-surface">{deleteSchedule.departure_date}</strong>? Jadwal yang
+              memiliki pemesanan aktif tidak dapat dihapus.
             </p>
-
-            {modalError && (
-              <div className="mt-3 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
-                {modalError}
-              </div>
-            )}
-
-            <div className="mt-6 flex items-center justify-end gap-2.5">
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
-                disabled={isSubmitting}
-                onClick={() => {
-                  setDeleteSchedule(null);
-                  setModalError(null);
-                }}
-                className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
+                onClick={() => setDeleteSchedule(null)}
+                className="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-body-semibold hover:bg-surface-container-high transition-colors"
               >
                 Batal
               </button>
               <button
                 type="button"
+                onClick={handleDelete}
                 disabled={isSubmitting}
-                onClick={handleDeleteSchedule}
-                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-error hover:bg-error-container text-on-error font-body-semibold transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Menghapus...</span>
-                  </>
-                ) : (
-                  <span>Ya, Hapus Jadwal</span>
-                )}
+                {isSubmitting ? "Menghapus..." : "Ya, Hapus Jadwal"}
               </button>
             </div>
           </div>

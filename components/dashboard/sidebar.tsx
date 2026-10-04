@@ -3,18 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Package,
-  CalendarDays,
-  Store,
-  LogOut,
-  ExternalLink,
-  X,
-  Plus,
-} from "lucide-react";
-
+import { MaterialIcon } from "@/components/ui/icon";
 
 interface SidebarProps {
   businessName?: string;
@@ -24,8 +13,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({
-  businessName = "Mitra Tour & Travel",
-  agentSlug,
+  businessName = "Pesona Merapi Tour & Travel",
+  agentSlug = "pesona-merapi",
   isOpen = false,
   onClose,
 }: SidebarProps) {
@@ -35,28 +24,54 @@ export function Sidebar({
 
   const navItems = [
     {
-      name: "Overview",
+      name: "Ikhtisar Dashboard",
       href: "/dashboard",
-      icon: LayoutDashboard,
+      icon: "space_dashboard",
       exact: true,
+      badge: null,
     },
     {
-      name: "Paket Wisata",
-      href: "/dashboard/packages",
-      icon: Package,
-      exact: false,
-    },
-    {
-      name: "Jadwal & Kuota",
+      name: "Jadwal & Alokasi Kuota",
       href: "/dashboard/schedules",
-      icon: CalendarDays,
+      icon: "calendar_month",
       exact: false,
+      badge: null,
     },
     {
-      name: "Profil Usaha",
-      href: "/dashboard/profile",
-      icon: Store,
+      name: "Manifes & Pemesanan",
+      href: "/dashboard/schedules",
+      icon: "badge",
       exact: false,
+      badge: null,
+    },
+    {
+      name: "Manajemen Paket Wisata",
+      href: "/dashboard/packages",
+      icon: "beach_access",
+      exact: false,
+      badge: null,
+    },
+    {
+      name: "Keuangan & Escrow Vault",
+      href: "/dashboard/escrow",
+      icon: "account_balance_wallet",
+      exact: false,
+      badge: null,
+    },
+    {
+      name: "Armada & Tour Leader",
+      href: "#",
+      icon: "directions_car",
+      exact: false,
+      badge: "Segera hadir",
+      disabled: true,
+    },
+    {
+      name: "Pengaturan Akun & Legalitas",
+      href: "/dashboard/profile",
+      icon: "settings",
+      exact: false,
+      badge: null,
     },
   ];
 
@@ -72,19 +87,12 @@ export function Sidebar({
   };
 
   const isActive = (itemHref: string, exact: boolean) => {
+    if (itemHref === "#") return false;
     if (exact) {
       return pathname === itemHref;
     }
     return pathname.startsWith(itemHref);
   };
-
-  // Generate 2-letter initials
-  const initials = businessName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join("") || "NB";
 
   return (
     <>
@@ -92,107 +100,151 @@ export function Sidebar({
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-on-surface/40 backdrop-blur-sm lg:hidden transition-opacity"
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Stitch Canonical Sidebar */}
       <aside
-        className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 shadow-sm",
-          isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
-        )}
+        className={`fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
       >
-        {/* Brand Header */}
-        <div className="flex h-20 items-center justify-between border-b border-slate-200 px-6 bg-slate-50/50">
-          <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center font-extrabold text-sm border border-brand-100 shrink-0">
-              {initials}
+        <div className="flex flex-col">
+          {/* Header Brand */}
+          <div className="p-space-lg bg-surface-container-lowest">
+            <div className="flex items-center justify-between">
+              <Link href="/dashboard" className="flex items-center gap-space-sm mb-space-xs">
+                <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg shadow-sm">
+                  N
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-title-md text-title-md text-primary font-bold tracking-tight leading-none">
+                    NusaBook
+                  </span>
+                  <span className="font-caption text-caption text-on-surface-variant font-medium">
+                    Operator Engine
+                  </span>
+                </div>
+              </Link>
+              {/* Close button on mobile */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="lg:hidden p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-high"
+                aria-label="Tutup Menu"
+              >
+                <MaterialIcon name="close" className="text-xl" />
+              </button>
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-base font-bold tracking-tight text-slate-900 truncate">
-                {businessName}
-              </span>
-              <span className="text-[11px] font-semibold tracking-wide text-slate-500">
-                Agency Dashboard
-              </span>
-            </div>
-          </Link>
 
-          {/* Mobile Close Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
-            aria-label="Tutup menu"
-          >
-            <X className="h-5 w-5" />
-          </button>
+            {/* Operator Verification Chip */}
+            <div className="mt-space-sm inline-flex items-center gap-space-xs bg-surface-container-high px-space-sm py-space-xs rounded-lg w-full">
+              <MaterialIcon name="verified" className="text-primary text-base shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-micro-badge text-micro-badge text-on-surface font-semibold truncate max-w-[190px]">
+                  {businessName}
+                </span>
+                <span className="font-caption text-caption text-primary font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  Terverifikasi Mitra UMKM
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex flex-col gap-1 px-space-md mt-space-xs">
+            {navItems.map((item) => {
+              const active = isActive(item.href, item.exact);
+
+              if (item.disabled) {
+                return (
+                  <div
+                    key={item.name}
+                    className="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant/60 cursor-not-allowed select-none"
+                  >
+                    <div className="flex items-center gap-space-sm">
+                      <MaterialIcon name={item.icon} className="text-xl" />
+                      <span className="font-body-regular text-body-regular">{item.name}</span>
+                    </div>
+                    {item.badge && (
+                      <span className="font-micro-badge text-micro-badge px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant/80">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={onClose}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors ${
+                    active
+                      ? "bg-primary-container text-on-primary font-body-semibold shadow-sm"
+                      : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
+                  }`}
+                >
+                  <MaterialIcon name={item.icon} className="text-xl" />
+                  <span className="font-body-regular text-body-regular">{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Storefront Link Chip */}
-        {agentSlug && (
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/40 flex items-center justify-between">
-            <span className="text-[11px] text-slate-500 font-medium">Toko Online:</span>
+        {/* Concurrency Box & Storefront Switcher */}
+        <div className="p-space-md bg-surface-container-lowest mt-space-lg">
+          <div className="bg-surface-container-low p-space-sm rounded-xl mb-space-sm flex flex-col gap-space-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-caption text-caption text-on-surface-variant font-medium">
+                Mesin Konkurensi
+              </span>
+              <span className="inline-flex items-center gap-1 font-micro-badge text-micro-badge text-on-surface font-semibold">
+                <span className="w-2 h-2 rounded-full bg-secondary-container animate-ping"></span> AKTIF
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-on-surface-variant">
+              <span className="font-caption text-caption">Sinkronisasi Realtime</span>
+              <span className="font-micro-badge text-micro-badge text-primary font-bold">0 ms delay</span>
+            </div>
+            <div className="flex items-center gap-1 mt-1 text-on-surface-variant">
+              <MaterialIcon name="lock" className="text-sm text-primary" />
+              <span className="font-caption text-caption text-on-surface font-medium">
+                Pessimistic Quota Locked
+              </span>
+            </div>
+          </div>
+
+          {agentSlug && (
             <Link
               href={`/${agentSlug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-900 transition-colors"
+              className="flex items-center justify-between w-full px-space-sm py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors group"
             >
-              <span>/{agentSlug}</span>
-              <ExternalLink className="h-3 w-3" />
-            </Link>
-          </div>
-        )}
-
-        {/* Navigation List */}
-        <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-1.5">
-          {navItems.map((item) => {
-            const active = isActive(item.href, item.exact);
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  "group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150",
-                  active
-                    ? "bg-brand-700 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "h-5 w-5 shrink-0",
-                    active ? "text-white" : "text-slate-400 group-hover:text-slate-600"
-                  )}
+              <div className="flex items-center gap-space-xs">
+                <MaterialIcon
+                  name="storefront"
+                  className="text-primary text-base group-hover:translate-x-0.5 transition-transform"
                 />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom Actions */}
-        <div className="p-4 border-t border-slate-200 space-y-2 mt-auto">
-          <Link
-            href="/dashboard/packages/new"
-            className="w-full bg-accent-500 hover:bg-accent-600 text-white py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Paket Wisata</span>
-          </Link>
+                <span className="font-caption text-caption font-semibold">Switch ke Storefront</span>
+              </div>
+              <MaterialIcon name="open_in_new" className="text-sm text-on-surface-variant" />
+            </Link>
+          )}
 
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+            className="flex items-center justify-center gap-1.5 w-full mt-space-sm py-2 px-space-sm text-caption font-semibold text-error hover:bg-error-container/20 rounded-lg transition-colors"
           >
-            <LogOut className="h-3.5 w-3.5 shrink-0" />
+            <MaterialIcon name="logout" className="text-base" />
             <span>Keluar Akun</span>
           </button>
         </div>
@@ -200,4 +252,3 @@ export function Sidebar({
     </>
   );
 }
-

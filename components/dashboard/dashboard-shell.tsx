@@ -24,7 +24,7 @@ export function DashboardShell({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800">
+    <div className="bg-background font-body-regular text-body-regular text-on-surface min-h-screen antialiased">
       {/* Sidebar Navigation */}
       <Sidebar
         businessName={businessName}
@@ -34,7 +34,7 @@ export function DashboardShell({
       />
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="pl-0 lg:pl-72 flex flex-col min-h-screen">
         <Header
           businessName={businessName}
           userName={userName}
@@ -44,7 +44,7 @@ export function DashboardShell({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="w-full pt-16 bg-background min-h-screen px-space-md sm:px-space-lg py-space-lg">
           {children}
         </main>
       </div>

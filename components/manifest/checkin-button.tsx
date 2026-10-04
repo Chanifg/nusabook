@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { MaterialIcon } from "@/components/ui/icon";
 
 interface CheckinButtonProps {
   passengerId: string;
@@ -86,24 +86,25 @@ export function CheckinButton({
       onClick={handleToggle}
       disabled={isLoading}
       aria-label={isChecked ? "Tandai belum hadir" : "Tandai sudah hadir"}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-150 border ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
         isChecked
-          ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700"
-          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-slate-400 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700"
+          ? "bg-surface-container-high text-primary hover:bg-surface-container-highest"
+          : "bg-surface-container hover:bg-surface-container-high text-on-surface-variant"
       }`}
     >
       {isLoading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
+        <span className="animate-spin text-sm">⌛</span>
       ) : isChecked ? (
-        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <MaterialIcon name="check_circle" className="text-sm text-primary" />
       ) : (
-        <Circle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+        <MaterialIcon name="radio_button_unchecked" className="text-sm text-outline" />
       )}
-      <span>
-        {isChecked
-          ? `Hadir${checkedTime ? ` • ${formatShortTime(checkedTime)}` : ""}`
-          : "Tandai Hadir"}
-      </span>
+      <span>{isChecked ? "Hadir" : "Belum Check-in"}</span>
+      {isChecked && checkedTime && (
+        <span className="font-mono text-[10px] text-on-surface-variant">
+          ({formatShortTime(checkedTime)})
+        </span>
+      )}
     </button>
   );
 }

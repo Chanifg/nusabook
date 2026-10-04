@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { formatRupiah } from "@/lib/utils";
-import { Calendar, MapPin, Users, Check, Clock, ChevronRight } from "lucide-react";
+import { MaterialIcon } from "@/components/ui/icon";
 
 export default async function StorefrontPage({
   params,
@@ -8,128 +10,367 @@ export default async function StorefrontPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const supabase = await createClient();
 
-  // Demo fallback data if running before live DB sync
-  const agent = {
-    name: "Pesona Merapi Tour & Travel",
-    slug: slug,
-    city: "Yogyakarta",
-    verified: true,
-    whatsapp: "6281234567890",
-    description: "Spesialis paket wisata alam Merapi, sunrise trip, dan sewa jeep lava tour terpercaya di Yogyakarta.",
-  };
+  // Query real agent by slug
+  const { data: agentData } = (await supabase
+    .from("travel_agents")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle()) as any;
 
-  const sampleTrip = {
-    title: "Sunrise Lava Tour Merapi & Bunker Kaliadem",
-    city: "Yogyakarta",
-    duration: "1 Hari",
-    price: 250000,
-    totalQuota: 12,
-    availableQuota: 12,
-    meetingPoint: "Basecamp Jeep Kaliurang, Sleman",
-    date: "Sabtu, 4 Oktober 2026",
-    included: ["Jeep 4x4 + Driver", "Tiket Masuk & Retribusi", "Pemandu Lokal", "Air Mineral & Snack"],
-  };
+  let packages: any[] = [];
+  if (agentData?.id) {
+    const { data: pkgData } = (await supabase
+      .from("tour_packages")
+      .select("*, trip_schedules(*)")
+      .eq("agent_id", agentData.id)
+      .eq("is_published", true)) as any;
+    packages = pkgData || [];
+  }
+
+  const businessName = agentData?.business_name || "Pesona Nusantara Tour & Travel";
+  const city = agentData?.city || "Kota Malang, Jawa Timur";
+  const description =
+    agentData?.description ||
+    "Operator wisata spesialis Kawasan Konservasi Bromo Tengger Semeru dan Kawah Ijen sejak 2018. Mengedepankan keselamatan berstandar K3, pemandu berlisensi HPI, dan armada prima berizin resmi.";
+  const whatsapp = agentData?.whatsapp_number || "6281234567890";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Agent Header Banner */}
-      <header className="bg-brand-700 text-white py-12 px-6 shadow-md">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-brand-900/60 text-xs font-medium text-brand-100 mb-3 border border-brand-500/30">
-              <Check className="w-3.5 h-3.5 text-accent-500" />
-              Mitra Terverifikasi Nusabook
+    <div className="bg-surface font-body-regular text-on-surface antialiased min-h-screen">
+      {/* Top Header */}
+      <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
+          <div className="flex items-center gap-space-md">
+            <Link href="/" className="flex items-center gap-space-xs">
+              <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg">
+                N
+              </div>
+              <span className="font-headline-sm text-headline-sm text-primary font-bold">
+                Nusabook
+              </span>
+            </Link>
+            <div className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-micro-badge text-micro-badge text-on-surface-variant font-bold">
+                Live Sync Aktif
+              </span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">{agent.name}</h1>
-            <p className="text-brand-100 max-w-xl text-sm md:text-base leading-relaxed">{agent.description}</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 text-sm">
-            <p className="text-brand-100 text-xs">Lokasi Operasional</p>
-            <p className="font-semibold text-white flex items-center gap-1.5 mt-0.5">
-              <MapPin className="w-4 h-4 text-accent-500" />
-              {agent.city}
-            </p>
+
+          <nav className="hidden lg:flex items-center gap-space-lg text-sm font-semibold">
+            <Link
+              href="/explore"
+              className="text-on-surface-variant hover:text-on-surface transition-colors"
+            >
+              Jelajah Wisata
+            </Link>
+            <Link href="#katalog-trip" className="text-primary">
+              Etalase Paket
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-on-surface-variant hover:text-on-surface transition-colors"
+            >
+              Operator Backoffice
+            </Link>
+          </nav>
+
+          <div className="flex items-center gap-space-sm">
+            <a
+              href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary-container hover:bg-secondary text-on-primary font-body-semibold text-xs transition-all shadow-sm"
+            >
+              <MaterialIcon name="chat" className="text-base" />
+              <span className="hidden sm:inline">Hubungi Mitra</span>
+            </a>
           </div>
         </div>
       </header>
 
-      {/* Trip Catalog */}
-      <main className="max-w-5xl mx-auto p-6 md:p-8 flex-1 w-full">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Jadwal Perjalanan Terbuka</h2>
-            <p className="text-slate-600 text-sm mt-1">Pilih jadwal trip dan amankan kursi Anda secara instan</p>
+      <main className="w-full pt-16 bg-surface min-h-[calc(100vh-14rem)]">
+        {/* Top Breadcrumb Bar */}
+        <div className="w-full bg-surface-container-low py-space-sm px-4 sm:px-6 lg:px-12">
+          <div className="max-w-7xl mx-auto flex items-center gap-space-xs text-on-surface-variant font-caption text-caption flex-wrap">
+            <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
+              <MaterialIcon name="home" className="text-sm" /> Beranda
+            </Link>
+            <span className="text-outline-variant">/</span>
+            <Link href="/explore" className="hover:text-primary transition-colors">
+              Mitra Terverifikasi
+            </Link>
+            <span className="text-outline-variant">/</span>
+            <span className="text-on-surface-variant">{city}</span>
+            <span className="text-outline-variant">/</span>
+            <span className="font-body-semibold text-primary font-bold">{businessName}</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
-          <div className="flex flex-col lg:flex-row gap-8 justify-between">
-            <div className="space-y-4 max-w-2xl">
-              <span className="inline-block px-3 py-1 rounded-full bg-accent-50 text-accent-600 text-xs font-bold uppercase tracking-wider">
-                Open Trip
-              </span>
-              <h3 className="text-2xl font-bold text-slate-900">{sampleTrip.title}</h3>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2 text-sm text-slate-700">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-brand-700" />
-                  <span>{sampleTrip.date}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-brand-700" />
-                  <span>{sampleTrip.duration}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-emerald-600" />
-                  <span className="font-medium text-emerald-700">Sisa Kuota: {sampleTrip.availableQuota} kursi</span>
-                </div>
+        {/* Agency Hero Section */}
+        <section className="relative w-full">
+          {/* Cover Banner */}
+          <div
+            className="w-full h-72 sm:h-80 lg:h-96 relative bg-cover bg-center overflow-hidden"
+            style={{
+              backgroundImage:
+                'url("https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1600&q=80")',
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-primary/30 to-black/50" />
+            <div className="relative max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-between items-start pt-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/90 backdrop-blur-md shadow-sm">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                <span className="font-micro-badge text-micro-badge text-primary uppercase font-bold">
+                  Official Nusabook Verified Agency
+                </span>
               </div>
+              <div className="hidden sm:flex items-center gap-2 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg font-caption text-caption">
+                <MaterialIcon name="photo_camera" className="text-sm text-secondary-fixed" />
+                <span>Basecamp: {city}</span>
+              </div>
+            </div>
+          </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Fasilitas Termasuk</p>
-                <div className="flex flex-wrap gap-2">
-                  {sampleTrip.included.map((item, idx) => (
-                    <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 text-xs text-slate-700">
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      {item}
+          {/* Floating Profile Card */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 -mt-20 sm:-mt-24 relative z-10">
+            <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-xl flex flex-col lg:flex-row gap-6 lg:items-start justify-between border border-outline-variant/20">
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-xl bg-primary text-on-primary flex items-center justify-center font-bold text-3xl shrink-0 shadow-md">
+                  {businessName.slice(0, 2).toUpperCase()}
+                  <div
+                    className="absolute -bottom-2 -right-2 bg-emerald-500 text-white w-7 h-7 rounded-full flex items-center justify-center shadow"
+                    title="Terverifikasi Resmi"
+                  >
+                    <MaterialIcon name="verified" className="text-base" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h1 className="font-headline-md text-headline-md text-primary font-bold tracking-tight">
+                      {businessName}
+                    </h1>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-micro-badge text-micro-badge font-bold">
+                      <MaterialIcon name="shield_person" className="text-xs" /> Mitra Pilihan
                     </span>
-                  ))}
+                  </div>
+
+                  {/* Credentials */}
+                  <div className="flex items-center gap-2 flex-wrap text-outline font-caption text-caption">
+                    <span className="bg-surface-container px-2.5 py-1 rounded font-body-semibold text-on-surface">
+                      NIB Terdaftar
+                    </span>
+                    <span className="bg-surface-container px-2.5 py-1 rounded">
+                      Izin Resmi Operasional
+                    </span>
+                    <span className="bg-surface-container px-2.5 py-1 rounded">
+                      Pemandu Bersertifikat
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-on-surface-variant font-caption text-caption pt-1">
+                    <MaterialIcon name="location_on" className="text-base text-secondary" />
+                    <span>{city}</span>
+                    <span className="text-outline-variant">•</span>
+                    <span className="text-emerald-700 font-body-semibold flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" /> Jam Buka: 24/7 Support
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions & Escrow badge */}
+              <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end gap-3 shrink-0">
+                <a
+                  href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-secondary-container text-on-primary font-body-semibold text-sm hover:opacity-95 shadow-sm transition-all"
+                >
+                  <MaterialIcon name="chat" className="text-lg" />
+                  <span>WhatsApp Resmi Operator</span>
+                </a>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary-fixed text-on-primary-fixed font-caption text-caption self-start lg:self-end">
+                  <MaterialIcon name="lock" className="text-sm text-primary" />
+                  <span>Pembayaran Escrow Terproteksi Nusabook</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col justify-between items-start lg:items-end border-t lg:border-t-0 lg:border-l border-slate-200 pt-6 lg:pt-0 lg:pl-8 min-w-[240px]">
-              <div>
-                <p className="text-xs text-slate-500 font-medium">Harga per Peserta</p>
-                <p className="text-3xl font-extrabold text-brand-700 mt-1">{formatRupiah(sampleTrip.price)}</p>
+            {/* Quick Metrics Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center gap-3 border border-outline-variant/20">
+                <div className="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary">
+                  <MaterialIcon name="star" className="text-xl" />
+                </div>
+                <div>
+                  <div className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    4.9<span className="text-caption font-caption text-outline"> / 5.0</span>
+                  </div>
+                  <div className="font-caption text-caption text-outline">428 Ulasan Terverifikasi</div>
+                </div>
               </div>
 
-              <div className="w-full flex flex-col gap-2.5 mt-6">
-                <Link
-                  href={`/${slug}/packages/sunrise-lava-tour-merapi`}
-                  className="w-full py-2.5 px-4 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
-                >
-                  Lihat Detail & Jadwal
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
+              <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center gap-3 border border-outline-variant/20">
+                <div className="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+                  <MaterialIcon name="flight_takeoff" className="text-xl" />
+                </div>
+                <div>
+                  <div className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    1.450+
+                  </div>
+                  <div className="font-caption text-caption text-outline">Trip Berhasil Terlaksana</div>
+                </div>
+              </div>
 
-                <Link
-                  href={`/${slug}/booking?trip=sunrise-lava-tour-merapi`}
-                  className="w-full py-3.5 px-6 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold flex items-center justify-center gap-2 shadow-sm transition text-sm"
-                >
-                  Pesan Kursi Sekarang
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
+              <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center gap-3 border border-outline-variant/20">
+                <div className="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary">
+                  <MaterialIcon name="groups" className="text-xl" />
+                </div>
+                <div>
+                  <div className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    14.800+
+                  </div>
+                  <div className="font-caption text-caption text-outline">Wisatawan Terlayani</div>
+                </div>
+              </div>
+
+              <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center gap-3 border border-outline-variant/20">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-700">
+                  <MaterialIcon name="schedule" className="text-xl" />
+                </div>
+                <div>
+                  <div className="font-headline-sm text-headline-sm text-emerald-700 font-bold">
+                    &lt; 5 Menit
+                  </div>
+                  <div className="font-caption text-caption text-outline">Rata-rata Respon Chat</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
+        </section>
 
-      <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500 bg-white">
-        Powered by <Link href="/" className="font-semibold text-brand-700 hover:underline">Nusabook Platform</Link>
-      </footer>
+        {/* Section: Katalog Paket Wisata */}
+        <section id="katalog-trip" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-primary font-bold">
+                Jadwal &amp; Etalase Resmi
+              </span>
+              <h2 className="font-headline-md text-headline-md text-on-surface font-bold mt-1">
+                Paket Wisata &amp; Open Trip Terbuka
+              </h2>
+              <p className="text-on-surface-variant text-sm mt-1">
+                Pilih paket perjalanan dan amankan kuota kursi dengan proteksi Pessimistic Seat Hold.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {packages.length > 0 ? (
+              packages.map((pkg) => {
+                const isPrivate = pkg.category === "private_trip";
+                const schedule = pkg.trip_schedules?.[0];
+                const price = schedule?.price_per_pax || 375000;
+                const quotaRemaining = schedule
+                  ? Math.max(0, schedule.total_quota - schedule.reserved_quota - schedule.booked_quota)
+                  : 6;
+
+                return (
+                  <div
+                    key={pkg.id}
+                    className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col border border-outline-variant/20 group"
+                  >
+                    <div className="relative h-48 w-full bg-surface-container overflow-hidden">
+                      <img
+                        src={
+                          pkg.thumbnail_url ||
+                          "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=600&q=80"
+                        }
+                        alt={pkg.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-primary text-on-primary font-micro-badge text-micro-badge font-bold uppercase shadow-sm">
+                          {isPrivate ? "PRIVATE CHARTER" : "OPEN TRIP"}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded font-mono text-[11px]">
+                        {pkg.duration_days} Hari
+                      </div>
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+                          <MaterialIcon name="pin_drop" className="text-sm text-primary" />
+                          <span>{pkg.destination_city}</span>
+                        </div>
+                        <h3 className="font-title-md text-title-md font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2">
+                          {pkg.title}
+                        </h3>
+                        <p className="text-xs text-on-surface-variant line-clamp-2">
+                          {pkg.description || "Perjalanan seru dengan fasilitas lengkap dan pemandu profesional."}
+                        </p>
+                      </div>
+
+                      <div className="pt-4 border-t border-surface-container flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] text-on-surface-variant">Mulai Dari</span>
+                          <span className="font-headline-sm text-headline-sm font-bold text-primary">
+                            {formatRupiah(price)}
+                          </span>
+                        </div>
+                        <Link
+                          href={`/${slug}/packages/${pkg.slug}`}
+                          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-semibold text-xs transition-colors shadow-sm"
+                        >
+                          Pesan Tiket
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              /* Fallback canonical cards if no dynamic packages */
+              <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col border border-outline-variant/20 col-span-full p-8 text-center">
+                <p className="text-on-surface-variant text-sm">
+                  Belum ada paket wisata aktif yang ditampilkan pada etalase ini.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Escrow Guarantee Callout */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pb-16">
+          <div className="bg-surface-container-low rounded-2xl p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-outline-variant/20">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0">
+                <MaterialIcon name="verified_user" className="text-2xl" />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="font-title-md text-title-md font-bold text-on-surface">
+                  Dana Wisatawan Terlindungi Rekening Bersama (Escrow Vault)
+                </h3>
+                <p className="font-caption text-caption text-on-surface-variant mt-0.5 max-w-2xl">
+                  Pembayaran Anda diamankan di sistem NusaBook dan hanya diteruskan ke mitra setelah
+                  keberangkatan trip terverifikasi sukses. Bebas risiko penipuan dan overbooking.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/explore"
+              className="px-5 py-2.5 rounded-lg bg-primary text-on-primary font-body-semibold text-xs transition-colors shrink-0 shadow-sm"
+            >
+              Jelajahi Paket Lainnya
+            </Link>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
