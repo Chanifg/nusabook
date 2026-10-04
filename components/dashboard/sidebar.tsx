@@ -12,8 +12,9 @@ import {
   LogOut,
   ExternalLink,
   X,
-  Compass,
+  Plus,
 } from "lucide-react";
+
 
 interface SidebarProps {
   businessName?: string;
@@ -34,7 +35,7 @@ export function Sidebar({
 
   const navItems = [
     {
-      name: "Dashboard",
+      name: "Overview",
       href: "/dashboard",
       icon: LayoutDashboard,
       exact: true,
@@ -46,7 +47,7 @@ export function Sidebar({
       exact: false,
     },
     {
-      name: "Jadwal Keberangkatan",
+      name: "Jadwal & Kuota",
       href: "/dashboard/schedules",
       icon: CalendarDays,
       exact: false,
@@ -77,6 +78,14 @@ export function Sidebar({
     return pathname.startsWith(itemHref);
   };
 
+  // Generate 2-letter initials
+  const initials = businessName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("") || "NB";
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -91,22 +100,22 @@ export function Sidebar({
       {/* Sidebar Container */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed top-0 bottom-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 shadow-sm",
           isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-700 text-white shadow-sm">
-              <Compass className="h-5 w-5 text-white" />
+        <div className="flex h-20 items-center justify-between border-b border-slate-200 px-6 bg-slate-50/50">
+          <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center font-extrabold text-sm border border-brand-100 shrink-0">
+              {initials}
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-brand-700">
-                Nusabook
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-bold tracking-tight text-slate-900 truncate">
+                {businessName}
               </span>
-              <span className="text-[10px] font-medium tracking-wide uppercase text-slate-500">
-                Backoffice Mitra
+              <span className="text-[11px] font-semibold tracking-wide text-slate-500">
+                Agency Dashboard
               </span>
             </div>
           </Link>
@@ -122,27 +131,24 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Business Identity Card */}
-        <div className="p-4 border-b border-slate-100 bg-slate-50/70">
-          <p className="text-xs font-medium text-slate-500">Akun Mitra</p>
-          <p className="text-sm font-bold text-slate-900 truncate mt-0.5">
-            {businessName}
-          </p>
-          {agentSlug && (
+        {/* Storefront Link Chip */}
+        {agentSlug && (
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/40 flex items-center justify-between">
+            <span className="text-[11px] text-slate-500 font-medium">Toko Online:</span>
             <Link
               href={`/${agentSlug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent-500 hover:text-accent-600 mt-1 transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-900 transition-colors"
             >
-              <span>Kunjungi Storefront</span>
+              <span>/{agentSlug}</span>
               <ExternalLink className="h-3 w-3" />
             </Link>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Navigation List */}
-        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5">
+        <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-1.5">
           {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
             const Icon = item.icon;
@@ -153,9 +159,9 @@ export function Sidebar({
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150",
+                  "group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150",
                   active
-                    ? "bg-brand-700 text-white shadow-sm shadow-brand-700/20 font-semibold"
+                    ? "bg-brand-700 text-white shadow-sm"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 )}
               >
@@ -171,14 +177,22 @@ export function Sidebar({
           })}
         </nav>
 
-        {/* Footer with Logout */}
-        <div className="border-t border-slate-200 p-4">
+        {/* Bottom Actions */}
+        <div className="p-4 border-t border-slate-200 space-y-2 mt-auto">
+          <Link
+            href="/dashboard/packages/new"
+            className="w-full bg-accent-500 hover:bg-accent-600 text-white py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Paket Wisata</span>
+          </Link>
+
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
           >
-            <LogOut className="h-5 w-5 shrink-0" />
+            <LogOut className="h-3.5 w-3.5 shrink-0" />
             <span>Keluar Akun</span>
           </button>
         </div>
@@ -186,3 +200,4 @@ export function Sidebar({
     </>
   );
 }
+
