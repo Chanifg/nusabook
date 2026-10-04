@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/utils";
@@ -554,6 +555,15 @@ export function SchedulesList({
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="inline-flex items-center gap-1.5">
+                          <Link
+                            href={`/dashboard/schedules/${sch.id}/manifest`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition shadow-xs"
+                            title="Lihat manifes penumpang"
+                          >
+                            <Users className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>Manifes</span>
+                          </Link>
+
                           <button
                             type="button"
                             onClick={() => openEditModal(sch)}

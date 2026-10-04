@@ -119,6 +119,8 @@ export async function POST(request: Request) {
         phone_number: p.phoneNumber || null,
         emergency_contact: p.emergencyContact || null,
         special_notes: p.specialNotes || null,
+        is_checked_in: false,
+        checked_in_at: null,
         created_at: new Date().toISOString(),
       })),
     };
