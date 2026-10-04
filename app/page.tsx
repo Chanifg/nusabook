@@ -504,14 +504,14 @@ export default function HomePage() {
                     href="/register"
                     className="px-8 py-4 rounded-xl bg-secondary-container hover:bg-secondary text-on-primary font-body-semibold text-body-lg shadow-md transition-all flex items-center gap-2"
                   >
-                    <span>Mulai Gratis Sekarang</span>
+                    <span>Buka Storefront Operator Gratis</span>
                     <MaterialIcon name="arrow_forward" className="text-xl" />
                   </Link>
                   <Link
                     href="/explore"
                     className="px-6 py-4 rounded-xl bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 text-on-primary font-body-semibold text-body-lg transition-all"
                   >
-                    <span>Lihat Marketplace</span>
+                    <span>Jelajahi Paket Wisata</span>
                   </Link>
                 </div>
               </div>

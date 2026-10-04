@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MaterialIcon } from "@/components/ui/icon";
 
 interface KYCApplicant {
@@ -107,6 +107,16 @@ export default function SuperAdminPage() {
       setToastMessage(null);
     }, 4000);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && modalOpen) {
+        setModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalOpen]);
 
   const handleApproveKYC = (partner: KYCApplicant) => {
     setModalTitle("Verifikasi Dokumen Mitra");

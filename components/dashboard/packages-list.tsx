@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -45,6 +45,17 @@ export function PackagesList({
   const [packageToDelete, setPackageToDelete] = useState<PackageItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && deleteId) {
+        setDeleteId(null);
+        setPackageToDelete(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [deleteId]);
 
   // Statistics calculation for Bento stats
   const totalPackages = packages.length;
@@ -516,10 +527,41 @@ export function PackagesList({
             );
           })
         ) : (
-          <div className="py-16 text-center bg-surface-container-lowest rounded-xl border border-outline-variant/20 p-space-lg">
-            <p className="text-on-surface-variant font-body-regular">
-              Tidak ada paket wisata yang cocok dengan pencarian atau filter.
+          <div className="py-16 text-center bg-surface-container-lowest rounded-xl border border-outline-variant/20 p-space-lg flex flex-col items-center justify-center max-w-md mx-auto my-4">
+            <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-outline mb-4">
+              <MaterialIcon name="inventory_2" className="text-3xl" />
+            </div>
+            <h4 className="font-title-md text-title-md font-bold text-on-surface mb-1">
+              {searchQuery || categoryFilter !== "ALL" || statusFilter !== "ALL"
+                ? "Tidak ada paket yang cocok"
+                : "Belum ada paket wisata"}
+            </h4>
+            <p className="font-body-regular text-body-regular text-on-surface-variant text-sm mb-6 max-w-sm">
+              {searchQuery || categoryFilter !== "ALL" || statusFilter !== "ALL"
+                ? "Coba sesuaikan kata kunci atau atur ulang filter kategori dan status publikasi."
+                : "Mulai buat katalog paket wisata pertama Anda untuk membuka pemesanan dan kuota kursi."}
             </p>
+            {searchQuery || categoryFilter !== "ALL" || statusFilter !== "ALL" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setCategoryFilter("ALL");
+                  setStatusFilter("ALL");
+                }}
+                className="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-xs transition-colors"
+              >
+                Reset Filter
+              </button>
+            ) : (
+              <Link
+                href="/dashboard/packages/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-semibold text-xs shadow-sm transition-colors"
+              >
+                <MaterialIcon name="add" className="text-base" />
+                <span>Tambah Paket Wisata Baru</span>
+              </Link>
+            )}
           </div>
         )}
       </div>

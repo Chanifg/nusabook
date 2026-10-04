@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -50,11 +50,23 @@ export function SchedulesList({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
-  // Metrics calculation
   const totalSeats = schedules.reduce((sum, s) => sum + s.total_quota, 0);
   const bookedSeats = schedules.reduce((sum, s) => sum + s.booked_quota, 0);
   const reservedSeats = schedules.reduce((sum, s) => sum + s.reserved_quota, 0);
-  const occupancyRate = totalSeats > 0 ? Math.round((bookedSeats / totalSeats) * 100) : 89;
+  const occupancyRate = totalSeats > 0 ? Math.round((bookedSeats / totalSeats) * 100) : 0;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isAddModalOpen) setIsAddModalOpen(false);
+        if (editingSchedule) setEditingSchedule(null);
+        if (statusChangingSchedule) setStatusChangingSchedule(null);
+        if (deleteSchedule) setDeleteSchedule(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAddModalOpen, editingSchedule, statusChangingSchedule, deleteSchedule]);
 
   // Filtered schedules
   const filteredSchedules = schedules.filter((sch) => {
@@ -711,8 +723,44 @@ export function SchedulesList({
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-on-surface-variant font-body-regular">
-                    Belum ada jadwal keberangkatan yang sesuai kriteria filter.
+                  <td colSpan={8} className="py-12 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto p-4">
+                      <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-outline mb-3">
+                        <MaterialIcon name="event_busy" className="text-2xl" />
+                      </div>
+                      <p className="font-body-semibold text-body-semibold text-on-surface mb-1">
+                        {searchQuery || statusFilter !== "ALL" || packageFilter !== "ALL"
+                          ? "Tidak ada jadwal yang cocok"
+                          : "Belum ada jadwal keberangkatan"}
+                      </p>
+                      <p className="font-caption text-caption text-on-surface-variant text-xs mb-4">
+                        {searchQuery || statusFilter !== "ALL" || packageFilter !== "ALL"
+                          ? "Coba sesuaikan kata kunci atau atur ulang filter status dan paket."
+                          : "Buka batch jadwal keberangkatan baru untuk mulai menerima booking peserta."}
+                      </p>
+                      {searchQuery || statusFilter !== "ALL" || packageFilter !== "ALL" ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchQuery("");
+                            setStatusFilter("ALL");
+                            setPackageFilter("ALL");
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-xs transition-colors"
+                        >
+                          Reset Filter
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleOpenAdd}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-semibold text-xs shadow-sm transition-colors"
+                        >
+                          <MaterialIcon name="add" className="text-sm" />
+                          <span>Buka Jadwal Baru</span>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}

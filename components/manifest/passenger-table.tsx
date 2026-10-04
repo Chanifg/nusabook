@@ -82,7 +82,7 @@ export function PassengerTable({
   }, [passengers, searchQuery, activeTab]);
 
   const stats = useMemo(() => {
-    const total = passengers.length > 0 ? passengers.length : 14;
+    const total = passengers.length;
     const present = passengers.filter((p) => p.isCheckedIn).length;
     const absent = total - present;
     const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
@@ -309,8 +309,34 @@ export function PassengerTable({
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-on-surface-variant font-body-regular">
-                      Belum ada data penumpang pada manifes ini.
+                    <td colSpan={5} className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center max-w-sm mx-auto p-4">
+                        <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-outline mb-3">
+                          <MaterialIcon name="person_search" className="text-2xl" />
+                        </div>
+                        <p className="font-body-semibold text-body-semibold text-on-surface mb-1">
+                          {searchQuery || activeTab !== "all"
+                            ? "Tidak ada peserta yang cocok"
+                            : "Belum ada manifes penumpang"}
+                        </p>
+                        <p className="font-caption text-caption text-on-surface-variant text-xs mb-4">
+                          {searchQuery || activeTab !== "all"
+                            ? "Coba ubah kata kunci pencarian atau reset filter status kehadiran."
+                            : "Peserta yang menyelesaikan pemesanan akan otomatis terdata di sini."}
+                        </p>
+                        {(searchQuery || activeTab !== "all") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery("");
+                              setActiveTab("all");
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-xs transition-colors"
+                          >
+                            Reset Filter
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}

@@ -408,14 +408,12 @@ export default function MarketplaceExplorePage() {
               </button>
             </div>
             <div className="flex items-center gap-space-sm pl-space-xs">
-              <img
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9zORNB2FPjTW_H98NevCLhXNTN4IUGGfqvD1zb38cqGydAcZU48wcSbV80amSRL8i_DH5E_ANNVnRQ5hVC780G4txUSnM5zYnxX59hHqUPbG3q8hLDgzB6qU6VW4G70E7kwTaZw6RRGkbhYqovfRas5W09tau4zjA7iNaXZYFS4CyUgS1b3lrz0k4sEZJJs6OHpCHs4aMJEIYyIb_CIvpLbu2PnKxrjhPx8uzaQ5vlH1GX4IaRks"
-              />
+              <div className="w-8 h-8 rounded-full bg-primary-container text-primary font-bold text-xs flex items-center justify-center shadow-sm">
+                PN
+              </div>
               <div className="hidden sm:flex flex-col text-left">
                 <span className="font-body-semibold text-body-semibold text-on-surface leading-tight font-bold">
-                  Bambang Pamungkas
+                  Mitra Agen
                 </span>
                 <span className="font-caption text-caption text-outline">Pesona Nusantara</span>
               </div>
@@ -1077,7 +1075,7 @@ export default function MarketplaceExplorePage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6">
                   <span className="font-caption text-caption text-outline">
                     Menampilkan <strong className="text-on-surface">1 - {filteredPackages.length}</strong> dari{" "}
-                    <strong className="text-on-surface">28</strong> paket wisata aktif
+                    <strong className="text-on-surface">{filteredPackages.length}</strong> paket wisata aktif
                   </span>
                   <div className="flex items-center gap-1.5">
                     <button

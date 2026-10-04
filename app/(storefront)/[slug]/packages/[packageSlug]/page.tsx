@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import PackageDetailClient from "./package-detail-client";
+import {
+  PackageDetailView,
+  ScheduleOption,
+} from "./package-detail-view";
 
 export default async function PackageDetailPage({
   params,
@@ -10,63 +13,75 @@ export default async function PackageDetailPage({
   const { slug, packageSlug } = await params;
   const supabase = await createClient();
 
-  // 1. Verify agent exists & active
-  const { data: agent } = (await supabase
+  // 1. Fetch active travel agent
+  const { data: agentData } = (await supabase
     .from("travel_agents")
-    .select("id, business_name, slug, is_active")
+    .select("id, business_name, slug, city, whatsapp_number")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle()) as any;
 
-  if (!agent) {
+  if (!agentData) {
     notFound();
   }
 
-  // 2. Fetch package and schedules
-  const { data: pkg } = (await supabase
+  // 2. Fetch published tour package with its schedules
+  const { data: packageData } = (await supabase
     .from("tour_packages")
     .select("*, trip_schedules(*)")
-    .eq("agent_id", agent.id)
+    .eq("agent_id", agentData.id)
     .eq("slug", packageSlug)
     .eq("is_published", true)
     .maybeSingle()) as any;
 
-  if (!pkg) {
+  if (!packageData) {
     notFound();
   }
 
-  // Map trip_schedules to schedule options
-  const schedules = (pkg.trip_schedules || []).map((s: any) => ({
-    id: s.id,
-    dateText: new Date(s.departure_date).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }),
-    departureTime: "Midnight 00:00 WIB",
-    availableSeats: s.quota_remaining,
-    status:
-      s.quota_remaining <= 2 && s.quota_remaining > 0
-        ? "urgent"
-        : s.quota_remaining === 0
-        ? "sold_out"
-        : "available",
-    statusBadge:
-      s.quota_remaining === 0
-        ? "Habis (Sold Out)"
-        : s.quota_remaining <= 2
-        ? `Sisa ${s.quota_remaining} Kursi!`
-        : `Tersedia ${s.quota_remaining} Kursi`,
-    isSoldOut: s.quota_remaining === 0,
-    price: s.price,
-  }));
+  // 3. Map dynamic trip schedules
+  const rawSchedules = packageData.trip_schedules || [];
+  const schedules: ScheduleOption[] = rawSchedules.map((sch: any) => {
+    const availableSeats = Math.max(
+      0,
+      sch.total_quota - sch.reserved_quota - sch.booked_quota
+    );
+    const isSoldOut =
+      availableSeats === 0 ||
+      sch.status === "SOLD_OUT" ||
+      sch.status === "CLOSED";
+
+    const dateObj = new Date(sch.departure_date);
+    const dateText = !isNaN(dateObj.getTime())
+      ? dateObj.toLocaleDateString("id-ID", {
+          weekday: "long",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : sch.departure_date;
+
+    return {
+      id: sch.id,
+      dateText,
+      departureTime: "Midnight 00:00 WIB",
+      availableSeats,
+      status: isSoldOut ? "sold_out" : availableSeats <= 3 ? "urgent" : "available",
+      statusBadge: isSoldOut
+        ? "Penuh (Sold Out)"
+        : availableSeats <= 3
+        ? `Sisa ${availableSeats} Kursi!`
+        : `Tersedia ${availableSeats} Kursi`,
+      isSoldOut,
+      pricePerPax: sch.price_per_pax || 450000,
+    };
+  });
 
   return (
-    <PackageDetailClient
+    <PackageDetailView
       slug={slug}
       packageSlug={packageSlug}
-      pkg={pkg}
+      agent={agentData}
+      pkg={packageData}
       schedules={schedules}
     />
   );
