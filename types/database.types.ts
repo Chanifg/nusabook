@@ -295,6 +295,8 @@ export type Database = {
           phone_number: string | null;
           emergency_contact: string | null;
           special_notes: string | null;
+          is_checked_in: boolean;
+          checked_in_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -306,6 +308,8 @@ export type Database = {
           phone_number?: string | null;
           emergency_contact?: string | null;
           special_notes?: string | null;
+          is_checked_in?: boolean;
+          checked_in_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -317,6 +321,8 @@ export type Database = {
           phone_number?: string | null;
           emergency_contact?: string | null;
           special_notes?: string | null;
+          is_checked_in?: boolean;
+          checked_in_at?: string | null;
           created_at?: string;
         };
         Relationships: [];
