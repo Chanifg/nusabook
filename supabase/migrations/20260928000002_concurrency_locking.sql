@@ -50,7 +50,7 @@ BEGIN
         RETURN FALSE;
     END IF;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 2. Release Quota (Expired or Cancelled Bookings)
 CREATE OR REPLACE FUNCTION release_trip_quota(
@@ -65,7 +65,7 @@ BEGIN
         updated_at = NOW()
     WHERE id = p_schedule_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 3. Confirm Quota (Payment Captured/Settled)
 CREATE OR REPLACE FUNCTION confirm_trip_quota(
@@ -80,4 +80,4 @@ BEGIN
         updated_at = NOW()
     WHERE id = p_schedule_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
