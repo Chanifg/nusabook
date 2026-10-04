@@ -12,29 +12,29 @@ export default async function StorefrontPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Query real agent by slug
+  // Query real active agent by slug
   const { data: agentData } = (await supabase
     .from("travel_agents")
     .select("*")
     .eq("slug", slug)
+    .eq("is_active", true)
     .maybeSingle()) as any;
 
-  let packages: any[] = [];
-  if (agentData?.id) {
-    const { data: pkgData } = (await supabase
-      .from("tour_packages")
-      .select("*, trip_schedules(*)")
-      .eq("agent_id", agentData.id)
-      .eq("is_published", true)) as any;
-    packages = pkgData || [];
+  if (!agentData) {
+    notFound();
   }
 
-  const businessName = agentData?.business_name || "Pesona Nusantara Tour & Travel";
-  const city = agentData?.city || "Kota Malang, Jawa Timur";
-  const description =
-    agentData?.description ||
-    "Operator wisata spesialis Kawasan Konservasi Bromo Tengger Semeru dan Kawah Ijen sejak 2018. Mengedepankan keselamatan berstandar K3, pemandu berlisensi HPI, dan armada prima berizin resmi.";
-  const whatsapp = agentData?.whatsapp_number || "6281234567890";
+  const { data: pkgData } = (await supabase
+    .from("tour_packages")
+    .select("*, trip_schedules(*)")
+    .eq("agent_id", agentData.id)
+    .eq("is_published", true)) as any;
+  const packages = pkgData || [];
+
+  const businessName = agentData.business_name;
+  const city = agentData.city || "";
+  const description = agentData.description || "";
+  const whatsapp = agentData.whatsapp_number || "";
 
   return (
     <div className="bg-surface font-body-regular text-on-surface antialiased min-h-screen">
@@ -335,11 +335,34 @@ export default async function StorefrontPage({
                 );
               })
             ) : (
-              /* Fallback canonical cards if no dynamic packages */
-              <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col border border-outline-variant/20 col-span-full p-8 text-center">
-                <p className="text-on-surface-variant text-sm">
-                  Belum ada paket wisata aktif yang ditampilkan pada etalase ini.
+              <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 col-span-full p-10 text-center flex flex-col items-center justify-center max-w-lg mx-auto my-4 shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center text-outline mb-4">
+                  <MaterialIcon name="travel_explore" className="text-3xl" />
+                </div>
+                <h4 className="font-title-md text-title-md font-bold text-on-surface mb-2">
+                  Belum Ada Jadwal Aktif
+                </h4>
+                <p className="font-body-regular text-body-regular text-on-surface-variant mb-6 text-sm">
+                  {businessName} sedang menyiapkan kuota keberangkatan terbaru. Anda dapat langsung menanyakan jadwal khusus melalui pesan resmi atau mengeksplorasi destinasi mitra lainnya.
                 </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, "")}?text=Halo%20${encodeURIComponent(businessName)},%20saya%20ingin%20tanya%20jadwal%20trip%20terbaru`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#10b981] hover:bg-[#059669] text-white font-body-semibold text-xs shadow-sm transition-all font-bold"
+                  >
+                    <MaterialIcon name="chat" className="text-[18px]" />
+                    <span>Tanya via WhatsApp</span>
+                  </a>
+                  <Link
+                    href="/explore"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-body-semibold text-xs transition-colors"
+                  >
+                    <MaterialIcon name="explore" className="text-[18px]" />
+                    <span>Jelajahi Paket Lain</span>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
