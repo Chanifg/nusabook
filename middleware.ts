@@ -19,11 +19,26 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  try {
-    return await updateSession(request);
-  } catch (error) {
-    return NextResponse.next();
+  // Only invoke Supabase auth session update on protected routes or when auth cookies exist
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin") ||
+    pathname.startsWith("/bookings");
+
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") || c.name === "user-role");
+
+  if (isProtectedRoute || hasAuthCookie) {
+    try {
+      return await updateSession(request);
+    } catch (error) {
+      return NextResponse.next();
+    }
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
