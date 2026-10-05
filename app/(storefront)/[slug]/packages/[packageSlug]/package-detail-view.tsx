@@ -292,6 +292,8 @@ export function PackageDetailView({
                     pkg.thumbnail_url ||
                     "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80"
                   }
+                  fetchPriority="high"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
                 <div className="absolute bottom-4 left-4 text-white">
@@ -310,6 +312,8 @@ export function PackageDetailView({
                     alt="Gallery 1"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white font-caption text-caption text-[11px]">
                     Armada Jeep 4x4
@@ -320,6 +324,8 @@ export function PackageDetailView({
                     alt="Gallery 2"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white font-caption text-caption text-[11px]">
                     Destinasi Terverifikasi
@@ -330,6 +336,8 @@ export function PackageDetailView({
                     alt="Gallery 3"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     src="https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=800&q=80"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white font-caption text-caption text-[11px]">
                     Pemandu Lisensi HPI
@@ -340,6 +348,8 @@ export function PackageDetailView({
                     alt="Gallery 4"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
                     <MaterialIcon name="photo_library" className="text-2xl" />
