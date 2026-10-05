@@ -13,27 +13,30 @@ export default async function PackageDetailPage({
   const { slug, packageSlug } = await params;
   const supabase = await createClient();
 
-  // 1. Fetch active travel agent
-  const { data: agentData } = (await supabase
-    .from("travel_agents")
-    .select("id, business_name, slug, city, whatsapp_number")
-    .eq("slug", slug)
-    .eq("is_active", true)
-    .maybeSingle()) as any;
+  // Fetch active agent and published package in parallel to eliminate serial network waterfall
+  const [agentRes, packageRes] = await Promise.all([
+    supabase
+      .from("travel_agents")
+      .select("id, business_name, slug, city, whatsapp_number")
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase
+      .from("tour_packages")
+      .select("*, trip_schedules(*), travel_agents!inner(slug, is_active)")
+      .eq("slug", packageSlug)
+      .eq("travel_agents.slug", slug)
+      .eq("travel_agents.is_active", true)
+      .eq("is_published", true)
+      .maybeSingle(),
+  ]);
 
+  const agentData = agentRes.data as any;
   if (!agentData) {
     notFound();
   }
 
-  // 2. Fetch published tour package with its schedules
-  const { data: packageData } = (await supabase
-    .from("tour_packages")
-    .select("*, trip_schedules(*)")
-    .eq("agent_id", agentData.id)
-    .eq("slug", packageSlug)
-    .eq("is_published", true)
-    .maybeSingle()) as any;
-
+  const packageData = packageRes.data as any;
   if (!packageData) {
     notFound();
   }

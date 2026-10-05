@@ -12,24 +12,28 @@ export default async function StorefrontPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Query real active agent by slug
-  const { data: agentData } = (await supabase
-    .from("travel_agents")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_active", true)
-    .maybeSingle()) as any;
+  // Query agent and published packages in parallel to eliminate serial network waterfall
+  const [agentRes, pkgRes] = await Promise.all([
+    supabase
+      .from("travel_agents")
+      .select("*")
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase
+      .from("tour_packages")
+      .select("*, trip_schedules(*), travel_agents!inner(slug, is_active)")
+      .eq("travel_agents.slug", slug)
+      .eq("travel_agents.is_active", true)
+      .eq("is_published", true),
+  ]);
 
+  const agentData = agentRes.data as any;
   if (!agentData) {
     notFound();
   }
 
-  const { data: pkgData } = (await supabase
-    .from("tour_packages")
-    .select("*, trip_schedules(*)")
-    .eq("agent_id", agentData.id)
-    .eq("is_published", true)) as any;
-  const packages: any[] = pkgData || [];
+  const packages: any[] = (pkgRes.data as any[]) || [];
 
   const businessName = agentData.business_name;
   const city = agentData.city || "";
