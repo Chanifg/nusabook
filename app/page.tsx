@@ -78,15 +78,6 @@ export default function HomePage() {
           <div className="pointer-events-none absolute top-40 right-10 w-96 h-96 bg-secondary-container/10 rounded-full blur-2xl" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
-            {/* Top Accreditation Badge */}
-            <div className="flex justify-center mb-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-highest/60 backdrop-blur-md shadow-sm border border-outline-variant/30">
-                <span className="flex h-2 w-2 rounded-full bg-secondary-container animate-pulse" />
-                <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-primary font-bold">
-                  Program Pembinaan Mahasiswa Wirausaha (P2MW 2026) • Kemendikbudristek RI
-                </span>
-              </div>
-            </div>
 
             {/* Main Heading & Value Proposition */}
             <div className="text-center max-w-4xl mx-auto mb-10">
@@ -110,10 +101,6 @@ export default function HomePage() {
                     <MaterialIcon name="storefront" className="text-xl" />
                     <span>Buka Toko Tour Gratis (0 Biaya Awal)</span>
                   </Link>
-                  <span className="font-caption text-caption text-on-surface-variant mt-1.5 flex items-center gap-1">
-                    <MaterialIcon name="verified" className="text-xs text-primary" />
-                    Skema komisi 2% per transaksi berhasil
-                  </span>
                 </div>
 
                 <Link
