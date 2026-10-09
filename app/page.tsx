@@ -1,7 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
 
 export default function HomePage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const toggleFaq = (index: number) => {
+    setOpenFaq(openFaq === index ? null : index);
+  };
   return (
     <div className="bg-surface font-body-regular text-body-regular text-on-surface antialiased min-h-screen">
       {/* Top Header Navigation */}
@@ -303,29 +311,15 @@ export default function HomePage() {
               {/* Card 1 */}
               <div className="bg-surface-container-lowest rounded-2xl p-7 shadow-md flex flex-col justify-between hover:shadow-lg transition-shadow border border-outline-variant/20">
                 <div>
-                  <div className="w-12 h-12 rounded-xl bg-error-container text-error flex items-center justify-center mb-5">
-                    <MaterialIcon name="event_busy" className="text-2xl" />
-                  </div>
-                  <div className="mb-4">
-                    <span className="font-caption text-caption font-bold text-error uppercase tracking-wider block mb-1">
-                      Masalah Umum
-                    </span>
-                    <h3 className="font-title-md text-title-md text-on-surface font-bold leading-snug">
-                      Risiko Overbooking Kursi Trip saat Pesanan Membludak
-                    </h3>
-                    <p className="font-body-regular text-body-regular text-on-surface-variant mt-2 text-sm leading-relaxed">
-                      Dua admin WhatsApp menjanjikan sisa kursi yang sama ke pelanggan berbeda di menit
-                      yang sama. Akibatnya tamu terlantar di dermaga atau jeep kekurangan kapasitas.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6 pt-5 bg-surface-container-low -mx-7 -mb-7 p-6 rounded-b-2xl">
                   <span className="font-caption text-caption font-bold text-primary uppercase tracking-wider block mb-1">
                     Solusi Nusabook
                   </span>
-                  <p className="font-body-semibold text-caption text-primary leading-relaxed text-xs">
-                    Concurrency-Safe Pessimistic Quota Locking dengan PostgreSQL Row-Level Lock
-                    mencegah kursi ganda terpilih dalam hitungan milidetik secara atomik.
+                  <h3 className="font-title-md text-title-md text-on-surface font-bold leading-snug mb-2">
+                    Pengunci Kuota Otomatis &amp; Anti Bentrok
+                  </h3>
+                  <p className="font-body-regular text-body-regular text-on-surface-variant text-sm leading-relaxed">
+                    Sistem langsung mengunci sisa kursi secara real-time saat ada pemesanan. Dijamin
+                    tidak ada lagi kejadian overbooking atau dua pelanggan mendapat kursi yang sama.
                   </p>
                 </div>
               </div>
@@ -333,29 +327,15 @@ export default function HomePage() {
               {/* Card 2 */}
               <div className="bg-surface-container-lowest rounded-2xl p-7 shadow-md flex flex-col justify-between hover:shadow-lg transition-shadow border border-outline-variant/20">
                 <div>
-                  <div className="w-12 h-12 rounded-xl bg-surface-container-highest text-primary flex items-center justify-center mb-5">
-                    <MaterialIcon name="receipt_long" className="text-2xl" />
-                  </div>
-                  <div className="mb-4">
-                    <span className="font-caption text-caption font-bold text-outline uppercase tracking-wider block mb-1">
-                      Masalah Umum
-                    </span>
-                    <h3 className="font-title-md text-title-md text-on-surface font-bold leading-snug">
-                      Rekapitulasi Manual &amp; Rawan Bukti Transfer Palsu
-                    </h3>
-                    <p className="font-body-regular text-body-regular text-on-surface-variant mt-2 text-sm leading-relaxed">
-                      Menghabiskan waktu 3 jam tiap malam mencocokkan mutasi bank, verifikasi struk
-                      editan, hingga kasir walk-in lupa dicatat ke buku manifes perjalanan.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6 pt-5 bg-surface-container-low -mx-7 -mb-7 p-6 rounded-b-2xl">
                   <span className="font-caption text-caption font-bold text-primary uppercase tracking-wider block mb-1">
                     Solusi Nusabook
                   </span>
-                  <p className="font-body-semibold text-caption text-primary leading-relaxed text-xs">
-                    Multi-payment Otomatis Midtrans (QRIS Dinamis &amp; VA Otomatis) + Rekonsiliasi
-                    Kasir terpusat tanpa perlu verifikasi slip manual lagi.
+                  <h3 className="font-title-md text-title-md text-on-surface font-bold leading-snug mb-2">
+                    Pembayaran Otomatis Tanpa Cek Struk
+                  </h3>
+                  <p className="font-body-regular text-body-regular text-on-surface-variant text-sm leading-relaxed">
+                    Mendukung pembayaran via QRIS dan Transfer Bank (Virtual Account) secara instan.
+                    Pesanan otomatis terverifikasi tanpa Anda perlu mengecek bukti transfer manual.
                   </p>
                 </div>
               </div>
@@ -363,29 +343,15 @@ export default function HomePage() {
               {/* Card 3 */}
               <div className="bg-surface-container-lowest rounded-2xl p-7 shadow-md flex flex-col justify-between hover:shadow-lg transition-shadow border border-outline-variant/20">
                 <div>
-                  <div className="w-12 h-12 rounded-xl bg-secondary-fixed text-secondary flex items-center justify-center mb-5">
-                    <MaterialIcon name="web_asset_off" className="text-2xl" />
-                  </div>
-                  <div className="mb-4">
-                    <span className="font-caption text-caption font-bold text-secondary uppercase tracking-wider block mb-1">
-                      Masalah Umum
-                    </span>
-                    <h3 className="font-title-md text-title-md text-on-surface font-bold leading-snug">
-                      Biaya Puluhan Juta untuk Membuat Website Custom
-                    </h3>
-                    <p className="font-body-regular text-body-regular text-on-surface-variant mt-2 text-sm leading-relaxed">
-                      Agensi software house mematok biaya belasan juta untuk booking engine, ditambah
-                      server mahal dan pemeliharaan bulanan yang membebani kas UMKM.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6 pt-5 bg-surface-container-low -mx-7 -mb-7 p-6 rounded-b-2xl">
                   <span className="font-caption text-caption font-bold text-primary uppercase tracking-wider block mb-1">
                     Solusi Nusabook
                   </span>
-                  <p className="font-body-semibold text-caption text-primary leading-relaxed text-xs">
-                    No-Code Storefront Subdomain Gratis siap pakai hanya dalam 5 menit. Tanpa biaya
-                    instalasi, skema bagi hasil murni 2% hanya saat transaksi berhasil.
+                  <h3 className="font-title-md text-title-md text-on-surface font-bold leading-snug mb-2">
+                    Website Toko Online Siap Pakai
+                  </h3>
+                  <p className="font-body-regular text-body-regular text-on-surface-variant text-sm leading-relaxed">
+                    Dapatkan website katalog travel resmi untuk usaha Anda hanya dalam 5 menit tanpa perlu
+                    paham koding. Gratis biaya pembuatan dan tanpa iuran bulanan.
                   </p>
                 </div>
               </div>
@@ -404,40 +370,78 @@ export default function HomePage() {
                 Pertanyaan yang Sering Diajukan
               </h2>
             </div>
-            <div className="space-y-4">
-              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/20">
-                <h3 className="font-title-md text-title-md text-primary font-bold flex items-center justify-between gap-4">
+
+            {/* Unified Accordion Container Box */}
+            <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 divide-y divide-outline-variant/15 overflow-hidden">
+              {/* FAQ 1 */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(0)}
+                  className="w-full text-left p-6 flex items-center justify-between gap-4 font-title-md text-title-md text-primary font-bold hover:bg-surface-container-low/50 transition-colors"
+                >
                   <span>Apakah ada biaya langganan bulanan atau registrasi awal?</span>
-                  <MaterialIcon name="check_circle" className="text-secondary text-xl shrink-0" />
-                </h3>
-                <p className="font-body-regular text-body-regular text-on-surface-variant mt-3 leading-relaxed text-sm">
-                  Sama sekali <span className="font-body-semibold text-primary">TIDAK ADA</span> biaya
-                  langganan bulanan maupun setup pendaftaran. Nusabook menerapkan skema murni 2% komisi
-                  yang hanya dipotong saat transaksi tiket berhasil lolos dari Escrow Vault.
-                </p>
+                  <MaterialIcon
+                    name="expand_more"
+                    className={`text-2xl text-primary shrink-0 transition-transform duration-200 ${
+                      openFaq === 0 ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === 0 && (
+                  <div className="px-6 pb-6 pt-1 font-body-regular text-body-regular text-on-surface-variant leading-relaxed text-sm border-t border-outline-variant/10">
+                    Sama sekali <span className="font-body-semibold text-primary font-bold">TIDAK ADA</span> biaya
+                    langganan bulanan maupun setup pendaftaran. Nusabook menerapkan skema murni 2% komisi
+                    yang hanya dipotong saat transaksi tiket berhasil lolos dari Escrow Vault.
+                  </div>
+                )}
               </div>
 
-              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/20">
-                <h3 className="font-title-md text-title-md text-primary font-bold flex items-center justify-between gap-4">
+              {/* FAQ 2 */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(1)}
+                  className="w-full text-left p-6 flex items-center justify-between gap-4 font-title-md text-title-md text-primary font-bold hover:bg-surface-container-low/50 transition-colors"
+                >
                   <span>Bagaimana jika ada tamu rombongan yang membayar tunai di kantor?</span>
-                  <MaterialIcon name="check_circle" className="text-secondary text-xl shrink-0" />
-                </h3>
-                <p className="font-body-regular text-body-regular text-on-surface-variant mt-3 leading-relaxed text-sm">
-                  Operator dapat memanfaatkan fitur Manual Booking Entry di dashboard backoffice. Data
-                  penumpang offline langsung disinkronkan ke manifes tanpa risiko kuota bentrok.
-                </p>
+                  <MaterialIcon
+                    name="expand_more"
+                    className={`text-2xl text-primary shrink-0 transition-transform duration-200 ${
+                      openFaq === 1 ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === 1 && (
+                  <div className="px-6 pb-6 pt-1 font-body-regular text-body-regular text-on-surface-variant leading-relaxed text-sm border-t border-outline-variant/10">
+                    Operator dapat memanfaatkan fitur Manual Booking Entry di dashboard backoffice. Data
+                    penumpang offline langsung disinkronkan ke manifes tanpa risiko kuota bentrok.
+                  </div>
+                )}
               </div>
 
-              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/20">
-                <h3 className="font-title-md text-title-md text-primary font-bold flex items-center justify-between gap-4">
+              {/* FAQ 3 */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(2)}
+                  className="w-full text-left p-6 flex items-center justify-between gap-4 font-title-md text-title-md text-primary font-bold hover:bg-surface-container-low/50 transition-colors"
+                >
                   <span>Apakah data KTP/NIK wisatawan aman dan patuh regulasi?</span>
-                  <MaterialIcon name="check_circle" className="text-secondary text-xl shrink-0" />
-                </h3>
-                <p className="font-body-regular text-body-regular text-on-surface-variant mt-3 leading-relaxed text-sm">
-                  Seluruh data pribadi wisatawan dilindungi enkripsi AES-256 dan mematuhi amanat UU
-                  Perlindungan Data Pribadi (UU PDP No. 27/2022). Data hanya dipakai untuk validasi
-                  SIMAKSI dan asuransi.
-                </p>
+                  <MaterialIcon
+                    name="expand_more"
+                    className={`text-2xl text-primary shrink-0 transition-transform duration-200 ${
+                      openFaq === 2 ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === 2 && (
+                  <div className="px-6 pb-6 pt-1 font-body-regular text-body-regular text-on-surface-variant leading-relaxed text-sm border-t border-outline-variant/10">
+                    Seluruh data pribadi wisatawan dilindungi enkripsi AES-256 dan mematuhi amanat UU
+                    Perlindungan Data Pribadi (UU PDP No. 27/2022). Data hanya dipakai untuk validasi
+                    SIMAKSI dan asuransi.
+                  </div>
+                )}
               </div>
             </div>
           </div>

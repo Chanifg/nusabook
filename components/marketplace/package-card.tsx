@@ -79,15 +79,15 @@ export function PackageCard({ packageData }: PackageCardProps) {
 
           {/* Badges on Thumbnail */}
           {packageData.thumbnailUrl && (
-            <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-              {packageData.isVerified && (
-                <span className="px-2 py-0.5 rounded-full bg-brand-700/90 text-white text-[11px] font-bold backdrop-blur-xs flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-accent-400" />
-                  Mitra Terverifikasi
-                </span>
-              )}
-              <span className="px-2 py-0.5 rounded-full bg-white/90 text-slate-900 text-[11px] font-bold backdrop-blur-xs">
-                {packageData.category === "open_trip" ? "Open Trip" : "Private Trip"}
+            <div className="absolute top-3 right-3 z-10">
+              <span className="px-2.5 py-1 rounded-full bg-black/40 text-white text-[11px] font-semibold backdrop-blur-xs">
+                {packageData.category === "open_trip"
+                  ? "Open Trip"
+                  : packageData.category === "private_trip"
+                  ? "Private Trip"
+                  : packageData.category === "liveaboard"
+                  ? "Liveaboard"
+                  : "Midnight Tour"}
               </span>
             </div>
           )}

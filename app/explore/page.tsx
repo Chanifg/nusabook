@@ -1,8 +1,39 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
+
+const HERO_SLIDES = [
+  {
+    id: 1,
+    url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=2000&q=80",
+    title: "Gunung Bromo & Savana Teletubbies",
+    location: "Malang & Probolinggo, Jawa Timur",
+    badge: "DESTINASI TERPOPULER",
+  },
+  {
+    id: 2,
+    url: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=2000&q=80",
+    title: "Labuan Bajo & Taman Nasional Komodo",
+    location: "Nusa Tenggara Timur",
+    badge: "LIVEABOARD PHINISI",
+  },
+  {
+    id: 3,
+    url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=2000&q=80",
+    title: "Eksotisme Karimunjawa & Island Hopping",
+    location: "Jepara, Jawa Tengah",
+    badge: "SNORKELING & BAHARI",
+  },
+  {
+    id: 4,
+    url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=2000&q=80",
+    title: "Kawah Ijen Blue Fire & Kawah Wurung",
+    location: "Banyuwangi, Jawa Timur",
+    badge: "MIDNIGHT TOUR",
+  },
+];
 
 interface ExplorePackage {
   id: string;
@@ -234,6 +265,17 @@ function formatRupiah(amount: number): string {
 }
 
 export default function MarketplaceExplorePage() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Auto-play slide effect every 5 seconds with smooth crossfade blend
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
   const [departureDate, setDepartureDate] = useState("18 Okt - 25 Okt");
@@ -351,43 +393,41 @@ export default function MarketplaceExplorePage() {
   return (
     <div className="bg-surface font-body-regular text-on-surface antialiased min-h-screen flex flex-col">
       {/* HEADER */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-16 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
+      <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
           <div className="flex items-center gap-space-md">
-            <Link className="flex items-center gap-space-sm" href="/">
-              <img
-                alt="Nusabook Brand Logo"
-                className="h-8 w-auto object-contain"
-                src="https://lh3.googleusercontent.com/aida/AEtjO1U3Dc9ujBNuM7mgSPnQReIZqJpbXFrgBa8_v7KkLAxGoGg-NCEjy4Aw-pYXp9CiKsNHmqpLEMF2TzdVBIjehkrvhOp1eK3eYIfA64704YK0SOXTQb6gBESs7Xo_FJmMnJpYGla99v_5KwfnRrPX3mOY81yQP8OnvPcRn6zitzBMcBKr14d077mBMYP9cT2gZ37ppBCN_acPq-kd6A4kNOGLXs6_FK5SnaikbZm8kopURdxI0y2YnoftJw"
-              />
+            <Link className="flex items-center gap-space-xs" href="/">
+              <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg">
+                N
+              </div>
               <span className="font-headline-sm text-headline-sm text-primary font-bold">Nusabook</span>
             </Link>
             <div className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="font-micro-badge text-micro-badge text-on-surface-variant font-bold">
                 Live Sync Aktif
               </span>
             </div>
           </div>
 
-          <nav className="hidden lg:flex items-center gap-space-lg">
+          <nav className="hidden lg:flex items-center gap-space-lg text-sm font-semibold">
             <Link
-              className="font-body-semibold text-body-semibold text-primary transition-colors"
+              className="text-primary font-bold transition-colors"
               href="/explore"
             >
               Jelajah Wisata
             </Link>
             <Link
-              className="font-body-regular text-body-regular text-on-surface-variant hover:text-on-surface transition-colors"
+              className="text-on-surface-variant hover:text-on-surface transition-colors"
               href="/pesona-merapi"
             >
               Etalase Paket
             </Link>
             <Link
-              className="font-body-regular text-body-regular text-on-surface-variant hover:text-on-surface transition-colors"
-              href="/pesona-merapi/packages/sunrise-lava-tour-merapi"
+              className="text-on-surface-variant hover:text-on-surface transition-colors"
+              href="/dashboard"
             >
-              Checkout & Reservasi
+              Operator Backoffice
             </Link>
           </nav>
 
@@ -401,16 +441,60 @@ export default function MarketplaceExplorePage() {
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary-container" />
               </button>
             </div>
-            <div className="flex items-center gap-space-sm pl-space-xs">
-              <div className="w-8 h-8 rounded-full bg-primary-container text-primary font-bold text-xs flex items-center justify-center shadow-sm">
-                PN
-              </div>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="font-body-semibold text-body-semibold text-on-surface leading-tight font-bold">
-                  Mitra Agen
-                </span>
-                <span className="font-caption text-caption text-outline">Pesona Nusantara</span>
-              </div>
+
+            {/* Profile Dropdown Container */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-space-sm pl-space-xs cursor-pointer hover:bg-surface-container-low p-1.5 rounded-xl transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary-container text-primary font-bold text-xs flex items-center justify-center shadow-sm">
+                  PN
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="font-body-semibold text-body-semibold text-on-surface leading-tight font-bold">
+                    Mitra Agen
+                  </span>
+                  <span className="font-caption text-caption text-outline">Pesona Nusantara</span>
+                </div>
+                <MaterialIcon
+                  name="expand_more"
+                  className={`text-lg text-on-surface-variant transition-transform duration-200 ${
+                    isProfileOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-2 z-50 text-xs">
+                  <div className="px-4 py-2.5 border-b border-outline-variant/15">
+                    <p className="font-body-semibold text-on-surface font-bold text-xs">
+                      Pesona Nusantara Tour
+                    </p>
+                    <p className="text-on-surface-variant text-[11px]">Mitra Agen Terverifikasi</p>
+                  </div>
+                  <div className="py-1">
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-on-surface hover:bg-surface-container-low font-body-semibold transition-colors"
+                    >
+                      <MaterialIcon name="dashboard" className="text-base text-primary" />
+                      <span>Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/login"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-error font-body-semibold hover:bg-error-container/20 transition-colors"
+                    >
+                      <MaterialIcon name="logout" className="text-base text-error" />
+                      <span>Logout</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -418,32 +502,90 @@ export default function MarketplaceExplorePage() {
 
       {/* MAIN CONTENT */}
       <main className="w-full pt-16 bg-surface min-h-[calc(100vh-14rem)] flex-1">
-        <div className="flex flex-col w-full">
-          {/* HERO & ADVANCED DISCOVERY SEARCH WIDGET */}
-          <section className="relative w-full bg-gradient-to-b from-primary via-primary-container to-surface-container-low text-on-primary overflow-hidden">
-            <div
-              className="absolute inset-0 opacity-10 pointer-events-none"
-              style={{
-                backgroundImage: "radial-gradient(#ffffff 1.5px, transparent 1.5px)",
-                backgroundSize: "24px 24px",
-              }}
-            />
-            <div className="relative max-w-7xl mx-auto px-6 lg:px-12 pt-10 pb-16">
-              {/* Top Badges & Value Pitch */}
-              <div className="flex flex-wrap items-center gap-space-sm mb-4">
-              </div>
-              <div className="max-w-4xl mb-8">
-                <h1 className="font-display text-display tracking-tight text-surface-container-lowest mb-3 font-bold">
-                  Eksplorasi Keindahan Nusantara Bersama Operator Lokal Terpercaya
-                </h1>
-                <p className="font-body-lg text-body-lg text-primary-fixed-dim/90 max-w-3xl leading-relaxed">
-                  Jaminan kuota kursi real-time langsung tersinkronisasi dengan sistem operasional agen. Tanpa risiko
-                  overbooking, bergaransi escrow aman, dan terverifikasi izin NIB/TDUP.
-                </p>
-              </div>
+        {/* Top Breadcrumb Bar (Matching Etalase Paket) */}
+        <div className="w-full bg-surface-container-low py-space-sm px-6 lg:px-12 border-b border-outline-variant/15">
+          <div className="max-w-7xl mx-auto flex items-center gap-space-xs text-on-surface-variant font-caption text-caption flex-wrap">
+            <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
+              <MaterialIcon name="home" className="text-sm" /> Beranda
+            </Link>
+            <span className="text-outline-variant">/</span>
+            <span className="font-body-semibold text-primary font-bold">Jelajah Wisata Nusantara</span>
+          </div>
+        </div>
 
-              {/* Advanced Search Filter Bar Panel */}
-              <div className="w-full bg-surface-container-lowest text-on-surface rounded-xl shadow-xl p-5 lg:p-6">
+        <div className="flex flex-col w-full">
+          {/* HERO BANNER SECTION (EXACT MATCH WITH ETALASE BANNER DIMENSIONS & GRADIENT) */}
+          <section className="relative w-full">
+            {/* Cover Banner with Slider */}
+            <div className="w-full h-72 sm:h-80 lg:h-96 relative bg-cover bg-center overflow-hidden">
+              {/* Crossfade Background Carousel */}
+              {HERO_SLIDES.map((slide, idx) => {
+                const isActive = currentSlide === idx;
+                return (
+                  <div
+                    key={slide.id}
+                    className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                      isActive ? "opacity-100 scale-100 z-10" : "opacity-0 scale-105 z-0"
+                    }`}
+                  >
+                    <img
+                      src={slide.url}
+                      alt={slide.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                );
+              })}
+
+              {/* Exact Gradient Overlay from Etalase: Fades image into surface background */}
+              <div className="absolute inset-0 z-20 bg-gradient-to-t from-surface via-primary/30 to-black/50 pointer-events-none" />
+
+              {/* Top Banner Overlay Controls & Badges */}
+              <div className="relative z-30 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-between items-start pt-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/90 backdrop-blur-md shadow-sm">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                  <span className="font-micro-badge text-micro-badge text-primary uppercase font-bold">
+                    Official Nusabook Verified Agency
+                  </span>
+                </div>
+
+                {/* Slider Navigation Controls */}
+                <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg font-caption text-caption">
+                  <div className="flex items-center gap-1.5 mr-2">
+                    {HERO_SLIDES.map((slide, idx) => (
+                      <button
+                        key={slide.id}
+                        type="button"
+                        onClick={() => setCurrentSlide(idx)}
+                        aria-label={`Slide ${idx + 1}`}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          currentSlide === idx ? "w-6 bg-secondary-container" : "w-2 bg-white/40 hover:bg-white/70"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((prev) => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1))}
+                    className="w-6 h-6 rounded-full hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                  >
+                    <MaterialIcon name="chevron_left" className="text-base" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length)}
+                    className="w-6 h-6 rounded-full hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                  >
+                    <MaterialIcon name="chevron_right" className="text-base" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Card Content (Overlapping the banner, matching Etalase -mt-20 sm:-mt-24) */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 -mt-20 sm:-mt-24 relative z-30">
+              <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-xl border border-outline-variant/20 mb-8">
+                {/* Advanced Search Filter Bar Panel */}
                 {/* Trip Type Tabs */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4">
                   {[
@@ -752,17 +894,9 @@ export default function MarketplaceExplorePage() {
                               decoding="async"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-                            <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                              {pkg.isVerified && (
-                                <span className="px-2 py-0.5 rounded-full bg-primary/90 text-on-primary font-micro-badge text-micro-badge backdrop-blur-sm flex items-center gap-1 font-bold">
-                                  <MaterialIcon
-                                    name="verified"
-                                    className="text-[13px] text-secondary-container"
-                                  />
-                                  Mitra Terverifikasi
-                                </span>
-                              )}
-                              <span className="px-2 py-0.5 rounded-full bg-surface-container-lowest/90 text-on-surface font-micro-badge text-micro-badge backdrop-blur-sm font-bold">
+                            {/* Category Label Badge (Top Right, Transparent Backdrop) */}
+                            <div className="absolute top-3 right-3">
+                              <span className="px-2.5 py-1 rounded-full bg-black/40 text-surface-container-lowest font-caption text-caption backdrop-blur-sm font-semibold">
                                 {pkg.categoryLabel}
                               </span>
                             </div>
