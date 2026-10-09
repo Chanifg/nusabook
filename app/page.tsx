@@ -33,19 +33,6 @@ export default function HomePage() {
             >
               Storefront Mitra
             </Link>
-            <Link
-              href="/dashboard"
-              className="text-on-surface-variant hover:text-on-surface transition-colors"
-            >
-              Operator Backoffice
-            </Link>
-            <Link
-              href="/admin"
-              className="text-secondary font-body-semibold flex items-center gap-1 hover:underline"
-            >
-              <MaterialIcon name="admin_panel_settings" className="text-sm" />
-              <span>Super Admin</span>
-            </Link>
           </nav>
 
           <div className="flex items-center gap-space-sm shrink-0">
