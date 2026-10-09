@@ -16,9 +16,6 @@ export default function HomePage() {
                 <span className="font-title-md text-title-md text-primary font-bold tracking-tight leading-none">
                   Nusabook
                 </span>
-                <span className="font-micro-badge text-micro-badge uppercase text-secondary px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed inline-block w-fit mt-0.5 font-bold">
-                  P2MW Kemendikbudristek 2026
-                </span>
               </div>
             </Link>
           </div>
