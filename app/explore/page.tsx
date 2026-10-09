@@ -389,12 +389,6 @@ export default function MarketplaceExplorePage() {
             >
               Checkout & Reservasi
             </Link>
-            <Link
-              className="font-body-regular text-body-regular text-on-surface-variant hover:text-on-surface transition-colors"
-              href="/dashboard"
-            >
-              Operator Backoffice
-            </Link>
           </nav>
 
           <div className="flex items-center gap-space-md">
@@ -437,13 +431,6 @@ export default function MarketplaceExplorePage() {
             <div className="relative max-w-7xl mx-auto px-6 lg:px-12 pt-10 pb-16">
               {/* Top Badges & Value Pitch */}
               <div className="flex flex-wrap items-center gap-space-sm mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-lowest/15 backdrop-blur-md text-surface-container-lowest font-micro-badge text-micro-badge">
-                  <MaterialIcon
-                    name="verified"
-                    className="text-[15px] text-secondary-container"
-                  />
-                  Terverifikasi Kemenparekraf & NIB Resmi
-                </span>
               </div>
               <div className="max-w-4xl mb-8">
                 <h1 className="font-display text-display tracking-tight text-surface-container-lowest mb-3 font-bold">
@@ -588,11 +575,11 @@ export default function MarketplaceExplorePage() {
                 <div className="mt-4 pt-3 flex flex-wrap items-center gap-2">
                   <span className="font-caption text-caption text-outline mr-1">Tren Pencarian:</span>
                   {[
-                    { label: "🔥 Bromo Sunrise Midnight", query: "Bromo" },
-                    { label: "⛵ Phinisi Komodo 3D2N", query: "Komodo" },
-                    { label: "🤿 Snorkeling Menjangan", query: "Menjangan" },
-                    { label: "🌋 Kawah Ijen Blue Fire", query: "Ijen" },
-                    { label: "🌊 Karimunjawa Bahari", query: "Karimunjawa" },
+                    { label: "Bromo Sunrise Midnight", query: "Bromo" },
+                    { label: "Phinisi Komodo 3D2N", query: "Komodo" },
+                    { label: "Snorkeling Menjangan", query: "Menjangan" },
+                    { label: "Kawah Ijen Blue Fire", query: "Ijen" },
+                    { label: "Karimunjawa Bahari", query: "Karimunjawa" },
                   ].map((trend) => (
                     <button
                       key={trend.label}
@@ -604,29 +591,6 @@ export default function MarketplaceExplorePage() {
                     </button>
                   ))}
                 </div>
-              </div>
-            </div>
-          </section>
-
-          {/* P2MW BANNER STRIP */}
-          <section className="w-full bg-surface-container py-3">
-            <div className="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-on-surface">
-              <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary">
-                  <MaterialIcon name="verified_user" className="text-[18px]" />
-                </span>
-                <div className="text-left">
-                  <span className="font-body-semibold text-body-semibold block text-primary font-bold">
-                    Inisiatif Program Pembinaan Mahasiswa Wirausaha (P2MW) 2026
-                  </span>
-                  <span className="font-caption text-caption text-on-surface-variant">
-                    Didanai Ditjen Diktiristek & Pendampingan Universitas Tidar • Standardisasi Digitalisasi Ekosistem UMKM Maritim.
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-primary font-body-semibold text-caption shrink-0 font-bold">
-                <span>Transparansi Biaya & Legalitas Terjamin</span>
-                <MaterialIcon name="arrow_forward" className="text-[16px]" />
               </div>
             </div>
           </section>
@@ -650,74 +614,6 @@ export default function MarketplaceExplorePage() {
                     >
                       Reset Semua
                     </button>
-                  </div>
-
-                  {/* Verified Switch Toggle */}
-                  <div className="p-3 rounded-lg bg-surface-container-low flex items-center justify-between gap-3">
-                    <div className="flex flex-col">
-                      <span className="font-body-semibold text-caption text-primary flex items-center gap-1 font-bold">
-                        <MaterialIcon
-                          name="shield"
-                          className="text-[15px] text-secondary-container"
-                        />
-                        Mitra Terverifikasi
-                      </span>
-                      <span className="font-caption text-caption text-on-surface-variant">
-                        NIB & TDUP Resmi Saja
-                      </span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        checked={verifiedOnly}
-                        onChange={(e) => setVerifiedOnly(e.target.checked)}
-                        className="sr-only peer"
-                        type="checkbox"
-                      />
-                      <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                    </label>
-                  </div>
-
-                  {/* Real-Time Quota Status Filter */}
-                  <div className="space-y-3">
-                    <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                      Status Kuota Kursi
-                    </span>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input
-                          checked={availableOnly}
-                          onChange={(e) => setAvailableOnly(e.target.checked)}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary"
-                          type="checkbox"
-                        />
-                        <span className="font-body-regular text-body-regular text-on-surface">
-                          Tersedia Instan (Auto-Lock)
-                        </span>
-                      </label>
-                      <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input
-                          checked={guaranteedOnly}
-                          onChange={(e) => setGuaranteedOnly(e.target.checked)}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary"
-                          type="checkbox"
-                        />
-                        <span className="font-body-regular text-body-regular text-on-surface">
-                          Pasti Berangkat (Guaranteed)
-                        </span>
-                      </label>
-                      <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input
-                          checked={urgentOnly}
-                          onChange={(e) => setUrgentOnly(e.target.checked)}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary"
-                          type="checkbox"
-                        />
-                        <span className="font-body-regular text-body-regular text-secondary font-body-semibold flex items-center gap-1 font-bold">
-                          <span>Sisa Kursi Menipis (≤ 3 Kursi)</span>
-                          <MaterialIcon name="local_fire_department" className="text-[14px]" />
-                        </span>
-                      </label>
-                    </div>
                   </div>
 
                   {/* Budget Range Slider */}
@@ -750,10 +646,10 @@ export default function MarketplaceExplorePage() {
                     </span>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        { id: "1d", label: "1 Hari / Midnight" },
-                        { id: "2d1n", label: "2D 1N" },
-                        { id: "3d2n", label: "3D 2N" },
-                        { id: "4d3n", label: "4D 3N+" },
+                        { id: "1d", label: "1 Hari / Tengah Malam" },
+                        { id: "2d1n", label: "2H 1M" },
+                        { id: "3d2n", label: "3H 2M" },
+                        { id: "4d3n", label: "4H 3M" },
                       ].map((dur) => {
                         const isActive = selectedDuration === dur.id;
                         return (
@@ -802,53 +698,6 @@ export default function MarketplaceExplorePage() {
                       </label>
                     </div>
                   </div>
-
-                  {/* Rating Operator */}
-                  <div className="space-y-2">
-                    <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                      Rating Operator
-                    </span>
-                    <div className="space-y-1.5">
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low cursor-pointer">
-                        <div className="flex items-center gap-1.5 text-caption font-body-semibold text-on-surface font-bold">
-                          <MaterialIcon
-                            name="star"
-                            className="text-[16px] text-secondary-container"
-                          />
-                          <span>4.8 ke atas (Rekomendasi)</span>
-                        </div>
-                        <input defaultChecked className="text-primary" name="rating-filter" type="radio" />
-                      </label>
-                      <label className="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-low cursor-pointer">
-                        <div className="flex items-center gap-1.5 text-caption font-body-semibold text-on-surface font-bold">
-                          <MaterialIcon
-                            name="star"
-                            className="text-[16px] text-secondary-container"
-                          />
-                          <span>4.5 ke atas</span>
-                        </div>
-                        <input className="text-primary" name="rating-filter" type="radio" />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Help Widget */}
-                <div className="bg-primary/5 rounded-xl p-4 text-on-surface space-y-2">
-                  <div className="flex items-center gap-2 text-primary font-body-semibold text-body-semibold font-bold">
-                    <MaterialIcon name="support_agent" className="text-[18px]" />
-                    <span>Butuh Custom Group?</span>
-                  </div>
-                  <p className="font-caption text-caption text-on-surface-variant">
-                    Konsultasikan paket corporate gathering, honeymoon, atau charter kapal khusus melalui konsultan trip Nusabook.
-                  </p>
-                  <button
-                    className="w-full py-2 px-3 text-caption font-body-semibold text-primary bg-surface-container-lowest rounded-lg hover:bg-surface-container transition-all flex items-center justify-center gap-1 font-bold"
-                    type="button"
-                  >
-                    <MaterialIcon name="chat" className="text-[15px]" />
-                    Hubungi Konsultan
-                  </button>
                 </div>
               </aside>
 
@@ -1123,258 +972,6 @@ export default function MarketplaceExplorePage() {
             </div>
           </section>
 
-          {/* INTERACTIVE HUB KEBERANGKATAN & PETA RUTE NUSANTARA */}
-          <section className="w-full bg-surface-container-low py-12">
-            <div className="max-w-7xl mx-auto px-6 lg:px-12 space-y-8">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                  <span className="font-micro-badge text-micro-badge text-secondary font-bold tracking-wider uppercase block mb-1">
-                    Jaringan Logistik Maritim & Darat
-                  </span>
-                  <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold">
-                    Hub Keberangkatan & Koridor Wisata Nusantara
-                  </h2>
-                </div>
-                <p className="font-body-regular text-body-regular text-on-surface-variant max-w-md">
-                  Seluruh armada penyeberangan kapal cepat, speedboat, dan jip 4x4 terintegrasi langsung dengan manifest manifes KSOP & sistem operasional Nusabook.
-                </p>
-              </div>
-
-              {/* Map & Hub Visual Bento Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                {/* Peta Interaktif Mockup Container */}
-                <div className="lg:col-span-8 bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm relative flex flex-col justify-between p-6">
-                  <div
-                    className="w-full h-80 bg-cover bg-center rounded-lg relative overflow-hidden"
-                    style={{
-                      backgroundImage:
-                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBANSa1W6VgYnW3uCNDJRmf3B_fRjteJh5-D0iX7MW0E7yTcXGPjKoR1AUBh5So6jis5rcGG6Iu9QquRZInZPJJZfJY0HKfxrWFt9TZPWjo_2KfUEEN-IRUMBSvNHbVcD6i70Rc0Jf3N5m5pWEvPVYPt6to9duA7QxybhqNzoZs34HD88J4M2cc6pPc9y60J5uzY7K89DOxCziS-_38pn_S03y_OnD7H-Rhzt9EmfY3yw5eM6VCi_k")',
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-primary/20 backdrop-blur-[0.5px]" />
-                    {/* Hub Pins */}
-                    <div className="absolute top-[52%] left-[28%] group cursor-pointer">
-                      <div className="relative flex items-center justify-center">
-                        <span className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-secondary-container opacity-75" />
-                        <span className="relative inline-flex rounded-full h-5 w-5 bg-secondary-container items-center justify-center text-white text-[10px] font-bold">
-                          1
-                        </span>
-                      </div>
-                      <div className="mt-1 bg-surface-container-lowest text-on-surface text-[11px] font-bold px-2 py-0.5 rounded shadow-md whitespace-nowrap">
-                        Hub Malang & Bromo
-                      </div>
-                    </div>
-                    <div className="absolute top-[48%] left-[24%] group cursor-pointer">
-                      <div className="relative flex items-center justify-center">
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-primary items-center justify-center text-white text-[9px] font-bold">
-                          2
-                        </span>
-                      </div>
-                      <div className="mt-1 bg-surface-container-lowest text-on-surface text-[11px] font-bold px-2 py-0.5 rounded shadow-md whitespace-nowrap">
-                        Pelabuhan Kartini Jepara
-                      </div>
-                    </div>
-                    <div className="absolute top-[54%] left-[34%] group cursor-pointer">
-                      <div className="relative flex items-center justify-center">
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-primary items-center justify-center text-white text-[9px] font-bold">
-                          3
-                        </span>
-                      </div>
-                      <div className="mt-1 bg-surface-container-lowest text-on-surface text-[11px] font-bold px-2 py-0.5 rounded shadow-md whitespace-nowrap">
-                        Banyuwangi & Ketapang
-                      </div>
-                    </div>
-                    <div className="absolute top-[58%] left-[54%] group cursor-pointer">
-                      <div className="relative flex items-center justify-center">
-                        <span className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-secondary-container opacity-75" />
-                        <span className="relative inline-flex rounded-full h-5 w-5 bg-secondary-container items-center justify-center text-white text-[10px] font-bold">
-                          4
-                        </span>
-                      </div>
-                      <div className="mt-1 bg-surface-container-lowest text-on-surface text-[11px] font-bold px-2 py-0.5 rounded shadow-md whitespace-nowrap">
-                        Marina Labuan Bajo
-                      </div>
-                    </div>
-                    <div className="absolute top-[35%] left-[45%] group cursor-pointer">
-                      <div className="relative flex items-center justify-center">
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-primary items-center justify-center text-white text-[9px] font-bold">
-                          5
-                        </span>
-                      </div>
-                      <div className="mt-1 bg-surface-container-lowest text-on-surface text-[11px] font-bold px-2 py-0.5 rounded shadow-md whitespace-nowrap">
-                        Tanjung Batu Berau
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom Operational Live Telemetry */}
-                  <div className="grid grid-cols-3 gap-4 pt-4 mt-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                        <MaterialIcon name="sailing" className="text-[20px]" />
-                      </div>
-                      <div>
-                        <span className="font-headline-sm text-headline-sm text-on-surface font-bold">42 Kapal</span>
-                        <span className="font-caption text-caption text-outline block">Phinisi & Fastboat Aktif</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                        <MaterialIcon name="directions_car" className="text-[20px]" />
-                      </div>
-                      <div>
-                        <span className="font-headline-sm text-headline-sm text-on-surface font-bold">118 Jeep</span>
-                        <span className="font-caption text-caption text-outline block">Armada Bromo & Ijen</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                        <MaterialIcon name="badge" className="text-[20px]" />
-                      </div>
-                      <div>
-                        <span className="font-headline-sm text-headline-sm text-on-surface font-bold">100% Legal</span>
-                        <span className="font-caption text-caption text-outline block">Terverifikasi KSOP</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hub Detail Cards (Right Column) */}
-                <div className="lg:col-span-4 space-y-4">
-                  <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-body-semibold text-body-semibold text-primary font-bold">
-                        Hub Marina Labuan Bajo
-                      </span>
-                      <span className="font-micro-badge text-micro-badge px-2 py-0.5 bg-[#ecfdf5] text-[#059669] rounded-full font-bold">
-                        Operasional Lancar
-                      </span>
-                    </div>
-                    <p className="font-caption text-caption text-on-surface-variant">
-                      Titik kumpul dermaga KP3 / Marina Waterfront. Integrasi tiket digital SIMAKSI Taman Nasional Komodo & manifes syahbandar.
-                    </p>
-                    <div className="flex items-center gap-2 pt-1 font-caption text-caption text-secondary font-bold">
-                      <MaterialIcon name="anchor" className="text-[15px]" />
-                      <span>12 Trip Berangkat Minggu Ini</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-body-semibold text-body-semibold text-primary font-bold">
-                        Hub Stasiun Kota Malang
-                      </span>
-                      <span className="font-micro-badge text-micro-badge px-2 py-0.5 bg-[#ecfdf5] text-[#059669] rounded-full font-bold">
-                        Operasional Lancar
-                      </span>
-                    </div>
-                    <p className="font-caption text-caption text-on-surface-variant">
-                      Titik jemput resmi Stasiun Malang Kotabaru & Bandara Abdulrachman Saleh untuk midnight trip Bromo via Tumpang & Tosari.
-                    </p>
-                    <div className="flex items-center gap-2 pt-1 font-caption text-caption text-secondary font-bold">
-                      <MaterialIcon name="pin_drop" className="text-[15px]" />
-                      <span>Penjemputan tepat waktu bergaransi</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-body-semibold text-body-semibold text-primary font-bold">
-                        Hub Pelabuhan Jepara
-                      </span>
-                      <span className="font-micro-badge text-micro-badge px-2 py-0.5 bg-[#fffbeb] text-[#d97706] rounded-full font-bold">
-                        Pantauan Ombak 1.2m
-                      </span>
-                    </div>
-                    <p className="font-caption text-caption text-on-surface-variant">
-                      Dermaga Express Bahari rute Jepara-Karimunjawa. Live sync jadwal BMKG Maritim langsung ke tiket penumpang.
-                    </p>
-                    <div className="flex items-center gap-2 pt-1 font-caption text-caption text-primary font-bold">
-                      <MaterialIcon name="water" className="text-[15px]" />
-                      <span>Aman Berlayar Sesuai Notulen Syahbandar</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* 3 PILAR KEAMANAN WISATAWAN (VALUE BADGES B2C) */}
-          <section className="w-full bg-surface-container-lowest py-14">
-            <div className="max-w-7xl mx-auto px-6 lg:px-12 space-y-10">
-              <div className="text-center max-w-2xl mx-auto space-y-2">
-                <span className="font-micro-badge text-micro-badge text-primary uppercase tracking-widest font-bold">
-                  Standardisasi Ekosistem Nusabook
-                </span>
-                <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold">
-                  3 Pilar Keamanan & Transparansi Wisatawan
-                </h2>
-                <p className="font-body-regular text-body-regular text-on-surface-variant">
-                  Perlindungan menyeluruh dari reservasi awal hingga kepulangan Anda dari destinasi Nusantara.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Pilar 1 */}
-                <div className="bg-surface-container-low p-6 rounded-xl space-y-4 hover:shadow-sm transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-sm">
-                    <MaterialIcon name="lock_clock" className="text-[26px]" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <h3 className="font-title-md text-title-md text-on-surface font-bold">
-                      Slot Kuota Real-Time Tanpa Overbooking
-                    </h3>
-                    <p className="font-body-regular text-body-regular text-on-surface-variant leading-relaxed">
-                      Arsitektur database Nusabook menggunakan mekanisme PostgreSQL atomic row-lock. Begitu Anda memilih tanggal, kursi langsung dikunci sementara hingga pembayaran selesai.
-                    </p>
-                  </div>
-                  <div className="pt-2 flex items-center gap-1.5 text-caption font-body-semibold text-primary font-bold">
-                    <MaterialIcon name="check_circle" className="text-[16px]" />
-                    <span>Zero Double-Booking Guarantee</span>
-                  </div>
-                </div>
-
-                {/* Pilar 2 */}
-                <div className="bg-surface-container-low p-6 rounded-xl space-y-4 hover:shadow-sm transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-secondary-container text-surface-container-lowest flex items-center justify-center shadow-sm">
-                    <MaterialIcon name="account_balance" className="text-[26px]" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <h3 className="font-title-md text-title-md text-on-surface font-bold">
-                      Escrow Rekening Aman (Garansi Berangkat)
-                    </h3>
-                    <p className="font-body-regular text-body-regular text-on-surface-variant leading-relaxed">
-                      Dana DP & pelunasan Anda ditampung di escrow payment gateway terdaftar OJK. Dana baru dicairkan ke operator setelah trip berjalan sesuai kesepakatan itenary.
-                    </p>
-                  </div>
-                  <div className="pt-2 flex items-center gap-1.5 text-caption font-body-semibold text-secondary font-bold">
-                    <MaterialIcon name="security" className="text-[16px]" />
-                    <span>100% Refund Jika Operator Batal</span>
-                  </div>
-                </div>
-
-                {/* Pilar 3 */}
-                <div className="bg-surface-container-low p-6 rounded-xl space-y-4 hover:shadow-sm transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-sm">
-                    <MaterialIcon name="qr_code_2" className="text-[26px]" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <h3 className="font-title-md text-title-md text-on-surface font-bold">
-                      E-Ticket & Manifes Resmi KSOP / TNBTS
-                    </h3>
-                    <p className="font-body-regular text-body-regular text-on-surface-variant leading-relaxed">
-                      Tiket instan ber-QR Code, polis asuransi kecelakaan Jasa Raharja, dan konfirmasi titik kumpul langsung dikirimkan ke WhatsApp Anda dalam hitungan detik.
-                    </p>
-                  </div>
-                  <div className="pt-2 flex items-center gap-1.5 text-caption font-body-semibold text-primary font-bold">
-                    <MaterialIcon name="verified" className="text-[16px]" />
-                    <span>Tervalidasi di Pintu Masuk Wisata</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* QUICK OPERATOR ONBOARDING CALLOUT STRIP */}
           <section className="w-full bg-primary text-on-primary py-8">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -1417,18 +1014,8 @@ export default function MarketplaceExplorePage() {
             <span className="font-body-semibold text-body-semibold text-primary font-bold">
               Nusabook UMKM Pariwisata
             </span>
-            <span className="font-caption text-caption text-outline">Program P2MW 2026</span>
           </div>
           <div className="flex gap-space-lg font-caption text-caption">
-            <Link className="hover:text-on-surface transition-colors" href="/guide">
-              Panduan Operator
-            </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/terms">
-              Syarat Escrow DP
-            </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/safety">
-              Standar Keselamatan Bahari
-            </Link>
           </div>
           <div className="font-caption text-caption text-outline">© 2026 Nusabook Indonesia. Hak Cipta Dilindungi.</div>
         </div>
