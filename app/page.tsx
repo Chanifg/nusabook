@@ -557,14 +557,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-space-lg pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-caption text-caption text-xs border-t border-surface-container">
-            <p>© 2026 Nusabook. Inisiatif P2MW Kemendikbudristek RI. Seluruh Hak Cipta Dilindungi.</p>
-            <div className="flex items-center gap-space-md">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-secondary-container" />
-                Escrow Safe Lock
-              </span>
-              <span>Kemendikbudristek P2MW Terdaftar</span>
-            </div>
+            <p>© 2026 Nusabook. Seluruh Hak Cipta Dilindungi.</p>
           </div>
         </div>
       </footer>
