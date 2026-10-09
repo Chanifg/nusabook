@@ -21,9 +21,6 @@ export default function HomePage() {
           </div>
 
           <nav className="hidden xl:flex items-center gap-space-md">
-            <Link href="/" className="text-primary font-body-semibold">
-              Beranda
-            </Link>
             <Link
               href="/explore"
               className="text-on-surface-variant hover:text-on-surface transition-colors"
@@ -96,7 +93,7 @@ export default function HomePage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-secondary-container hover:bg-secondary text-on-primary font-body-semibold text-body-lg shadow-md hover:shadow-lg transition-all"
                   >
                     <MaterialIcon name="storefront" className="text-xl" />
-                    <span>Buka Toko Tour Gratis (0 Biaya Awal)</span>
+                    <span>Mulai Gratis Sekarang</span>
                   </Link>
                 </div>
 
@@ -214,10 +211,6 @@ export default function HomePage() {
                           </p>
                         </div>
                       </div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-caption text-caption font-semibold">
-                        <span className="w-2 h-2 rounded-full bg-secondary-container" />
-                        PostgreSQL Row-Lock Active
-                      </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3 mb-5">
@@ -309,9 +302,6 @@ export default function HomePage() {
         <section className="w-full py-20 bg-surface">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="font-micro-badge text-micro-badge uppercase text-secondary tracking-widest font-bold block mb-2">
-                Riset Empiris Lapangan
-              </span>
               <h2 className="font-headline-lg text-headline-lg text-primary font-bold tracking-tight">
                 Tantangan Nyata Pelaku Tour &amp; Travel Lokal
               </h2>
@@ -471,12 +461,6 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
             <div className="bg-gradient-to-br from-primary via-primary to-primary-container rounded-3xl p-8 md:p-14 text-on-primary shadow-2xl relative overflow-hidden text-center">
               <div className="relative z-10 max-w-3xl mx-auto">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-on-primary/10 backdrop-blur-md mb-6">
-                  <span className="w-2 h-2 rounded-full bg-secondary-container" />
-                  <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-on-primary font-bold">
-                    Mulai Dalam 3 Menit
-                  </span>
-                </div>
                 <h2 className="font-headline-lg text-headline-lg md:text-display text-on-primary font-bold tracking-tight mb-4">
                   Siap Mentransformasi Bisnis Tour &amp; Travel Anda ke Level Berikutnya?
                 </h2>
