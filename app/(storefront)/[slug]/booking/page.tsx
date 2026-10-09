@@ -208,17 +208,11 @@ export default function BookingPage() {
             <span className="font-body-semibold text-body-semibold text-primary font-bold">
               Checkout & Reservasi
             </span>
-            <Link className="font-body-regular text-body-regular text-on-surface-variant hover:text-on-surface transition-colors" href="/dashboard">
-              Operator Backoffice
-            </Link>
           </nav>
 
           <div className="flex items-center gap-space-md">
             <div className="hidden sm:flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1.5 rounded-full text-on-surface-variant">
               <MaterialIcon name="lock" className="text-[16px] text-primary" />
-              <span className="font-caption text-caption font-semibold text-primary font-bold">
-                Escrow Terproteksi
-              </span>
             </div>
             <div className="relative">
               <button
@@ -1029,18 +1023,6 @@ export default function BookingPage() {
             <span className="font-body-semibold text-body-semibold text-primary font-bold">
               Nusabook UMKM Pariwisata
             </span>
-            <span className="font-caption text-caption text-outline">Program P2MW 2026</span>
-          </div>
-          <div className="flex gap-space-lg font-caption text-caption">
-            <Link className="hover:text-on-surface transition-colors" href="/guide">
-              Panduan Operator
-            </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/terms">
-              Syarat Escrow DP
-            </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/safety">
-              Standar Keselamatan Bahari
-            </Link>
           </div>
           <div className="font-caption text-caption text-outline">© 2026 Nusabook Indonesia. Hak Cipta Dilindungi.</div>
         </div>
