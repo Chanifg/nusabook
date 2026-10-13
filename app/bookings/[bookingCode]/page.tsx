@@ -42,12 +42,6 @@ export default function ETicketPage({
                 Nusabook
               </span>
             </Link>
-            <div className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="font-micro-badge text-micro-badge text-on-surface-variant font-semibold uppercase tracking-wider font-bold">
-                Live Sync Aktif
-              </span>
-            </div>
           </div>
 
           <nav className="hidden lg:flex items-center gap-space-lg">
@@ -66,12 +60,6 @@ export default function ETicketPage({
           </nav>
 
           <div className="flex items-center gap-space-md">
-            <div className="hidden sm:flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1.5 rounded-full text-on-surface-variant">
-              <MaterialIcon name="lock" className="text-[16px] text-primary" />
-              <span className="font-caption text-caption font-semibold text-primary font-bold">
-                Escrow Terproteksi
-              </span>
-            </div>
             <div className="relative">
               <button
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all"
@@ -114,7 +102,7 @@ export default function ETicketPage({
                       Konfirmasi Reservasi Resmi
                     </h1>
                     <p className="font-caption text-caption text-on-surface-variant">
-                      Langkah 4 dari 4: Penerbitan E-Tiket Sah & SIMAKSI Digital
+                      Langkah 4 dari 4: E-Tiket & Konfirmasi
                     </p>
                   </div>
                 </div>
@@ -144,7 +132,7 @@ export default function ETicketPage({
                       <MaterialIcon name="check" className="text-[14px]" />
                     </span>
                     <span className="font-caption text-caption text-on-surface font-semibold hidden sm:inline">
-                      Escrow Terkunci
+                      Pembayaran Terkonfirmasi
                     </span>
                   </div>
                   <span className="w-4 h-0.5 bg-secondary-container" />
@@ -242,21 +230,18 @@ export default function ETicketPage({
                     <div className="flex flex-col">
                       <div className="flex items-center gap-space-xs">
                         <span className="font-title-md text-title-md text-primary font-bold">
-                          Nusabook Boarding Pass
-                        </span>
-                        <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">
-                          Official SIMAKSI
+                          E-Tiket Nusabook
                         </span>
                       </div>
                       <span className="font-caption text-caption text-on-surface-variant">
-                        Operator: Pesona Nusantara Tour & Travel (NIB: 1209380029102)
+                        Operator: Pesona Nusantara Tour & Travel
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-space-sm">
                     <div className="inline-flex items-center gap-1.5 bg-[#ecfdf5] text-[#059669] px-space-sm py-1 rounded-full font-micro-badge text-micro-badge font-bold">
                       <span className="w-2 h-2 rounded-full bg-[#10b981] animate-ping" />
-                      <span>TERBAYAR LUNAS (ESCROW SECURED)</span>
+                      <span>TERBAYAR LUNAS</span>
                     </div>
                   </div>
                 </div>
@@ -275,7 +260,7 @@ export default function ETicketPage({
                     <span className="font-body-semibold text-primary select-all font-bold font-mono">
                       {bookingCode}
                     </span>{" "}
-                    • Kategori: Ekskursi Wisata Alam Terproteksi
+                    • Kategori: Open Trip
                   </p>
                 </div>
 
@@ -454,7 +439,7 @@ export default function ETicketPage({
                 <div className="w-full flex flex-col items-center">
                   <div className="inline-flex items-center gap-1 text-primary font-caption text-caption font-bold uppercase tracking-wider mb-space-sm">
                     <MaterialIcon name="qr_code_scanner" className="text-[16px]" />
-                    <span>Validasi Lapangan</span>
+                    <span>Validasi di Lokasi</span>
                   </div>
 
                   {/* Clean QR Code Visual Graphic */}
@@ -496,7 +481,7 @@ export default function ETicketPage({
                     NUSA-AUTH-9a8f4c2b-e10842
                   </div>
                   <p className="font-caption text-caption text-on-surface-variant mt-space-xs leading-relaxed max-w-xs">
-                    Tunjukkan QR Code ini kepada Tour Leader / Crew Lapangan saat penjemputan untuk verifikasi kehadiran & aktivasi pelepasan Escrow.
+                    Tunjukkan QR Code ini kepada Tour Leader / Crew Lapangan saat penjemputan untuk verifikasi kehadiran.
                   </p>
                 </div>
 
@@ -691,10 +676,10 @@ export default function ETicketPage({
                         </div>
                         <div>
                           <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                            Nusabook Emergency Hotdesk
+                            Nusabook Customer Support
                           </span>
                           <span className="font-caption text-caption text-on-surface-variant">
-                            +62 811-300-NUSA (Eskalasi 24/7)
+                            +62 811-300-NUSA (Hotline 24/7)
                           </span>
                         </div>
                       </div>
@@ -712,30 +697,20 @@ export default function ETicketPage({
 
               {/* Right Column: Escrow Financial Proof & Safe Vault Breakdown (5 Cols) */}
               <div className="lg:col-span-5 flex flex-col gap-space-md">
-                {/* Escrow Protection Badge Highlight */}
+                {/* Ringkasan Pembayaran Card */}
                 <div className="w-full bg-surface-container-lowest rounded-xl p-space-md lg:p-space-lg shadow-md flex flex-col gap-space-md">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-space-xs">
-                      <MaterialIcon name="verified_user" className="text-[22px] text-primary" />
-                      <h3 className="font-title-md text-title-md text-primary font-bold">
-                        Nusabook Safe Vault™ Escrow
-                      </h3>
-                    </div>
-                    <span className="bg-[#ecfdf5] text-[#059669] px-2 py-0.5 rounded text-[11px] font-bold">
-                      100% TERPROTEKSI
-                    </span>
-                  </div>
-                  <div className="p-space-sm rounded-lg bg-surface-container-low text-on-surface-variant font-caption text-caption leading-relaxed">
-                    Pembayaran Anda ditahan secara aman di Rekening Penampung Resmi Nusabook (BCA Escrow Account). Dana baru akan diteruskan ke rekening operator{" "}
-                    <span className="font-semibold text-on-surface font-bold">Pesona Nusantara Tour</span> setelah kepulangan trip dinyatakan selesai & bebas komplain.
+                  <div className="flex items-center gap-space-xs">
+                    <MaterialIcon name="receipt_long" className="text-[22px] text-primary" />
+                    <h3 className="font-title-md text-title-md text-primary font-bold">
+                      Ringkasan Pembayaran
+                    </h3>
                   </div>
 
-                  {/* Transaction Summary Breakdown */}
                   <div className="flex flex-col gap-space-xs text-body-regular">
                     <div className="flex items-center justify-between py-1">
                       <span className="text-on-surface-variant">Metode Pembayaran</span>
                       <span className="font-body-semibold text-on-surface font-bold">
-                        BCA Virtual Account (Midtrans)
+                        BCA Virtual Account
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-1">
@@ -745,36 +720,24 @@ export default function ETicketPage({
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-on-surface-variant">No. Referensi Transaksi</span>
+                      <span className="text-on-surface-variant">No. Referensi</span>
                       <span className="font-mono text-caption text-on-surface font-semibold font-bold">
                         TRX-BCA-20261014-991823
                       </span>
                     </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-on-surface-variant">Harga Paket (2 Pax @ Rp 425.000)</span>
-                      <span className="text-on-surface font-body-semibold font-bold">Rp 850.000</span>
-                    </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-on-surface-variant">Tiket Masuk TNBTS & Asuransi</span>
-                      <span className="text-secondary font-semibold font-bold">Termasuk (Gratis)</span>
-                    </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-on-surface-variant">Biaya Layanan Platform & Escrow</span>
-                      <span className="text-[#059669] font-semibold font-bold">Rp 0 (Subsidi Program P2MW)</span>
-                    </div>
 
-                    {/* Total Paid Line */}
+                    {/* Total Tagihan */}
                     <div className="pt-space-sm mt-space-xs bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between border-t border-surface-container-high">
                       <div>
                         <span className="font-caption text-caption text-on-surface-variant block uppercase tracking-wider font-bold">
-                          Total Pelunasan
+                          Total Tagihan
                         </span>
                         <span className="font-headline-sm text-headline-sm text-primary font-bold">
                           Rp 850.000
                         </span>
                       </div>
                       <span className="bg-[#ecfdf5] text-[#059669] font-body-semibold text-body-semibold px-2.5 py-1 rounded-full font-bold">
-                        Lunas 100%
+                        Lunas
                       </span>
                     </div>
                   </div>
@@ -829,7 +792,7 @@ export default function ETicketPage({
                     <span>Ketentuan Perubahan & Force Majeure</span>
                   </div>
                   <p className="font-caption text-caption text-on-surface-variant leading-relaxed">
-                    Dalam hal erupsi vulkanik Bromo / penutupan resmi Balai Besar TNBTS karena cuaca ekstrem, reservasi ini dilindungi jaminan pengembalian dana penuh (100% Refund Escrow) atau penjadwalan ulang bebas biaya hingga 90 hari ke depan.
+                    Dalam hal erupsi vulkanik Bromo atau penutupan resmi TNBTS karena cuaca ekstrem, reservasi ini dilindungi jaminan pengembalian dana penuh atau penjadwalan ulang bebas biaya hingga 90 hari.
                   </p>
                 </div>
               </div>
@@ -873,14 +836,8 @@ export default function ETicketPage({
             <span className="font-caption text-caption text-outline">Program P2MW 2026</span>
           </div>
           <div className="flex gap-space-lg font-caption text-caption">
-            <Link className="hover:text-on-surface transition-colors" href="/guide">
-              Panduan Operator
-            </Link>
             <Link className="hover:text-on-surface transition-colors" href="/terms">
-              Syarat Escrow DP
-            </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/safety">
-              Standar Keselamatan Bahari
+              Syarat & Ketentuan
             </Link>
           </div>
           <div className="font-caption text-caption text-outline">© 2026 Nusabook Indonesia. Hak Cipta Dilindungi.</div>

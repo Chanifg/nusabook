@@ -190,12 +190,6 @@ export default function BookingPage() {
                 Nusabook
               </span>
             </Link>
-            <div className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="font-micro-badge text-micro-badge text-on-surface-variant font-semibold uppercase tracking-wider font-bold">
-                Live Sync Aktif
-              </span>
-            </div>
           </div>
 
           <nav className="hidden lg:flex items-center gap-space-lg">
@@ -283,7 +277,7 @@ export default function BookingPage() {
                   <div className="flex flex-col min-w-0">
                     <span className="font-caption text-caption text-outline">Langkah 3</span>
                     <span className="font-body-regular text-body-regular text-on-surface truncate">
-                      Pembayaran Escrow
+                      Pembayaran
                     </span>
                   </div>
                 </div>
@@ -316,7 +310,6 @@ export default function BookingPage() {
                   </strong>
                 </span>
               </div>
-              <span className="hidden sm:inline text-xs text-outline">PostgreSQL Pessimistic Row-Lock Aktif</span>
             </div>
           </div>
 
@@ -346,12 +339,9 @@ export default function BookingPage() {
                         </h2>
                       </div>
                       <p className="font-caption text-caption text-outline">
-                        Penanggung Jawab Pemesanan & Penerima E-Ticket Resmi
+                        Kontak utama untuk koordinasi
                       </p>
                     </div>
-                    <span className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container-high text-primary font-caption text-caption font-semibold font-bold">
-                      <MaterialIcon name="shield" className="text-[14px]" /> Terverifikasi
-                    </span>
                   </div>
 
                   <div className="flex items-center gap-space-sm mb-space-lg bg-surface-container-low p-space-sm rounded-lg">
@@ -420,7 +410,7 @@ export default function BookingPage() {
                           required
                         />
                         <span className="absolute right-3 material-symbols-outlined text-[18px] text-outline pointer-events-none">
-                          sms
+                          check
                         </span>
                       </div>
                       <span className="font-caption text-caption text-outline">
@@ -440,12 +430,9 @@ export default function BookingPage() {
                           Manifes Penumpang Resmi
                         </h2>
                       </div>
-                      <p className="font-caption text-caption text-outline">
-                        Standar Perizinan SIMAKSI TNBTS & Registrasi Asuransi Jasa Raharja
-                      </p>
                     </div>
                     <span className="inline-flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-primary-fixed text-primary font-micro-badge text-micro-badge uppercase tracking-wider font-bold">
-                      {pax} Pax Terkunci
+                      {pax} Peserta
                     </span>
                   </div>
 
@@ -453,7 +440,7 @@ export default function BookingPage() {
                   <div className="flex items-start gap-space-sm p-space-md rounded-xl bg-surface-container-low mb-space-lg">
                     <MaterialIcon name="verified_user" className="text-primary text-[22px] shrink-0 mt-0.5" />
                     <p className="font-caption text-caption text-on-surface-variant leading-relaxed">
-                      <strong>Kepatuhan UU PDP No. 27/2022:</strong> Seluruh data identitas kependudukan Anda dienkripsi berlapis (AES-256) di server Nusabook. Data manifes ini khusus diserahkan ke Balai Besar Taman Nasional Bromo Tengger Semeru (TNBTS) dan PT Asuransi Jasa Raharja untuk proteksi keselamatan operasional.
+                      Data Anda aman dan hanya digunakan untuk keperluan perjalanan.
                     </p>
                   </div>
 
@@ -605,7 +592,7 @@ export default function BookingPage() {
                     </h2>
                   </div>
                   <p className="font-caption text-caption text-outline mb-space-md">
-                    Armada Toyota HiAce Commuter Paguyuban Bromo akan menjemput sesuai jadwal yang dipilih.
+                    Penjemputan akan disesuaikan dengan jadwal Anda.
                   </p>
                   <div className="space-y-space-sm">
                     {/* Option 1: Stasiun Malang */}
@@ -635,7 +622,7 @@ export default function BookingPage() {
                           </span>
                         </div>
                         <p className="font-caption text-caption text-on-surface-variant">
-                          Titik kumpul resmi di depan gerai Indomaret Point Pintu Timur Stasiun. Tour guide memegang papan bendera Pesona Nusantara.
+                          Titik kumpul di depan Indomaret, pintu timur stasiun.
                         </p>
                       </div>
                     </label>
@@ -667,7 +654,7 @@ export default function BookingPage() {
                           </span>
                         </div>
                         <p className="font-caption text-caption text-outline">
-                          Driver menjemput langsung di lobi hotel antara pukul 23:45 s/d 00:30 WIB.
+                          Driver akan menjemput di lobi hotel Anda.
                         </p>
                         {pickupLocation === "hotel" && (
                           <input
@@ -708,7 +695,7 @@ export default function BookingPage() {
                           </span>
                         </div>
                         <p className="font-caption text-caption text-outline">
-                          Kumpul di area ruang tunggu utama samping Pos Polisi Terminal Arjosari.
+                          Kumpul di ruang tunggu utama, samping Pos Polisi.
                         </p>
                       </div>
                     </label>
@@ -720,15 +707,8 @@ export default function BookingPage() {
                   <div className="flex items-center gap-space-xs mb-space-xs">
                     <MaterialIcon name="account_balance_wallet" className="text-primary text-[20px]" />
                     <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                      Metode Pembayaran (Escrow Safe Vault)
+                      Metode Pembayaran
                     </h2>
-                  </div>
-                  {/* Escrow Info Badge */}
-                  <div className="p-space-sm bg-surface-container-low rounded-lg flex items-center gap-space-sm mb-space-md">
-                    <MaterialIcon name="lock" className="text-primary text-[20px] shrink-0" />
-                    <span className="font-caption text-caption text-on-surface-variant">
-                      Dana Anda 100% aman di rekening bersama resmi Nusabook. Dana baru dilepaskan ke operator setelah trip selesai dilaksanakan.
-                    </span>
                   </div>
 
                   <div className="space-y-space-sm">
@@ -753,10 +733,10 @@ export default function BookingPage() {
                           />
                           <label className="cursor-pointer" htmlFor="pay-va">
                             <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                              Virtual Account Otomatis (Midtrans Direct)
+                              Virtual Account Bank
                             </span>
                             <span className="font-caption text-caption text-outline">
-                              BCA, Mandiri, BNI, BRI, Permata - Verifikasi Real-Time 24/7
+                              Pilih bank untuk pembayaran
                             </span>
                           </label>
                         </div>
@@ -801,10 +781,10 @@ export default function BookingPage() {
                           />
                           <label className="cursor-pointer" htmlFor="pay-qris">
                             <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                              QRIS Nasional (Semua Bank & E-Wallet)
+                              QRIS
                             </span>
                             <span className="font-caption text-caption text-outline">
-                              Scan cepat menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking
+                              Scan pakai aplikasi bank atau e-wallet
                             </span>
                           </label>
                         </div>
@@ -833,10 +813,10 @@ export default function BookingPage() {
                           />
                           <label className="cursor-pointer" htmlFor="pay-cc">
                             <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                              Kartu Kredit / Debit Online (3D Secure)
+                              Kartu Kredit / Debit
                             </span>
                             <span className="font-caption text-caption text-outline">
-                              Visa, Mastercard, JCB berlogo prinsipal resmi
+                              Visa, Mastercard, JCB
                             </span>
                           </label>
                         </div>
@@ -863,9 +843,6 @@ export default function BookingPage() {
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDmkLJizAb27p16NLtWKjfRcusg6nTqC8cmWTMOoT32cP2W9bII51cYaG9zodmHvVH_Mj1zuFbl1W572c7MLA4lA07C8Gf_N15NuwIP8HjeVe9ZXWko-FMDDhUui40UFVBpun0CAjRItCBKb5bjvSNs4r1uus6SoD36gVZcj0GlybRYaqo5IipRWfIhKmoHAiBkenCUmBRNReFMkjLNEB1VfEdAzx9LDH4pMIQrkhjxFPIswPR_Dc"
                     />
                     <div className="flex flex-col justify-center min-w-0">
-                      <span className="font-micro-badge text-micro-badge text-secondary-container uppercase font-bold tracking-wider">
-                        Open Trip Eksklusif
-                      </span>
                       <h4 className="font-body-semibold text-body-semibold text-on-surface leading-snug truncate font-bold">
                         {tripTitle}
                       </h4>
@@ -951,23 +928,6 @@ export default function BookingPage() {
                     </div>
                   </div>
 
-                  {/* Trust & Escrow Guarantee Strip */}
-                  <div className="bg-surface-container-low p-space-sm rounded-xl mb-space-lg space-y-1.5">
-                    <div className="flex items-center gap-space-xs text-[#059669]">
-                      <MaterialIcon name="verified" className="text-[18px]" />
-                      <span className="font-caption text-caption font-semibold font-bold">
-                        100% Garansi Pasti Berangkat
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-space-xs text-on-surface-variant">
-                      <MaterialIcon name="history" className="text-[18px] text-primary" />
-                      <span className="font-caption text-caption">Refund 100% jika dibatalkan H-7 trip</span>
-                    </div>
-                    <div className="flex items-center gap-space-xs text-on-surface-variant">
-                      <MaterialIcon name="lock" className="text-[18px] text-primary" />
-                      <span className="font-caption text-caption">Enkripsi SSL 256-bit Standar OJK & BI</span>
-                    </div>
-                  </div>
 
                   {/* Big Action CTA Button */}
                   <button

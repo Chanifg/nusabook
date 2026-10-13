@@ -117,12 +117,6 @@ export default function PaymentInstructionPage({
                 Nusabook
               </span>
             </Link>
-            <div className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="font-micro-badge text-micro-badge text-on-surface-variant font-semibold uppercase tracking-wider font-bold">
-                Live Sync Aktif
-              </span>
-            </div>
           </div>
 
           <nav className="hidden lg:flex items-center gap-space-lg">
@@ -141,12 +135,6 @@ export default function PaymentInstructionPage({
           </nav>
 
           <div className="flex items-center gap-space-md">
-            <div className="hidden sm:flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1.5 rounded-full text-on-surface-variant">
-              <MaterialIcon name="lock" className="text-[16px] text-primary" />
-              <span className="font-caption text-caption font-semibold text-primary font-bold">
-                Escrow Terproteksi
-              </span>
-            </div>
             <div className="relative">
               <button
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all"
@@ -223,7 +211,7 @@ export default function PaymentInstructionPage({
                     Sedang Berlangsung
                   </span>
                   <p className="font-body-semibold text-body-semibold text-primary truncate font-bold">
-                    Pembayaran Escrow
+                    Pembayaran
                   </p>
                 </div>
               </div>
@@ -252,7 +240,7 @@ export default function PaymentInstructionPage({
                   <div className="inline-flex items-center gap-space-xs bg-[#fffbeb] text-[#d97706] px-space-sm py-1 rounded-full">
                     <span className="w-2.5 h-2.5 rounded-full bg-secondary-container animate-ping" />
                     <span className="font-caption text-caption font-semibold font-bold">
-                      Menunggu Pembayaran (Pending Settlement)
+                      Menunggu Pembayaran
                     </span>
                   </div>
                   <span className="font-caption text-caption text-outline">|</span>
@@ -281,7 +269,7 @@ export default function PaymentInstructionPage({
                 <div className="flex items-center justify-between gap-space-md mb-1">
                   <div className="flex items-center gap-space-xs text-secondary font-bold">
                     <MaterialIcon name="timer" className="text-[18px]" />
-                    <span className="font-caption text-caption uppercase tracking-wider">Kunci Kursi TTL</span>
+                    <span className="font-caption text-caption uppercase tracking-wider">Sisa Waktu</span>
                   </div>
                   <span className="font-title-md text-title-md font-bold text-secondary tracking-widest font-mono">
                     {formatClock(totalSeconds)}
@@ -294,7 +282,7 @@ export default function PaymentInstructionPage({
                   />
                 </div>
                 <p className="font-caption text-caption text-on-secondary-fixed-variant leading-tight">
-                  <strong>2 Kursi Anda</strong> terkunci otomatis. Pembayaran akan kadaluarsa jika melewati batas waktu.
+                  Kursi Anda terkunci sementara. Segera selesaikan pembayaran.
                 </p>
               </div>
             </div>
@@ -320,7 +308,7 @@ export default function PaymentInstructionPage({
                       <div className="flex items-center gap-space-xs mt-0.5">
                         <span className="w-2 h-2 rounded-full bg-[#10b981]" />
                         <span className="font-caption text-caption text-[#059669] font-semibold font-bold">
-                          Verifikasi Otomatis 24/7 (Real-time Webhook)
+                          Verifikasi otomatis
                         </span>
                       </div>
                     </div>
@@ -369,7 +357,7 @@ export default function PaymentInstructionPage({
                         {formatRupiah(totalAmount)}
                       </span>
                       <span className="font-caption text-caption text-[#059669] font-medium block mt-0.5 font-bold">
-                        Bebas Biaya Admin (Midtrans Partner)
+                        Bebas biaya admin
                       </span>
                     </div>
                     <button
@@ -387,29 +375,11 @@ export default function PaymentInstructionPage({
                 <div className="bg-surface-container p-space-sm rounded-lg mt-space-md flex items-start gap-space-sm">
                   <MaterialIcon name="info" className="text-primary text-[20px] shrink-0 mt-0.5" />
                   <p className="font-caption text-caption text-on-surface-variant">
-                    Transfer tepat hingga digit terakhir agar sistem <strong>Nusabook Live Gateway</strong> dapat memverifikasi pembayaran Anda secara otomatis dalam hitungan detik tanpa perlu unggah bukti struk manual.
+                    Transfer tepat hingga digit terakhir agar sistem bisa verifikasi otomatis.
                   </p>
                 </div>
 
-                {/* Escrow Guarantee Banner */}
-                <div className="mt-space-lg bg-surface-container-high/60 rounded-xl p-space-md flex flex-col sm:flex-row items-start gap-space-md">
-                  <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
-                    <MaterialIcon name="verified_user" className="text-[28px]" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-space-xs">
-                      <h3 className="font-body-semibold text-body-semibold text-primary font-bold">
-                        Nusabook Escrow Safe Vault™ Terproteksi
-                      </h3>
-                      <span className="font-micro-badge text-micro-badge bg-primary-container text-on-primary px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                        Dijamin 100% Aman
-                      </span>
-                    </div>
-                    <p className="font-caption text-caption text-on-surface-variant leading-relaxed">
-                      Dana Anda sepenuhnya ditahan di Rekening Penampung Aman (Escrow) resmi Nusabook. Dana baru akan diteruskan ke rekening operator <strong>Pesona Nusantara Tour</strong> setelah keberangkatan tuntas dan proses check-in tiket di Bromo terverifikasi oleh kru lapangan.
-                    </p>
-                  </div>
-                </div>
+
               </div>
 
               {/* 4. Tab Panduan Pembayaran Interaktif */}
@@ -698,7 +668,7 @@ export default function PaymentInstructionPage({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent flex flex-col justify-end p-space-sm text-on-primary">
                     <span className="font-micro-badge text-micro-badge uppercase tracking-wider font-bold text-secondary-fixed">
-                      Open Trip Wisata Bahari & Gunung
+                      Open Trip
                     </span>
                     <h4 className="font-body-semibold text-body-semibold font-bold text-on-primary leading-tight">
                       Bromo Golden Sunrise, Kawah & Pasir Berbisik
@@ -735,9 +705,6 @@ export default function PaymentInstructionPage({
                     <span className="font-caption text-caption font-bold text-on-surface uppercase tracking-wider flex items-center gap-1">
                       <MaterialIcon name="groups" className="text-[16px] text-primary" />
                       <span>Manifes Terdaftar (2 Pax)</span>
-                    </span>
-                    <span className="font-micro-badge text-micro-badge bg-surface-container-high text-primary px-1.5 py-0.5 rounded font-bold">
-                      Lengkap
                     </span>
                   </div>
                   <div className="space-y-1.5 font-caption text-caption text-on-surface">
@@ -780,22 +747,16 @@ export default function PaymentInstructionPage({
                     <span>Shuttle HiAce & Hardtop Jeep 4x4</span>
                     <span className="font-semibold text-[#059669] font-bold">Termasuk (Rp 0)</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Biaya Layanan Midtrans Payment Escrow</span>
-                    <span className="font-semibold text-[#059669] font-bold">Rp 0 (Ditanggung Nusabook)</span>
-                  </div>
+
 
                   {/* Grand Total Block */}
                   <div className="mt-space-sm pt-space-sm bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between border-t border-surface-container-high">
                     <div>
-                      <span className="font-caption text-caption text-outline block">Total Pelunasan</span>
+                      <span className="font-caption text-caption text-outline block">Total Tagihan</span>
                       <span className="font-title-md text-title-md font-bold text-secondary">
                         {formatRupiah(totalAmount)}
                       </span>
                     </div>
-                    <span className="font-micro-badge text-micro-badge bg-[#ecfdf5] text-[#059669] px-2 py-1 rounded font-bold uppercase tracking-wider">
-                      Garansi Escrow
-                    </span>
                   </div>
                 </div>
 
@@ -851,14 +812,8 @@ export default function PaymentInstructionPage({
             <span className="font-caption text-caption text-outline">Program P2MW 2026</span>
           </div>
           <div className="flex gap-space-lg font-caption text-caption">
-            <Link className="hover:text-on-surface transition-colors" href="/guide">
-              Panduan Operator
-            </Link>
             <Link className="hover:text-on-surface transition-colors" href="/terms">
-              Syarat Escrow DP
-            </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/safety">
-              Standar Keselamatan Bahari
+              Syarat & Ketentuan
             </Link>
           </div>
           <div className="font-caption text-caption text-outline">© 2026 Nusabook Indonesia. Hak Cipta Dilindungi.</div>
