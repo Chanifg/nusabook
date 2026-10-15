@@ -14,35 +14,28 @@ export default function HomePage() {
     <div className="bg-surface font-body-regular text-body-regular text-on-surface antialiased min-h-screen">
       {/* Top Header Navigation */}
       <header className="fixed top-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between gap-space-md">
-          <div className="flex items-center gap-space-md shrink-0">
+        <div className="h-16 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between gap-space-md">
+          {/* LEFT: Logo + explore pill */}
+          <div className="flex items-center gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg">
                 N
               </div>
-              <div className="flex flex-col">
-                <span className="font-title-md text-title-md text-primary font-bold tracking-tight leading-none">
-                  Nusabook
-                </span>
-              </div>
+              <span className="font-title-md text-title-md text-primary font-bold tracking-tight leading-none">
+                Nusabook
+              </span>
+            </Link>
+            <span className="text-outline-variant hidden sm:block">|</span>
+            <Link
+              href="/explore"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-primary hover:text-on-primary text-xs font-semibold transition-all"
+            >
+              <MaterialIcon name="explore" className="text-[14px]" />
+              Jelajah Wisata
             </Link>
           </div>
 
-          <nav className="hidden xl:flex items-center gap-space-md">
-            <Link
-              href="/explore"
-              className="text-on-surface-variant hover:text-on-surface transition-colors"
-            >
-              Jelajah Wisata
-            </Link>
-            <Link
-              href="/pesona-merapi"
-              className="text-on-surface-variant hover:text-on-surface transition-colors"
-            >
-              Storefront Mitra
-            </Link>
-          </nav>
-
+          {/* RIGHT: CTAs */}
           <div className="flex items-center gap-space-sm shrink-0">
             <Link
               href="/login"

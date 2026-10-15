@@ -45,7 +45,8 @@ export default async function StorefrontPage({
       {/* Top Header */}
       <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-space-md">
+          {/* LEFT: Logo + Live badge + explore pill */}
+          <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-space-xs">
               <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg">
                 N
@@ -60,26 +61,17 @@ export default async function StorefrontPage({
                 Live Sync Aktif
               </span>
             </div>
-          </div>
-
-          <nav className="hidden lg:flex items-center gap-space-lg text-sm font-semibold">
+            <span className="text-outline-variant hidden lg:block">|</span>
             <Link
               href="/explore"
-              className="text-on-surface-variant hover:text-on-surface transition-colors"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-primary hover:text-on-primary text-xs font-semibold transition-all"
             >
+              <MaterialIcon name="explore" className="text-[14px]" />
               Jelajah Wisata
             </Link>
-            <Link href="#katalog-trip" className="text-primary">
-              Etalase Paket
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-on-surface-variant hover:text-on-surface transition-colors"
-            >
-              Operator Backoffice
-            </Link>
-          </nav>
+          </div>
 
+          {/* RIGHT: WhatsApp CTA */}
           <div className="flex items-center gap-space-sm">
             <a
               href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
