@@ -491,9 +491,6 @@ export default function HomePage() {
                 Nusantara Tour &amp; Travel SaaS Ecosystem. Platform digitalisasi operasional UMKM biro
                 perjalanan wisata nusantara berbasis real-time allotment dan manifest digital.
               </p>
-              <p className="font-caption text-caption text-on-surface-variant text-xs">
-                Program Pembinaan Mahasiswa Wirausaha (P2MW 2026) • Universitas Tidar
-              </p>
             </div>
 
             <div className="flex flex-col gap-space-xs text-sm">
