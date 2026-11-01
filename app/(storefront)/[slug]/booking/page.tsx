@@ -28,9 +28,9 @@ export default function BookingPage() {
 
   const [pax, setPax] = useState<number>(initialPax);
   const [isSelfPassenger, setIsSelfPassenger] = useState<boolean>(true);
-  const [customerName, setCustomerName] = useState<string>("Anindya Paramitha");
-  const [customerEmail, setCustomerEmail] = useState<string>("anindya.paramitha@gmail.com");
-  const [customerWhatsapp, setCustomerWhatsapp] = useState<string>("+62 812-3456-7890");
+  const [customerName, setCustomerName] = useState<string>("");
+  const [customerEmail, setCustomerEmail] = useState<string>("");
+  const [customerWhatsapp, setCustomerWhatsapp] = useState<string>("");
 
   const [pickupLocation, setPickupLocation] = useState<string>("stasiun");
   const [hotelDetails, setHotelDetails] = useState<string>("");
@@ -43,24 +43,16 @@ export default function BookingPage() {
   const pricePerPax = 450000;
   const tripTitle = "Open Trip Bromo Golden Sunrise";
 
-  const [passengers, setPassengers] = useState<PassengerInput[]>([
-    {
-      fullName: "Anindya Paramitha",
-      idCardNumber: "3578015509950003",
-      gender: "FEMALE",
-      dateOfBirth: "15 September 1995",
-      emergencyContact: "Bambang Sudibyo (Ayah) - 08119876543",
-      notes: "Tidak ada riwayat asma / penyakit jantung",
-    },
-    {
-      fullName: "Reza Herdian",
-      idCardNumber: "3273021403940001",
+  const [passengers, setPassengers] = useState<PassengerInput[]>(() =>
+    Array.from({ length: initialPax }, () => ({
+      fullName: "",
+      idCardNumber: "",
       gender: "MALE",
-      dateOfBirth: "14 Maret 1994",
-      emergencyContact: "Bambang Sudibyo (Ayah) - 08119876543",
-      notes: "Ukuran jaket L",
-    },
-  ]);
+      dateOfBirth: "",
+      emergencyContact: "",
+      notes: "",
+    }))
+  );
 
   // Adjust passengers list length if pax changes
   useEffect(() => {
