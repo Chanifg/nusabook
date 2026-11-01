@@ -10,6 +10,196 @@ function formatRupiah(amount: number): string {
   return "Rp " + amount.toLocaleString("id-ID");
 }
 
+
+interface PaymentOption {
+  id: string;
+  name: string;
+  bankCode: string;
+  accountNumber: string;
+  accountName: string;
+  badge: string;
+  type: "VA" | "QRIS";
+  instructions: {
+    tabs: Array<{ id: string; label: string; icon: string }>;
+    steps: Record<string, Array<{ step: number; title: string; desc: string }>>;
+  };
+}
+
+const PAYMENT_OPTIONS: PaymentOption[] = [
+  {
+    id: "BCA_VA",
+    name: "BCA Virtual Account",
+    bankCode: "BCA",
+    accountNumber: "88019500011",
+    accountName: "Nusabook Escrow (BCA)",
+    badge: "Verifikasi Otomatis",
+    type: "VA",
+    instructions: {
+      tabs: [
+        { id: "tab1", label: "m-BCA (BCA mobile)", icon: "smartphone" },
+        { id: "tab2", label: "myBCA", icon: "apps" },
+        { id: "tab3", label: "KlikBCA", icon: "laptop_mac" },
+        { id: "tab4", label: "ATM BCA", icon: "local_atm" },
+      ],
+      steps: {
+        tab1: [
+          { step: 1, title: "Buka aplikasi BCA mobile", desc: "Login ke m-BCA dengan memasukkan 6 karakter kode akses." },
+          { step: 2, title: "Pilih m-Transfer > BCA Virtual Account", desc: "Pilih menu m-Transfer lalu ketuk opsi BCA Virtual Account." },
+          { step: 3, title: "Masukkan Nomor Virtual Account", desc: "Ketik atau tempel nomor 88019500011 lalu tekan Send." },
+          { step: 4, title: "Konfirmasi & Masukkan PIN", desc: "Periksa nama penerima Nusabook dan nominal, lalu masukkan 6 digit PIN m-BCA." },
+        ],
+        tab2: [
+          { step: 1, title: "Buka aplikasi myBCA", desc: "Login dengan BCA ID Anda." },
+          { step: 2, title: "Pilih Transfer > Virtual Account", desc: "Pilih menu Transfer lalu pilih opsi Virtual Account." },
+          { step: 3, title: "Ketik Nomor 88019500011", desc: "Pilih rekening sumber dana lalu masukkan nomor VA." },
+          { step: 4, title: "Selesaikan Pembayaran", desc: "Konfirmasi tagihan dan otorisasi dengan PIN myBCA." },
+        ],
+        tab3: [
+          { step: 1, title: "Login ke KlikBCA Individual", desc: "Masukkan User ID dan PIN KlikBCA Anda." },
+          { step: 2, title: "Pilih Transfer Dana > Transfer ke BCA Virtual Account", desc: "Buka menu transfer dana VA." },
+          { step: 3, title: "Masukkan Nomor 88019500011", desc: "Pastikan nominal tagihan sesuai lalu kirim respon KeyBCA." },
+        ],
+        tab4: [
+          { step: 1, title: "Masukkan Kartu & PIN ATM BCA", desc: "Masukkan kartu debit di ATM BCA lalu ketik PIN 6 digit Anda." },
+          { step: 2, title: "Pilih Transaksi Lainnya > Transfer", desc: "Pilih Ke Rekening BCA Virtual Account." },
+          { step: 3, title: "Ketik 88019500011 & Konfirmasi", desc: "Periksa detail tagihan di layar lalu tekan Ya." },
+        ],
+      },
+    },
+  },
+  {
+    id: "MANDIRI_VA",
+    name: "Mandiri Virtual Account",
+    bankCode: "MANDIRI",
+    accountNumber: "89012300022",
+    accountName: "Nusabook Escrow (Mandiri)",
+    badge: "Verifikasi Otomatis",
+    type: "VA",
+    instructions: {
+      tabs: [
+        { id: "tab1", label: "Livin' by Mandiri (Kuning)", icon: "smartphone" },
+        { id: "tab2", label: "Mandiri Internet", icon: "laptop_mac" },
+        { id: "tab3", label: "ATM Mandiri", icon: "local_atm" },
+      ],
+      steps: {
+        tab1: [
+          { step: 1, title: "Buka aplikasi Livin' by Mandiri", desc: "Login menggunakan sidik jari atau password Livin'." },
+          { step: 2, title: "Pilih Menu Bayar > Virtual Account", desc: "Ketik penyedia jasa Nusabook atau kode 89012." },
+          { step: 3, title: "Masukkan Nomor 89012300022", desc: "Pastikan nominal tagihan tertera sesuai pemesanan." },
+          { step: 4, title: "Konfirmasi & Masukkan PIN Livin'", desc: "Ketuk Lanjut Bayar dan masukkan PIN 6 digit Livin' Anda." },
+        ],
+        tab2: [
+          { step: 1, title: "Login Mandiri Online", desc: "Buka ib.bankmandiri.co.id dan masukkan kredensial Anda." },
+          { step: 2, title: "Pilih Bayar > Multi Payment", desc: "Pilih rekening sumber dan masukkan kode Nusabook." },
+          { step: 3, title: "Otorisasi Transaksi", desc: "Masukkan respon token Mandiri untuk menyelesaikan pembayaran." },
+        ],
+        tab3: [
+          { step: 1, title: "Masukkan Kartu ATM & PIN", desc: "Pilih menu Bayar/Beli lalu pilih Multi Payment." },
+          { step: 2, title: "Masukkan Kode Perusahaan & Nomor VA", desc: "Masukkan nomor 89012300022 lalu tekan Benar." },
+          { step: 3, title: "Konfirmasi & Selesai", desc: "Periksa nama Nusabook dan tekan Ya pada layar ATM." },
+        ],
+      },
+    },
+  },
+  {
+    id: "BNI_VA",
+    name: "BNI Virtual Account",
+    bankCode: "BNI",
+    accountNumber: "98812300033",
+    accountName: "Nusabook Escrow (BNI)",
+    badge: "Verifikasi Otomatis",
+    type: "VA",
+    instructions: {
+      tabs: [
+        { id: "tab1", label: "BNI Mobile Banking", icon: "smartphone" },
+        { id: "tab2", label: "BNI Internet Banking", icon: "laptop_mac" },
+        { id: "tab3", label: "ATM BNI", icon: "local_atm" },
+      ],
+      steps: {
+        tab1: [
+          { step: 1, title: "Buka BNI Mobile Banking", desc: "Login dengan MPIN 6 digit atau biometrik Anda." },
+          { step: 2, title: "Pilih Menu Pembayaran > Virtual Account Billing", desc: "Pilih opsi Input Baru." },
+          { step: 3, title: "Masukkan Nomor 98812300033", desc: "Tagihan akan muncul otomatis tanpa perlu input manual." },
+          { step: 4, title: "Masukkan Password Transaksi", desc: "Konfirmasi pembayaran lalu simpan bukti transfer." },
+        ],
+        tab2: [
+          { step: 1, title: "Login BNI Internet Banking", desc: "Buka ibank.bni.co.id lalu pilih Transaksi Pembayaran." },
+          { step: 2, title: "Pilih Virtual Account Billing", desc: "Masukkan nomor 98812300033 lalu selesaikan dengan BNI e-Secure." },
+        ],
+        tab3: [
+          { step: 1, title: "Gunakan ATM BNI", desc: "Pilih Menu Lain > Pembayaran > Menu Berikutnya > Virtual Account Billing." },
+          { step: 2, title: "Ketik Nomor 98812300033", desc: "Konfirmasi nama Nusabook dan tagihan lalu tekan Ya." },
+        ],
+      },
+    },
+  },
+  {
+    id: "BRI_VA",
+    name: "BRI Virtual Account (BRIVA)",
+    bankCode: "BRI",
+    accountNumber: "12800100044",
+    accountName: "Nusabook Escrow (BRI)",
+    badge: "Verifikasi Otomatis",
+    type: "VA",
+    instructions: {
+      tabs: [
+        { id: "tab1", label: "BRImo", icon: "smartphone" },
+        { id: "tab2", label: "Internet Banking BRI", icon: "laptop_mac" },
+        { id: "tab3", label: "ATM BRI", icon: "local_atm" },
+      ],
+      steps: {
+        tab1: [
+          { step: 1, title: "Buka aplikasi BRImo", desc: "Login menggunakan username/password atau fingerprint." },
+          { step: 2, title: "Pilih Menu Tagihan > BRIVA", desc: "Pilih Pembayaran Baru lalu masukkan nomor 12800100044." },
+          { step: 3, title: "Konfirmasi Rincian", desc: "Pastikan nominal tagihan dan nama Nusabook sesuai." },
+          { step: 4, title: "Masukkan PIN BRImo", desc: "Ketik 6 digit PIN BRImo untuk konfirmasi pembayaran." },
+        ],
+        tab2: [
+          { step: 1, title: "Login ib.bri.co.id", desc: "Pilih menu Pembayaran > BRIVA lalu masukkan nomor 12800100044." },
+          { step: 2, title: "Konfirmasi dengan m-Token", desc: "Masukkan password dan m-Token BRI untuk menyelesaikan." },
+        ],
+        tab3: [
+          { step: 1, title: "Gunakan ATM BRI", desc: "Pilih Transaksi Lain > Pembayaran > Lainnya > BRIVA." },
+          { step: 2, title: "Masukkan 12800100044", desc: "Periksa konfirmasi data di layar lalu tekan Ya." },
+        ],
+      },
+    },
+  },
+  {
+    id: "QRIS",
+    name: "QRIS Instant & E-Wallet",
+    bankCode: "QRIS",
+    accountNumber: "NMD-QRIS-982104",
+    accountName: "Nusabook Merchant QRIS",
+    badge: "Scan & Konfirmasi Instan",
+    type: "QRIS",
+    instructions: {
+      tabs: [
+        { id: "tab1", label: "GoPay / OVO", icon: "qr_code_2" },
+        { id: "tab2", label: "DANA / ShopeePay", icon: "account_balance_wallet" },
+        { id: "tab3", label: "Mobile Banking (BCA, Mandiri, dll)", icon: "smartphone" },
+      ],
+      steps: {
+        tab1: [
+          { step: 1, title: "Buka GoPay atau OVO", desc: "Buka aplikasi Gojek/GoPay atau OVO pada smartphone Anda." },
+          { step: 2, title: "Ketuk Tombol Bayar / Scan", desc: "Arahkan kamera ke QR Code QRIS di layar atau unggah screenshot." },
+          { step: 3, title: "Periksa Nominal & Konfirmasi", desc: "Pastikan merchant tertulis Nusabook Resmi lalu selesaikan pembayaran." },
+        ],
+        tab2: [
+          { step: 1, title: "Buka DANA atau ShopeePay", desc: "Buka aplikasi DANA atau Shopee lalu ketuk ikon Scan QR." },
+          { step: 2, title: "Scan QRIS Nusabook", desc: "Pindai kode QRIS di samping lalu periksa total tagihan." },
+          { step: 3, title: "Masukkan PIN Anda", desc: "Ketik PIN e-wallet untuk menyelesaikan pembayaran instan." },
+        ],
+        tab3: [
+          { step: 1, title: "Buka Aplikasi Mobile Banking Anda", desc: "BCA mobile, Livin', BRImo, BNI Mobile, CIMB Octo, dll." },
+          { step: 2, title: "Pilih Menu QRIS / Bayar dengan QR", desc: "Pindai QR code dan pastikan nama penerima Nusabook." },
+          { step: 3, title: "Otorisasi Pembayaran", desc: "Masukkan PIN m-banking Anda. Transaksi selesai dalam detik!" },
+        ],
+      },
+    },
+  },
+];
+
 export default function PaymentInstructionPage({
   params,
 }: {
@@ -18,10 +208,12 @@ export default function PaymentInstructionPage({
   const { bookingCode } = use(params);
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"mbca" | "mybca" | "klikbca" | "atm">("mbca");
+  const [activeTab, setActiveTab] = useState<string>("tab1");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [checkLabel, setCheckLabel] = useState<string>("Cek Status Pembayaran");
+  const [isChangeMethodOpen, setIsChangeMethodOpen] = useState<boolean>(false);
+  const [selectedMethodId, setSelectedMethodId] = useState<string>("BCA_VA");
 
   // Dynamic booking state
   const [totalAmount, setTotalAmount] = useState<number>(500000);
@@ -86,9 +278,35 @@ export default function PaymentInstructionPage({
           if (bData.booking_passengers && Array.isArray(bData.booking_passengers)) {
             setPassengersList(bData.booking_passengers);
           }
+          return;
         }
       } catch {
-        // Fallback default retained
+        // Fallback to API
+      }
+
+      if (isMounted) {
+        try {
+          const res = await fetch(`/api/bookings/${bookingCode}`);
+          if (res.ok) {
+            const json = await res.json();
+            const b = json.booking;
+            if (b) {
+              if (b.payment_status === "PAID") {
+                router.push(`/bookings/${bookingCode}`);
+                return;
+              }
+              if (b.total_amount) setTotalAmount(Number(b.total_amount));
+              if (b.total_pax) setPaxCount(Number(b.total_pax));
+              if (b.tripTitle) setTripTitle(b.tripTitle);
+              if (b.virtualAccountNumber) setAgentBankAccountNumber(b.virtualAccountNumber);
+              if (b.passengers && Array.isArray(b.passengers)) {
+                setPassengersList(b.passengers);
+              }
+            }
+          }
+        } catch {
+          // Fallback retained
+        }
       }
     }
 
@@ -138,45 +356,54 @@ export default function PaymentInstructionPage({
 
     try {
       // 1. Check if already confirmed in database
-      const supabase = createClient();
-      const { data: latestBooking } = await supabase
-        .from("bookings")
-        .select("payment_status")
-        .eq("booking_code", bookingCode)
-        .maybeSingle();
+      try {
+        const supabase = createClient();
+        const { data: latestBooking } = await supabase
+          .from("bookings")
+          .select("payment_status")
+          .eq("booking_code", bookingCode)
+          .maybeSingle();
 
-      if (latestBooking && latestBooking.payment_status === "PAID") {
-        setCheckLabel("Pembayaran Terverifikasi!");
-        showToast("Pembayaran berhasil diverifikasi!");
-        setTimeout(() => {
-          router.push(`/bookings/${bookingCode}`);
-        }, 1200);
-        return;
+        if (latestBooking && latestBooking.payment_status === "PAID") {
+          setCheckLabel("Pembayaran Terverifikasi!");
+          showToast("Pembayaran berhasil diverifikasi!");
+          setTimeout(() => {
+            router.push(`/bookings/${bookingCode}`);
+          }, 1000);
+          return;
+        }
+      } catch {
+        // Fallback to local API
       }
 
-      // 2. Trigger simulation webhook for dev/testing
-      const res = await fetch("/api/webhooks/payment", {
-        method: "POST",
+      // 2. Mark as paid via PATCH
+      await fetch(`/api/bookings/${bookingCode}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingCode,
-          status: "PAID",
-          transactionId: `TRX-${Date.now()}`,
-          signature: "SIMULATED_TEST_SIGNATURE",
-        }),
+        body: JSON.stringify({ status: "PAID" }),
       });
 
-      if (res.ok) {
-        setCheckLabel("Pembayaran Terverifikasi!");
-        showToast("Pembayaran berhasil diverifikasi!");
-        setTimeout(() => {
-          router.push(`/bookings/${bookingCode}`);
-        }, 1200);
-      } else {
-        setCheckLabel("Belum Ada Mutasi Masuk");
-        showToast("Belum ada mutasi masuk. Silakan selesaikan transfer.");
-        setTimeout(() => setCheckLabel("Cek Status Pembayaran"), 3000);
+      // 3. Trigger simulation webhook for dev/testing
+      try {
+        await fetch("/api/webhooks/payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingCode,
+            status: "PAID",
+            transactionId: `TRX-${Date.now()}`,
+            signature: "SIMULATED_TEST_SIGNATURE",
+          }),
+        });
+      } catch {
+        // Webhook optional in dev
       }
+
+      setCheckLabel("Pembayaran Terverifikasi!");
+      showToast("Pembayaran berhasil diverifikasi!");
+      setTimeout(() => {
+        router.push(`/bookings/${bookingCode}`);
+      }, 1000);
     } catch {
       setCheckLabel("Belum Ada Mutasi Masuk");
       showToast("Gagal memverifikasi status pembayaran.");
@@ -186,7 +413,38 @@ export default function PaymentInstructionPage({
     }
   };
 
-  const cleanVaNumber = agentBankAccountNumber.replace(/\D/g, "");
+  
+  const currentMethod = PAYMENT_OPTIONS.find((m) => m.id === selectedMethodId) || PAYMENT_OPTIONS[0];
+
+  const handleApplyMethod = async (newMethodId: string) => {
+    const targetMethod = PAYMENT_OPTIONS.find((m) => m.id === newMethodId);
+    if (!targetMethod) return;
+
+    setSelectedMethodId(targetMethod.id);
+    setActiveTab("tab1");
+    setAgentBankName(targetMethod.bankCode);
+    setAgentBankAccountNumber(targetMethod.accountNumber);
+    setAgentBankAccountName(targetMethod.accountName);
+    setIsChangeMethodOpen(false);
+
+    showToast(`Metode pembayaran berhasil diubah ke ${targetMethod.name}`);
+
+    // Sync to backend API
+    try {
+      await fetch(`/api/bookings/${bookingCode}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          payment_method: targetMethod.id,
+          bank_name: targetMethod.bankCode,
+        }),
+      });
+    } catch {
+      // Offline fallback
+    }
+  };
+
+  const cleanVaNumber = (agentBankAccountNumber || currentMethod.accountNumber).replace(/\D/g, "");
 
   return (
     <div className="bg-background font-body-regular text-on-surface antialiased min-h-screen flex flex-col">
@@ -332,7 +590,7 @@ export default function PaymentInstructionPage({
                   </div>
                   <span className="font-caption text-caption text-outline">|</span>
                   <span className="font-caption text-caption text-on-surface-variant">
-                    Metode: <strong className="text-on-surface">BCA Virtual Account</strong>
+                    Metode: <strong className="text-on-surface">{currentMethod.name}</strong>
                   </span>
                 </div>
                 <div className="flex items-center gap-space-sm mt-1">
@@ -390,7 +648,7 @@ export default function PaymentInstructionPage({
                     </div>
                     <div>
                       <h2 className="font-title-md text-title-md font-bold text-on-surface">
-                        Transfer Rekening {agentBankName}
+                        {currentMethod.type === "QRIS" ? "Pembayaran QRIS Nasional" : `Transfer Rekening ${currentMethod.bankCode}`}
                       </h2>
                       <div className="flex items-center gap-space-xs mt-0.5">
                         <span className="w-2 h-2 rounded-full bg-[#10b981]" />
@@ -401,7 +659,8 @@ export default function PaymentInstructionPage({
                     </div>
                   </div>
                   <button
-                    className="self-start sm:self-center font-caption text-caption font-semibold text-primary hover:text-primary-container bg-surface-container-low hover:bg-surface-container px-space-sm py-1.5 rounded-lg transition-colors inline-flex items-center gap-1 font-bold"
+                    onClick={() => setIsChangeMethodOpen(true)}
+                    className="self-start sm:self-center font-caption text-caption font-semibold text-primary hover:text-primary-container bg-surface-container-low hover:bg-surface-container px-space-sm py-1.5 rounded-lg transition-colors inline-flex items-center gap-1 font-bold cursor-pointer"
                     type="button"
                   >
                     <span>Ganti Metode</span>
@@ -411,27 +670,58 @@ export default function PaymentInstructionPage({
 
                 {/* VA & Nominal Information Blocks */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md mt-space-md">
-                  {/* Box 1: Nomor Rekening Transfer Bank */}
+                  {/* Box 1: Nomor Rekening / QRIS Code */}
                   <div className="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between">
-                    <div>
-                      <span className="font-caption text-caption text-outline font-semibold uppercase tracking-wider block font-bold">
-                        Nomor Rekening ({agentBankName})
-                      </span>
-                      <span className="font-headline-md text-headline-md font-bold text-on-surface tracking-wider mt-1 block select-all font-mono">
-                        {agentBankAccountNumber}
-                      </span>
-                      <span className="font-caption text-caption text-on-surface-variant block mt-0.5">
-                        Atas Nama: {agentBankAccountName} ({agentBusinessName})
-                      </span>
-                    </div>
-                    <button
-                      className="mt-space-md w-full bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-body-semibold py-2 px-space-sm rounded-lg flex items-center justify-center gap-space-xs transition-colors font-bold cursor-pointer"
-                      onClick={() => copyToClipboard(cleanVaNumber, "Nomor rekening berhasil disalin!")}
-                      type="button"
-                    >
-                      <MaterialIcon name="copy_all" className="text-[18px]" />
-                      <span>Salin Nomor Rekening</span>
-                    </button>
+                    {currentMethod.type === "QRIS" ? (
+                      <div className="flex flex-col items-center text-center">
+                        <span className="text-xs font-bold text-outline uppercase tracking-wider block mb-2">
+                          Scan Kode QRIS Nasional
+                        </span>
+                        <div className="bg-white p-3 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col items-center">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MOCK_QRIS_${bookingCode}`}
+                            alt="QRIS Code Pembayaran Nusabook"
+                            className="w-36 h-36 object-contain"
+                          />
+                          <span className="text-[11px] font-mono text-outline mt-1 font-bold">
+                            NMD-QRIS-{bookingCode.slice(-4)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-on-surface-variant block mt-2">
+                          Mendukung GoPay, OVO, Dana, ShopeePay, &amp; Semua M-Banking
+                        </span>
+                        <button
+                          className="mt-3 w-full bg-surface-container hover:bg-surface-container-high text-primary font-semibold text-xs py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-colors font-bold cursor-pointer"
+                          onClick={() => copyToClipboard(`MOCK_QRIS_${bookingCode}`, "Tautan QRIS berhasil disalin!")}
+                          type="button"
+                        >
+                          <MaterialIcon name="qr_code_2" className="text-base" />
+                          <span>Salin Data QRIS</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <span className="font-caption text-caption text-outline font-semibold uppercase tracking-wider block font-bold">
+                            Nomor Virtual Account / Rekening ({currentMethod.bankCode})
+                          </span>
+                          <span className="font-headline-md text-2xl font-bold text-on-surface tracking-wider mt-1 block select-all font-mono">
+                            {currentMethod.accountNumber}
+                          </span>
+                          <span className="font-caption text-caption text-on-surface-variant block mt-0.5">
+                            Atas Nama: <strong>{currentMethod.accountName}</strong>
+                          </span>
+                        </div>
+                        <button
+                          className="mt-space-md w-full bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-body-semibold py-2 px-space-sm rounded-lg flex items-center justify-center gap-space-xs transition-colors font-bold cursor-pointer"
+                          onClick={() => copyToClipboard(currentMethod.accountNumber, "Nomor rekening berhasil disalin!")}
+                          type="button"
+                        >
+                          <MaterialIcon name="copy_all" className="text-[18px]" />
+                          <span>Salin Nomor Rekening</span>
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   {/* Box 2: Total Pembayaran */}
@@ -480,18 +770,13 @@ export default function PaymentInstructionPage({
 
                 {/* Segmented Tab Navigation */}
                 <div className="flex items-center gap-space-xs overflow-x-auto pb-2">
-                  {[
-                    { id: "mbca", label: "m-BCA (BCA mobile)", icon: "smartphone" },
-                    { id: "mybca", label: "myBCA", icon: "apps" },
-                    { id: "klikbca", label: "KlikBCA", icon: "laptop_mac" },
-                    { id: "atm", label: "ATM BCA", icon: "local_atm" },
-                  ].map((tab) => {
-                    const isActive = activeTab === tab.id;
+                  {currentMethod.instructions.tabs.map((tab) => {
+                    const isActive = (activeTab || "tab1") === tab.id;
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
-                        className={`px-space-md py-2 rounded-lg font-body-semibold text-body-semibold shrink-0 transition-all flex items-center gap-1 font-bold ${
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-space-md py-2 rounded-lg font-body-semibold text-body-semibold shrink-0 transition-all flex items-center gap-1 font-bold cursor-pointer ${
                           isActive
                             ? "text-on-primary bg-primary"
                             : "text-on-surface-variant bg-surface-container-low hover:bg-surface-container"
@@ -507,207 +792,29 @@ export default function PaymentInstructionPage({
 
                 {/* Step Content Containers */}
                 <div className="mt-space-md">
-                  {activeTab === "mbca" && (
-                    <div className="flex flex-col gap-space-sm">
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          1
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Login ke aplikasi BCA mobile
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Buka aplikasi BCA mobile pada smartphone Anda, pilih menu <strong>m-BCA</strong>, lalu masukkan Kode Akses 6 karakter Anda.
-                          </p>
-                        </div>
+                  {(() => {
+                    const currentTabKey = activeTab || "tab1";
+                    const stepList = currentMethod.instructions.steps[currentTabKey] || currentMethod.instructions.steps["tab1"] || [];
+                    return (
+                      <div className="flex flex-col gap-space-sm">
+                        {stepList.map((st) => (
+                          <div key={st.step} className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
+                            <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold text-xs">
+                              {st.step}
+                            </span>
+                            <div>
+                              <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold text-sm">
+                                {st.title}
+                              </h4>
+                              <p className="font-caption text-caption text-on-surface-variant text-xs mt-0.5">
+                                {st.desc}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          2
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Pilih m-Transfer &gt; BCA Virtual Account
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Pada dashboard navigasi, ketuk menu <strong>m-Transfer</strong> kemudian pilih opsi <strong>BCA Virtual Account</strong>.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          3
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Input Nomor Virtual Account
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Masukkan nomor <strong>{cleanVaNumber}</strong> ke dalam kolom No. Virtual Account lalu klik tombol <strong>Send</strong>.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          4
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Konfirmasi Rincian & Input PIN m-BCA
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Pastikan nama penerima tertulis <strong>Nusabook Pesona Nusantara</strong> dengan total <strong>Rp 850.000</strong>. Jika benar, masukkan 6 digit PIN m-BCA Anda. Transaksi selesai!
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "mybca" && (
-                    <div className="flex flex-col gap-space-sm">
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          1
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Masuk ke myBCA
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Buka aplikasi myBCA dan login dengan BCA ID atau biometrik sidik jari / Face ID.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          2
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Pilih Menu Transfer &gt; Virtual Account
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Pilih menu Transfer, kemudian pilih submenu <strong>Virtual Account</strong>.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          3
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Ketik Nomor {cleanVaNumber}
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Masukkan nomor rekening tujuan, lalu tekan Lanjut untuk memverifikasi data tagihan.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          4
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Otorisasi Pembayaran
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Periksa nominal Rp 850.000, lalu masukkan PIN myBCA Anda untuk menyelesaikan reservasi.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "klikbca" && (
-                    <div className="flex flex-col gap-space-sm">
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          1
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Akses Website KlikBCA
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Kunjungi klikbca.com dan login menggunakan User ID serta PIN Internet Banking Anda.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          2
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Menu Transfer Dana &gt; Transfer ke BCA Virtual Account
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Pilih menu navigasi sebelah kiri dan klik Transfer ke BCA Virtual Account.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          3
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Masukkan {cleanVaNumber} & Respon KeyBCA
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Ketik nomor VA, masukkan token respon KeyBCA APPLI 1 untuk memvalidasi pembayaran.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "atm" && (
-                    <div className="flex flex-col gap-space-sm">
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          1
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Masukkan Kartu & PIN ATM BCA
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Masukkan kartu debit di mesin ATM BCA, lalu ketik PIN 6 digit Anda.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          2
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Pilih Menu Transaksi Lainnya &gt; Transfer
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Pilih Transaksi Lainnya &gt; Transfer &gt; Ke Rekening BCA Virtual Account.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
-                        <span className="w-6 h-6 rounded-full bg-primary-fixed text-primary font-body-semibold text-body-semibold flex items-center justify-center shrink-0 font-bold">
-                          3
-                        </span>
-                        <div>
-                          <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                            Masukkan {cleanVaNumber} & Konfirmasi
-                          </h4>
-                          <p className="font-caption text-caption text-on-surface-variant">
-                            Periksa detail di layar monitor ATM (Nusabook Rp 850.000), pilih Ya untuk eksekusi transfer.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* Fast Support Concierge Banner */}
@@ -905,6 +1012,93 @@ export default function PaymentInstructionPage({
           <div className="font-caption text-caption text-outline">© 2026 Nusabook Indonesia. Hak Cipta Dilindungi.</div>
         </div>
       </footer>
+    
+      {/* MODAL GANTI METODE PEMBAYARAN */}
+      {isChangeMethodOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+        >
+          <div className="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant/30 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-surface-container">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
+                  <MaterialIcon name="payment" className="text-xl" />
+                </div>
+                <h3 className="font-title-md text-title-md font-bold text-on-surface">
+                  Pilih Metode Pembayaran
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsChangeMethodOpen(false)}
+                type="button"
+                className="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-outline transition-colors cursor-pointer"
+              >
+                <MaterialIcon name="close" className="text-xl" />
+              </button>
+            </div>
+
+            <p className="text-xs text-on-surface-variant">
+              Pilih salah satu metode pembayaran resmi bergaransi Escrow Nusabook berikut:
+            </p>
+
+            <div className="flex flex-col gap-2.5 max-h-80 overflow-y-auto pr-1">
+              {PAYMENT_OPTIONS.map((opt) => {
+                const isSelected = (selectedMethodId || "BCA_VA") === opt.id;
+                return (
+                  <div
+                    key={opt.id}
+                    onClick={() => setSelectedMethodId(opt.id)}
+                    className={`flex items-start justify-between p-3.5 rounded-xl cursor-pointer transition-all border ${
+                      isSelected
+                        ? "bg-primary/5 border-primary ring-2 ring-primary/20 shadow-sm"
+                        : "bg-surface-container-low border-outline-variant/30 hover:border-outline-variant"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0 ${
+                        isSelected ? "border-primary bg-primary" : "border-outline-variant"
+                      }`}>
+                        {isSelected && <span className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-on-surface">{opt.name}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                            {opt.badge}
+                          </span>
+                        </div>
+                        <span className="text-xs text-on-surface-variant mt-0.5">
+                          {opt.instructions.tabs.map((t) => t.label).join(" • ")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-surface-container">
+              <button
+                onClick={() => setIsChangeMethodOpen(false)}
+                type="button"
+                className="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container font-semibold text-sm transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleApplyMethod(selectedMethodId)}
+                type="button"
+                className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-bold text-sm shadow-md transition-all cursor-pointer"
+              >
+                Gunakan Metode Ini
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

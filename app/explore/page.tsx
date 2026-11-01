@@ -104,7 +104,7 @@ const EXPLORE_PACKAGES: ExplorePackage[] = [
     destinationCity: "Yogyakarta",
     locationDetails: "Kaliurang, Sleman, Yogyakarta",
     thumbnailUrl:
-      "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=1200&q=80",
     thumbnailAlt: "Jeep lava tour Kaliadem berlatar Gunung Merapi yang megah",
     agentName: "Pesona Merapi Tour & Travel",
     agentSlug: "pesona-merapi",
@@ -170,7 +170,7 @@ const EXPLORE_PACKAGES: ExplorePackage[] = [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCcX4F4QbtGOXCOeZQ4KaZdUizrGjplMtolbXn1KUVk0GAgCI6pk7ZaN-hqQbhtq-4yeeXkphBG5LNAPi6n-QqybUe21PrPA155-tfdWzAHm7KQEMOSl2-DwHjDIluIbjNKTbOCPcgCe2eS6b_bHps-qa0dg37yhRmljsIy3EGSRFGC5Lh91nkFkwsqZYPRIpZl4jm5jd0OdnwcGZv-OZSj6yA6TZladJWPrMy-3NV4SVGElyLHsCk",
     thumbnailAlt: "Dramatic sunrise over Mount Bromo with sea of clouds and Mount Semeru erupting",
     agentName: "Pesona Nusantara Tour (Malang)",
-    agentSlug: "pesona-merapi",
+    agentSlug: "bromo-overland",
     isVerified: true,
     nextDepartureDate: "Minggu, 18 Okt 2026",
     originalPrice: 550000,
@@ -451,8 +451,56 @@ export default function MarketplaceExplorePage() {
     setSortBy("schedule");
   };
 
+  const [liveQuotas, setLiveQuotas] = useState<
+    Record<
+      string,
+      {
+        totalQuota: number;
+        availableQuota: number;
+        bookedQuota: number;
+        reservedQuota: number;
+        isSoldOut: boolean;
+        quotaLabel: string;
+        quotaStatus: "urgent" | "safe" | "warning";
+        occupancyPercent: number;
+      }
+    >
+  >({});
+
+  useEffect(() => {
+    let active = true;
+    async function fetchLiveQuotas() {
+      try {
+        const res = await fetch("/api/packages/quota");
+        if (res.ok) {
+          const data = await res.json();
+          if (active && data.packages) {
+            setLiveQuotas(data.packages);
+          }
+        }
+      } catch {
+        // silent fallback
+      }
+    }
+    fetchLiveQuotas();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const filteredPackages = useMemo(() => {
-    let result = EXPLORE_PACKAGES.filter((pkg) => {
+    let result = EXPLORE_PACKAGES.map((pkg) => {
+      const live = liveQuotas[pkg.slug];
+      if (!live) return pkg;
+      return {
+        ...pkg,
+        totalQuota: live.totalQuota,
+        availableQuota: live.availableQuota,
+        quotaLabel: live.quotaLabel,
+        quotaStatus: live.quotaStatus,
+        occupancyPercent: live.occupancyPercent,
+      };
+    }).filter((pkg) => {
       // Search Query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -1287,7 +1335,7 @@ export default function MarketplaceExplorePage() {
                             </div>
                           </div>
                           <Link
-                            href={`/${pkg.agentSlug}`}
+                            href={`/${pkg.agentSlug}/packages/${pkg.slug}`}
                             className="px-4 py-2 bg-secondary-container hover:bg-[#e07106] text-surface-container-lowest font-body-semibold text-body-semibold rounded-lg shadow-sm transition-all flex items-center gap-1 font-bold"
                           >
                             <span>Pesan Sekarang</span>

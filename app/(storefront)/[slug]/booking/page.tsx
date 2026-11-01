@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
 import { createClient } from "@/lib/supabase/client";
+import { findCatalogPackageByScheduleId, findCatalogAgent, CATALOG_PACKAGES } from "@/lib/catalog-data";
 
 interface PassengerInput {
   fullName: string;
@@ -105,9 +106,48 @@ export default function BookingPage() {
               );
             }
           }
+          return;
         }
       } catch {
-        // Fallback default retained
+        // Fallback to catalog data
+      }
+
+      if (isMounted) {
+        // 1. Try finding by scheduleId
+        const matchBySchedule = findCatalogPackageByScheduleId(scheduleId);
+        if (matchBySchedule) {
+          setTripTitle(matchBySchedule.pkg.title);
+          setMeetingPoint(matchBySchedule.pkg.meeting_point);
+          setAgentBusinessName(matchBySchedule.pkg.agent.business_name);
+          setPricePerPax(matchBySchedule.schedule.pricePerPax || matchBySchedule.pkg.pricePerPax);
+          setDepartureDateText(matchBySchedule.schedule.dateText);
+          return;
+        }
+
+        // 2. Try finding by trip param in url
+        const tripParam = searchParams.get("trip");
+        if (tripParam) {
+          const matchByTrip = CATALOG_PACKAGES.find((p) => p.slug === tripParam);
+          if (matchByTrip) {
+            setTripTitle(matchByTrip.title);
+            setMeetingPoint(matchByTrip.meeting_point);
+            setAgentBusinessName(matchByTrip.agent.business_name);
+            setPricePerPax(matchByTrip.schedules[0]?.pricePerPax || matchByTrip.pricePerPax);
+            setDepartureDateText(matchByTrip.schedules[0]?.dateText || "Sesuai Jadwal");
+            return;
+          }
+        }
+
+        // 3. Fallback by agent slug
+        const agentCatalog = findCatalogAgent(slug);
+        if (agentCatalog && agentCatalog.packages.length > 0) {
+          const pkg = agentCatalog.packages[0];
+          setTripTitle(pkg.title);
+          setMeetingPoint(pkg.meeting_point);
+          setAgentBusinessName(agentCatalog.business_name);
+          setPricePerPax(pkg.schedules[0]?.pricePerPax || pkg.pricePerPax);
+          setDepartureDateText(pkg.schedules[0]?.dateText || "Sesuai Jadwal");
+        }
       }
     }
 

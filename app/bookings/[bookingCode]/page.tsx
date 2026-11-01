@@ -4,6 +4,7 @@ import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
 import { createClient } from "@/lib/supabase/client";
+import { findCatalogPackageByScheduleId } from "@/lib/catalog-data";
 
 function formatRupiah(amount: number): string {
   return "Rp " + amount.toLocaleString("id-ID");
@@ -97,9 +98,51 @@ export default function ETicketPage({
               },
             ]);
           }
+          return;
         }
       } catch {
-        // Fallback default retained
+        // Fallback to local API
+      }
+
+      if (isMounted) {
+        try {
+          const res = await fetch(`/api/bookings/${bookingCode}`);
+          if (res.ok) {
+            const json = await res.json();
+            const b = json.booking;
+            if (b) {
+              if (b.customer_name) setCustomerName(b.customer_name);
+              if (b.customer_email) setCustomerEmail(b.customer_email);
+              if (b.customer_whatsapp) setCustomerWhatsapp(b.customer_whatsapp);
+              if (b.total_pax) setTotalPax(Number(b.total_pax));
+              if (b.total_amount) setTotalAmount(Number(b.total_amount));
+              if (b.payment_status) setPaymentStatus(b.payment_status);
+              if (b.tripTitle) setTripTitle(b.tripTitle);
+
+              if (b.schedule_id) {
+                const catalogMatch = findCatalogPackageByScheduleId(b.schedule_id);
+                if (catalogMatch) {
+                  setTripTitle(catalogMatch.pkg.title);
+                  setMeetingPoint(catalogMatch.pkg.meeting_point);
+                  setOperatorName(catalogMatch.pkg.agent.business_name);
+                  setAgentWhatsapp(catalogMatch.pkg.agent.whatsapp_number.replace(/\D/g, ""));
+                  setDepartureDate(catalogMatch.schedule.departureDate);
+                }
+              }
+
+              if (b.passengers && Array.isArray(b.passengers) && b.passengers.length > 0) {
+                setPassengers(b.passengers.map((p: any) => ({
+                  full_name: p.full_name || p.fullName,
+                  id_card_number: p.id_card_number || p.idCardNumber,
+                })));
+              } else if (b.customer_name) {
+                setPassengers([{ full_name: b.customer_name, id_card_number: null }]);
+              }
+            }
+          }
+        } catch {
+          // Keep current state
+        }
       }
     }
 

@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { findCatalogPackage } from "@/lib/catalog-data";
+import { bookingStore } from "@/lib/booking-store";
 import {
   PackageDetailView,
   ScheduleOption,
@@ -11,42 +13,78 @@ export default async function PackageDetailPage({
   params: Promise<{ slug: string; packageSlug: string }>;
 }) {
   const { slug, packageSlug } = await params;
-  const supabase = await createClient();
+  let agentData: any = null;
+  let packageData: any = null;
 
-  // Fetch active agent and published package in parallel to eliminate serial network waterfall
-  const [agentRes, packageRes] = await Promise.all([
-    supabase
-      .from("travel_agents")
-      .select("id, business_name, slug, city, whatsapp_number")
-      .eq("slug", slug)
-      .eq("is_active", true)
-      .maybeSingle(),
-    supabase
-      .from("tour_packages")
-      .select("*, trip_schedules(*), travel_agents!inner(slug, is_active)")
-      .eq("slug", packageSlug)
-      .eq("travel_agents.slug", slug)
-      .eq("travel_agents.is_active", true)
-      .eq("is_published", true)
-      .maybeSingle(),
-  ]);
+  try {
+    const supabase = await createClient();
 
-  const agentData = agentRes.data as any;
-  if (!agentData) {
+    // Fetch active agent and published package in parallel to eliminate serial network waterfall
+    const [agentRes, packageRes] = await Promise.all([
+      supabase
+        .from("travel_agents")
+        .select("id, business_name, slug, city, whatsapp_number")
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .maybeSingle(),
+      supabase
+        .from("tour_packages")
+        .select("*, trip_schedules(*), travel_agents!inner(slug, is_active)")
+        .eq("slug", packageSlug)
+        .eq("travel_agents.slug", slug)
+        .eq("travel_agents.is_active", true)
+        .eq("is_published", true)
+        .maybeSingle(),
+    ]);
+
+    agentData = agentRes.data;
+    packageData = packageRes.data;
+  } catch {
+    // Local database connection offline, fallback to synchronized catalog
+  }
+
+  // Fallback to verified catalog package if DB returns empty
+  if (!agentData || !packageData) {
+    const catalogItem = findCatalogPackage(slug, packageSlug);
+    if (!catalogItem) {
+      notFound();
+    }
+    agentData = {
+      id: catalogItem.agent.id,
+      business_name: catalogItem.agent.business_name,
+      slug: catalogItem.agent.slug,
+      city: catalogItem.agent.city,
+      whatsapp_number: catalogItem.agent.whatsapp_number,
+    };
+    packageData = {
+      ...catalogItem,
+      trip_schedules: catalogItem.schedules.map((s) => {
+        const liveQ = bookingStore.getScheduleQuota(s.id);
+        return {
+          id: s.id,
+          departure_date: s.departureDate,
+          return_date: s.returnDate,
+          total_quota: liveQ.total,
+          reserved_quota: liveQ.reserved,
+          booked_quota: liveQ.booked,
+          price_per_pax: s.pricePerPax,
+          status: s.status,
+        };
+      }),
+    };
+  }
+
+  if (!agentData || !packageData) {
     notFound();
   }
 
-  const packageData = packageRes.data as any;
-  if (!packageData) {
-    notFound();
-  }
-
-  // 3. Map dynamic trip schedules
+  // Map dynamic trip schedules
   const rawSchedules = packageData.trip_schedules || [];
   const schedules: ScheduleOption[] = rawSchedules.map((sch: any) => {
+    const liveQ = bookingStore.getScheduleQuota(sch.id);
     const availableSeats = Math.max(
       0,
-      sch.total_quota - sch.reserved_quota - sch.booked_quota
+      liveQ.total - liveQ.reserved - liveQ.booked
     );
     const isSoldOut =
       availableSeats === 0 ||
@@ -66,7 +104,7 @@ export default async function PackageDetailPage({
     return {
       id: sch.id,
       dateText,
-      departureTime: "Midnight 00:00 WIB",
+      departureTime: "Pagi / Sesuai Jadwal",
       availableSeats,
       status: isSoldOut ? "sold_out" : availableSeats <= 3 ? "urgent" : "available",
       statusBadge: isSoldOut
@@ -75,7 +113,7 @@ export default async function PackageDetailPage({
         ? `Sisa ${availableSeats} Kursi!`
         : `Tersedia ${availableSeats} Kursi`,
       isSoldOut,
-      pricePerPax: sch.price_per_pax || 450000,
+      pricePerPax: sch.price_per_pax || 250000,
     };
   });
 

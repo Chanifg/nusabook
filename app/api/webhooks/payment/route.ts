@@ -41,30 +41,32 @@ export async function POST(request: Request) {
     const booking = bookingStore.getBookingByCode(bookingCode);
     const scheduleId = booking?.schedule_id || "33333333-3333-3333-3333-333333333333";
     const totalPax = booking?.total_pax || 1;
+    const prevStatus = booking?.payment_status || "UNPAID";
 
     // 2. Cek Status Transaksi
     if (verification.status === "PAID") {
       const now = new Date().toISOString();
 
-      // a. UPDATE bookings SET payment_status = 'PAID', paid_at = NOW()
-      bookingStore.updateBookingStatus(bookingCode, "PAID", now);
+      if (prevStatus !== "PAID") {
+        try {
+          const supabase = await createClient();
+          await (supabase.from("bookings") as any)
+            .update({ payment_status: "PAID", paid_at: now })
+            .eq("booking_code", bookingCode);
 
-      try {
-        const supabase = await createClient();
-        await (supabase.from("bookings") as any)
-          .update({ payment_status: "PAID", paid_at: now })
-          .eq("booking_code", bookingCode);
-
-        // b. Panggil SQL confirm_trip_quota(schedule_id, pax)
-        await (supabase.rpc as any)("confirm_trip_quota", {
-          p_schedule_id: scheduleId,
-          p_pax: totalPax,
-        });
-      } catch {
-        // In-memory fallback
+          // b. Panggil SQL confirm_trip_quota(schedule_id, pax)
+          await (supabase.rpc as any)("confirm_trip_quota", {
+            p_schedule_id: scheduleId,
+            p_pax: totalPax,
+          });
+        } catch {
+          // In-memory fallback
+        }
         bookingStore.confirmQuota(scheduleId, totalPax);
       }
-      bookingStore.confirmQuota(scheduleId, totalPax);
+
+      // a. UPDATE bookings SET payment_status = 'PAID', paid_at = NOW()
+      bookingStore.updateBookingStatus(bookingCode, "PAID", now);
 
       // c. Kirim WhatsApp e-ticket via NotificationProvider
       const notificationProvider = getNotificationProvider();
@@ -84,24 +86,26 @@ export async function POST(request: Request) {
         status: "PAID",
       });
     } else if (verification.status === "EXPIRED") {
-      // a. UPDATE bookings SET payment_status = 'EXPIRED'
-      bookingStore.updateBookingStatus(bookingCode, "EXPIRED");
+      if (prevStatus === "UNPAID") {
+        try {
+          const supabase = await createClient();
+          await (supabase.from("bookings") as any)
+            .update({ payment_status: "EXPIRED" })
+            .eq("booking_code", bookingCode);
 
-      try {
-        const supabase = await createClient();
-        await (supabase.from("bookings") as any)
-          .update({ payment_status: "EXPIRED" })
-          .eq("booking_code", bookingCode);
-
-        // b. Panggil SQL release_trip_quota(schedule_id, pax)
-        await (supabase.rpc as any)("release_trip_quota", {
-          p_schedule_id: scheduleId,
-          p_pax: totalPax,
-        });
-      } catch {
+          // b. Panggil SQL release_trip_quota(schedule_id, pax)
+          await (supabase.rpc as any)("release_trip_quota", {
+            p_schedule_id: scheduleId,
+            p_pax: totalPax,
+          });
+        } catch {
+          // In-memory fallback
+        }
         bookingStore.releaseQuota(scheduleId, totalPax);
       }
-      bookingStore.releaseQuota(scheduleId, totalPax);
+
+      // a. UPDATE bookings SET payment_status = 'EXPIRED'
+      bookingStore.updateBookingStatus(bookingCode, "EXPIRED");
 
       return NextResponse.json({
         success: true,

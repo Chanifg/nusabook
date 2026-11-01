@@ -172,7 +172,7 @@ BEGIN
             ARRAY['Jeep 4x4 dan Driver Berpengalaman', 'BBM dan Tiket Masuk Objek Wisata', 'Pemandu Lokal', 'Air Mineral dan Snack Ringan', 'Asuransi Jasa Raharja'],
             ARRAY['Pengeluaran Pribadi', 'Transportasi ke Meeting Point', 'Tips Sukarela Driver'],
             'Pembatalan hingga H-3 mendapatkan pengembalian 50%. Pembatalan kurang dari 48 jam tidak dapat di-refund.',
-            'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1200&q=80', TRUE
+            'https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=1200&q=80', TRUE
         ),
         (
             v_p1_2, v_a1, 'Private Heritage Sunset Ratu Boko & Candi Prambanan', 'private-heritage-ratu-boko',
@@ -187,7 +187,7 @@ BEGIN
 
         -- Agent 2 (Bromo)
         (
-            v_p2_1, v_a2, 'Midnight Overland Bromo Sunrise & Savana Teletubbies', 'bromo-sunrise-savana-teletubbies',
+            v_p2_1, v_a2, 'Midnight Overland Bromo Sunrise & Savana Teletubbies', 'bromo-sunrise-savana',
             'open_trip', 1, 0, 'Malang', 'Stasiun Kota Malang / Area Kota Malang',
             'Petualangan legendaris menyambut fajar emas dari Penanjakan 1 Bromo, dilanjutkan kawah aktif, Pasir Berbisik, dan bukit Teletubbies.',
             '[{"time": "00:30", "activity": "Penjemputan di meeting point Kota Malang"}, {"time": "03:30", "activity": "Tiba di Rest Area Bromo dan pindah Jeep 4x4"}, {"time": "05:00", "activity": "Momen Golden Sunrise di Kingkong Hill"}, {"time": "07:00", "activity": "Trekking Kawah Bromo dan Pura Poten"}, {"time": "09:30", "activity": "Eksplorasi Pasir Berbisik dan Savana Hijau"}, {"time": "12:30", "activity": "Kembali tiba di Malang"}]'::JSONB,
@@ -209,7 +209,7 @@ BEGIN
 
         -- Agent 3 (Labuan Bajo)
         (
-            v_p3_1, v_a3, 'Labuan Bajo Komodo Phinisi Sail 3D2N AC Cabin', 'labuan-bajo-phinisi-sail-3d2n',
+            v_p3_1, v_a3, 'Labuan Bajo Komodo Phinisi Sail 3D2N AC Cabin', 'labuan-bajo-komodo-phinisi',
             'open_trip', 3, 2, 'Labuan Bajo', 'Bandara Komodo (LBJ) / Pelabuhan Marina',
             'Jelajahi keajaiban purba Pulau Komodo, puncak ikonik Pulau Padar, pantai pasir merah muda, dan berenang bersama pari Manta.',
             '[{"time": "Hari 1", "activity": "Boarding Kapal Phinisi, Pulau Kelor, Menjerite Snorkeling, Sunset Pulau Kalong"}, {"time": "Hari 2", "activity": "Trekking Sunrise Pulau Padar, Pink Beach, Berburu Komodo di Pulau Komodo, Taka Makassar"}, {"time": "Hari 3", "activity": "Manta Point, Pulau Kanawa Snorkeling, Kembali ke Labuan Bajo"}]'::JSONB,
@@ -231,7 +231,7 @@ BEGIN
 
         -- Agent 4 (Banyuwangi)
         (
-            v_p4_1, v_a4, 'Kawah Ijen Blue Fire & Kawah Wurung Midnight', 'kawah-ijen-blue-fire-midnight',
+            v_p4_1, v_a4, 'Kawah Ijen Blue Fire & Kawah Wurung Midnight', 'kawah-ijen-blue-fire',
             'open_trip', 1, 0, 'Banyuwangi', 'Stasiun Banyuwangi Kota / Karangasem',
             'Menyaksikan fenomena langka api biru abadi di kawah asam terbesar di dunia, panorama danau toska, dan savana Kawah Wurung.',
             '[{"time": "00:00", "activity": "Penjemputan di Stasiun Banyuwangi"}, {"time": "01:30", "activity": "Tiba di Pos Paltuding dan briefing keselamatan"}, {"time": "02:00", "activity": "Mulai pendakian 3 km menuju puncak Ijen"}, {"time": "04:00", "activity": "Eksplorasi Blue Fire dan Danau Kawah Belerang"}, {"time": "06:30", "activity": "Sunrise di bibir kawah Ijen"}, {"time": "09:00", "activity": "Kunjungan ke Savana Kawah Wurung dan Kembali"}]'::JSONB,
@@ -253,7 +253,7 @@ BEGIN
 
         -- Agent 5 (Dieng)
         (
-            v_p5_1, v_a5, 'Dieng Golden Sunrise Sikunir & Telaga Warna 2D1N', 'dieng-golden-sunrise-sikunir',
+            v_p5_1, v_a5, 'Dieng Golden Sunrise Sikunir & Telaga Warna 2D1N', 'dieng-golden-sunrise-highlands',
             'open_trip', 2, 1, 'Yogyakarta', 'Stasiun Tugu / Kota Wonosobo',
             'Menikmati keindahan negeri di atas awan, pesona telaga multiwarna, kawah vulkanik aktif Sikidang, dan kemegahan Candi Arjuna.',
             '[{"time": "Hari 1", "activity": "Penjemputan di Jogja / Wonosobo, Candi Arjuna, Kawah Sikidang, Telaga Warna, Check-in Homestay Dieng"}, {"time": "Hari 2", "activity": "Trekking Golden Sunrise Bukit Sikunir, Sarapan Mie Ongklok Khas Wonosobo, Gardu Pandang Tieng, Kembali"}]'::JSONB,
@@ -277,7 +277,7 @@ BEGIN
 
         -- Agent 7 (Karimunjawa)
         (
-            v_p7_1, v_a7, 'Eksotisme Karimunjawa Bahari 3D2N Full Snorkeling', 'karimunjawa-bahari-3d2n',
+            v_p7_1, v_a7, 'Eksotisme Karimunjawa Bahari 3D2N Full Snorkeling', 'karimunjawa-bahari-snorkeling',
             'open_trip', 3, 2, 'Jepara', 'Pelabuhan Kartini Jepara',
             'Surga bahari Jawa Tengah: snorkeling bersama hiu jinak, penangkaran penyu, terumbu karang warna-warni, dan sunset di Pantai Ujung Gelam.',
             '[{"time": "Hari 1", "activity": "Kapal Cepat Express Bahari ke Karimunjawa, Check-in Penginapan AC, Sunset Pantai Batu Topeng"}, {"time": "Hari 2", "activity": "Tur Perahu ke Pulau Menjangan Kecil Snorkeling, Santap Ikan Bakar di Pantai Cemara, Penangkaran Hiu"}, {"time": "Hari 3", "activity": "Belanja Souvenir Khas, Kembali dengan Kapal Cepat ke Jepara"}]'::JSONB,
@@ -289,7 +289,7 @@ BEGIN
 
         -- Agent 8 (Derawan)
         (
-            v_p8_1, v_a8, 'Derawan & Maratua Island Hopping Paradise 4D3N', 'derawan-maratua-paradise-4d3n',
+            v_p8_1, v_a8, 'Derawan & Maratua Island Hopping Paradise 4D3N', 'derawan-maratua-island-hopping',
             'open_trip', 4, 3, 'Berau', 'Bandara Kalimarau Berau (BEJ)',
             'Sensasi berenang bersama ubur-ubur tanpa racun di Danau Kakaban, gua air biru Haji Mangku Maratua, dan snorkeling pari manta Sangalaki.',
             '[{"time": "Hari 1", "activity": "Penjemputan Bandara Berau, Speedboat ke Pulau Derawan, Sunset Dermaga Kayu"}, {"time": "Hari 2", "activity": "Island Hopping Maratua Paradise, Snorkeling Palung Laut, Gua Haji Mangku, Danau Ubur-ubur Kakaban"}, {"time": "Hari 3", "activity": "Manta Point Sangalaki, Penangkaran Penyu Hijau, Spot Gosong Pasir"}, {"time": "Hari 4", "activity": "Speedboat kembali ke Berau dan pengantaran bandara"}]'::JSONB,
