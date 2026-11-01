@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MaterialIcon } from "@/components/ui/icon";
+import { createClient } from "@/lib/supabase/client";
 
 function formatRupiah(amount: number): string {
   return "Rp " + amount.toLocaleString("id-ID");
@@ -22,9 +23,80 @@ export default function PaymentInstructionPage({
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [checkLabel, setCheckLabel] = useState<string>("Cek Status Pembayaran");
 
+  // Dynamic booking state
+  const [totalAmount, setTotalAmount] = useState<number>(500000);
+  const [tripTitle, setTripTitle] = useState<string>("Paket Wisata");
+  const [agentBusinessName, setAgentBusinessName] = useState<string>("Mitra Travel Nusabook");
+  const [agentBankName, setAgentBankName] = useState<string>("BCA");
+  const [agentBankAccountNumber, setAgentBankAccountNumber] = useState<string>("8820192831");
+  const [agentBankAccountName, setAgentBankAccountName] = useState<string>("Budi Santoso");
+  const [passengersList, setPassengersList] = useState<Array<{ full_name: string; id_card_number?: string | null }>>([]);
+  const [paxCount, setPaxCount] = useState<number>(1);
+  const [paymentExpiredAt, setPaymentExpiredAt] = useState<string | null>(null);
+
   // Real-time countdown
   const initialSeconds = 20 * 60;
-  const [totalSeconds, setTotalSeconds] = useState<number>(14 * 60 + 42);
+  const [totalSeconds, setTotalSeconds] = useState<number>(initialSeconds);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBooking() {
+      try {
+        const supabase = createClient();
+        const { data: bData } = await supabase
+          .from("bookings")
+          .select("*, travel_agents(*), trip_schedules(*, tour_packages(*)), booking_passengers(*)")
+          .eq("booking_code", bookingCode)
+          .maybeSingle();
+
+        if (bData && isMounted) {
+          if (bData.payment_status === "PAID") {
+            router.push(`/bookings/${bookingCode}`);
+            return;
+          }
+
+          if (bData.total_amount) {
+            setTotalAmount(Number(bData.total_amount));
+          }
+          if (bData.total_pax) {
+            setPaxCount(Number(bData.total_pax));
+          }
+          if (bData.payment_expired_at) {
+            setPaymentExpiredAt(bData.payment_expired_at);
+            const remaining = Math.max(
+              0,
+              Math.floor((new Date(bData.payment_expired_at).getTime() - Date.now()) / 1000)
+            );
+            setTotalSeconds(remaining);
+          }
+
+          const pkg = (bData as any).trip_schedules?.tour_packages;
+          if (pkg?.title) {
+            setTripTitle(pkg.title);
+          }
+
+          const agent = (bData as any).travel_agents;
+          if (agent) {
+            if (agent.business_name) setAgentBusinessName(agent.business_name);
+            if (agent.bank_name) setAgentBankName(agent.bank_name);
+            if (agent.bank_account_number) setAgentBankAccountNumber(agent.bank_account_number);
+            if (agent.bank_account_name) setAgentBankAccountName(agent.bank_account_name);
+          }
+
+          if (bData.booking_passengers && Array.isArray(bData.booking_passengers)) {
+            setPassengersList(bData.booking_passengers);
+          }
+        }
+      } catch {
+        // Fallback default retained
+      }
+    }
+
+    loadBooking();
+    return () => {
+      isMounted = false;
+    };
+  }, [bookingCode, router]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -65,7 +137,24 @@ export default function PaymentInstructionPage({
     setCheckLabel("Menghubungkan ke Bank...");
 
     try {
-      // Trigger simulation webhook for dev/testing
+      // 1. Check if already confirmed in database
+      const supabase = createClient();
+      const { data: latestBooking } = await supabase
+        .from("bookings")
+        .select("payment_status")
+        .eq("booking_code", bookingCode)
+        .maybeSingle();
+
+      if (latestBooking && latestBooking.payment_status === "PAID") {
+        setCheckLabel("Pembayaran Terverifikasi!");
+        showToast("Pembayaran berhasil diverifikasi!");
+        setTimeout(() => {
+          router.push(`/bookings/${bookingCode}`);
+        }, 1200);
+        return;
+      }
+
+      // 2. Trigger simulation webhook for dev/testing
       const res = await fetch("/api/webhooks/payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -97,9 +186,7 @@ export default function PaymentInstructionPage({
     }
   };
 
-  const vaNumber = "8277 0812 3456 7890";
-  const cleanVaNumber = "8277081234567890";
-  const totalAmount = 850000;
+  const cleanVaNumber = agentBankAccountNumber.replace(/\D/g, "");
 
   return (
     <div className="bg-background font-body-regular text-on-surface antialiased min-h-screen flex flex-col">
@@ -298,17 +385,17 @@ export default function PaymentInstructionPage({
                   <div className="flex items-center gap-space-md">
                     <div className="h-12 w-20 bg-surface-container-low rounded-lg flex items-center justify-center p-2 shadow-xs">
                       <span className="font-headline-sm text-headline-sm font-bold text-primary tracking-tighter">
-                        BCA
+                        {agentBankName}
                       </span>
                     </div>
                     <div>
                       <h2 className="font-title-md text-title-md font-bold text-on-surface">
-                        BCA Virtual Account
+                        Transfer Rekening {agentBankName}
                       </h2>
                       <div className="flex items-center gap-space-xs mt-0.5">
                         <span className="w-2 h-2 rounded-full bg-[#10b981]" />
                         <span className="font-caption text-caption text-[#059669] font-semibold font-bold">
-                          Verifikasi otomatis
+                          Verifikasi Otomatis &amp; Manual
                         </span>
                       </div>
                     </div>
@@ -324,26 +411,26 @@ export default function PaymentInstructionPage({
 
                 {/* VA & Nominal Information Blocks */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md mt-space-md">
-                  {/* Box 1: Nomor Virtual Account */}
+                  {/* Box 1: Nomor Rekening Transfer Bank */}
                   <div className="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between">
                     <div>
                       <span className="font-caption text-caption text-outline font-semibold uppercase tracking-wider block font-bold">
-                        Nomor Virtual Account
+                        Nomor Rekening ({agentBankName})
                       </span>
                       <span className="font-headline-md text-headline-md font-bold text-on-surface tracking-wider mt-1 block select-all font-mono">
-                        {vaNumber}
+                        {agentBankAccountNumber}
                       </span>
                       <span className="font-caption text-caption text-on-surface-variant block mt-0.5">
-                        Atas Nama: Nusabook - Pesona Nusantara
+                        Atas Nama: {agentBankAccountName} ({agentBusinessName})
                       </span>
                     </div>
                     <button
-                      className="mt-space-md w-full bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-body-semibold py-2 px-space-sm rounded-lg flex items-center justify-center gap-space-xs transition-colors font-bold"
-                      onClick={() => copyToClipboard(cleanVaNumber, "Nomor Virtual Account disalin!")}
+                      className="mt-space-md w-full bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-body-semibold py-2 px-space-sm rounded-lg flex items-center justify-center gap-space-xs transition-colors font-bold cursor-pointer"
+                      onClick={() => copyToClipboard(cleanVaNumber, "Nomor rekening berhasil disalin!")}
                       type="button"
                     >
                       <MaterialIcon name="copy_all" className="text-[18px]" />
-                      <span>Salin Nomor VA</span>
+                      <span>Salin Nomor Rekening</span>
                     </button>
                   </div>
 
@@ -361,7 +448,7 @@ export default function PaymentInstructionPage({
                       </span>
                     </div>
                     <button
-                      className="mt-space-md w-full bg-surface-container hover:bg-surface-container-high text-on-surface font-body-semibold text-body-semibold py-2 px-space-sm rounded-lg flex items-center justify-center gap-space-xs transition-colors font-bold"
+                      className="mt-space-md w-full bg-surface-container hover:bg-surface-container-high text-on-surface font-body-semibold text-body-semibold py-2 px-space-sm rounded-lg flex items-center justify-center gap-space-xs transition-colors font-bold cursor-pointer"
                       onClick={() => copyToClipboard(totalAmount.toString(), `Nominal transfer ${formatRupiah(totalAmount)} disalin!`)}
                       type="button"
                     >
@@ -704,49 +791,49 @@ export default function PaymentInstructionPage({
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-caption text-caption font-bold text-on-surface uppercase tracking-wider flex items-center gap-1">
                       <MaterialIcon name="groups" className="text-[16px] text-primary" />
-                      <span>Manifes Terdaftar (2 Pax)</span>
+                      <span>Manifes Terdaftar ({paxCount} Pax)</span>
                     </span>
                   </div>
                   <div className="space-y-1.5 font-caption text-caption text-on-surface">
-                    <div className="bg-surface-container-lowest p-1.5 rounded flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-on-surface font-bold">1. Anindya Paramitha</p>
-                        <p className="text-outline text-[11px]">NIK: 3578015509950003</p>
+                    {passengersList.length > 0 ? (
+                      passengersList.map((passenger, idx) => (
+                        <div key={idx} className="bg-surface-container-lowest p-1.5 rounded flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-on-surface font-bold">
+                              {idx + 1}. {passenger.full_name}
+                            </p>
+                            {passenger.id_card_number && (
+                              <p className="text-outline text-[11px]">
+                                NIK: {passenger.id_card_number.slice(0, 4)}********{passenger.id_card_number.slice(-4)}
+                              </p>
+                            )}
+                          </div>
+                          <MaterialIcon name="check_circle" className="text-[16px] text-[#059669]" />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="bg-surface-container-lowest p-2 rounded text-xs text-on-surface-variant">
+                        {paxCount} Tiket Peserta Terkonfirmasi
                       </div>
-                      <MaterialIcon name="check_circle" className="text-[16px] text-[#059669]" />
-                    </div>
-                    <div className="bg-surface-container-lowest p-1.5 rounded flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-on-surface font-bold">2. Reza Herdian</p>
-                        <p className="text-outline text-[11px]">NIK: 3273021403940001</p>
-                      </div>
-                      <MaterialIcon name="check_circle" className="text-[16px] text-[#059669]" />
-                    </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Detailed Price Breakdown */}
                 <div className="mt-space-md flex flex-col gap-1.5 text-on-surface-variant font-caption text-caption">
                   <div className="flex justify-between">
-                    <span>Paket Open Trip Bromo (2 Dewasa)</span>
-                    <span className="font-semibold text-on-surface font-bold">Rp 900.000</span>
-                  </div>
-                  <div className="flex justify-between text-[#059669]">
-                    <span>Voucher Hibah Wirausaha P2MW</span>
-                    <span className="font-semibold font-bold">-Rp 50.000</span>
+                    <span>{tripTitle} ({paxCount} Pax)</span>
+                    <span className="font-semibold text-on-surface font-bold">{formatRupiah(totalAmount)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Asuransi Jiwa & Resiko Jasa Raharja</span>
-                    <span className="font-semibold text-[#059669] font-bold">Termasuk (Rp 0)</span>
+                    <span>Asuransi Keselamatan Perjalanan</span>
+                    <span className="font-semibold text-[#059669] font-bold">Termasuk</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Tiket Masuk TNBTS & SIMAKSI Resmi</span>
-                    <span className="font-semibold text-[#059669] font-bold">Termasuk (Rp 0)</span>
+                    <span>Fasilitas &amp; Retribusi Destinasi</span>
+                    <span className="font-semibold text-[#059669] font-bold">Termasuk</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shuttle HiAce & Hardtop Jeep 4x4</span>
-                    <span className="font-semibold text-[#059669] font-bold">Termasuk (Rp 0)</span>
-                  </div>
+                </div>
 
 
                   {/* Grand Total Block */}
@@ -812,8 +899,8 @@ export default function PaymentInstructionPage({
             <span className="font-caption text-caption text-outline">Program P2MW 2026</span>
           </div>
           <div className="flex gap-space-lg font-caption text-caption">
-            <Link className="hover:text-on-surface transition-colors" href="/terms">
-              Syarat & Ketentuan
+            <Link className="hover:text-on-surface transition-colors" href="/explore">
+              Jelajah Paket Wisata
             </Link>
           </div>
           <div className="font-caption text-caption text-outline">© 2026 Nusabook Indonesia. Hak Cipta Dilindungi.</div>
