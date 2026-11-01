@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
 import { CityChips } from "@/components/marketplace/city-chips";
-import { PartnerShowcase } from "@/components/marketplace/partner-showcase";
 
 // ─── Calendar Helpers ──────────────────────────────────────────────────────
 const MONTH_NAMES = [
@@ -1330,8 +1329,6 @@ export default function MarketplaceExplorePage() {
               </div>
             </div>
           </section>
-
-          <PartnerShowcase />
         </div>
       </main>
 
