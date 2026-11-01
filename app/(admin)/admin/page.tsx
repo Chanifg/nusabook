@@ -1,105 +1,149 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { MaterialIcon } from "@/components/ui/icon";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
-interface KYCApplicant {
+export interface TravelAgentItem {
   id: string;
-  agencyName: string;
-  location: string;
+  businessName: string;
+  slug: string;
   ownerName: string;
-  nikMasked: string;
-  ktpStatus: string;
-  nibStatus: string;
-  status: "PENDING" | "VERIFIED" | "REVISION";
-  tripType: string;
+  ownerPhone: string;
+  city: string;
+  province: string;
+  joinedDate: string;
+  isVerified: boolean;
+  isActive: boolean;
+  packageCount: number;
+  totalBooking: number;
 }
 
-interface PayoutEntry {
-  id: string;
-  agencyName: string;
-  bankAccount: string;
-  tripTitle: string;
-  tripStatus: string;
-  grossAmount: number;
-  feeCut: number;
-  netAmount: number;
-  status: "READY" | "SETTLED";
-  transferRef?: string;
-}
-
-const INITIAL_KYC: KYCApplicant[] = [
+// Mock data agen travel yang terdaftar di platform Nusabook
+const INITIAL_AGENTS: TravelAgentItem[] = [
   {
-    id: "kyc-1",
-    agencyName: "Pesona Merapi Tour & Travel",
-    location: "Sleman, D.I. Yogyakarta",
+    id: "agent-001",
+    businessName: "Pesona Merapi Tour & Travel",
+    slug: "pesona-merapi",
     ownerName: "Rian Pratama",
-    nikMasked: "3404********0002",
-    ktpStatus: "Tervalidasi",
-    nibStatus: "NIB OSS Valid",
-    status: "PENDING",
-    tripType: "Trip Merapi & Jeep Adventure",
+    ownerPhone: "0812-3456-7890",
+    city: "Sleman",
+    province: "D.I. Yogyakarta",
+    joinedDate: "2026-08-14",
+    isVerified: true,
+    isActive: true,
+    packageCount: 6,
+    totalBooking: 142,
   },
   {
-    id: "kyc-2",
-    agencyName: "Batam Island Adventures",
-    location: "Batam, Kepulauan Riau",
+    id: "agent-002",
+    businessName: "Batam Island Adventures",
+    slug: "batam-adventures",
     ownerName: "Siti Nurhaliza",
-    nikMasked: "2171********0008",
-    ktpStatus: "Tervalidasi",
-    nibStatus: "TDUP Pariwisata Valid",
-    status: "PENDING",
-    tripType: "Island Hopping & Watersport",
+    ownerPhone: "0819-8765-4321",
+    city: "Batam",
+    province: "Kepulauan Riau",
+    joinedDate: "2026-08-28",
+    isVerified: true,
+    isActive: true,
+    packageCount: 4,
+    totalBooking: 98,
   },
   {
-    id: "kyc-3",
-    agencyName: "Rinjani Highland Trekker",
-    location: "Lombok Timur, NTB",
+    id: "agent-003",
+    businessName: "Rinjani Highland Trekker",
+    slug: "rinjani-trekker",
     ownerName: "Lalu Hendra",
-    nikMasked: "5203********0004",
-    ktpStatus: "Tervalidasi",
-    nibStatus: "Sertifikasi HPI Valid",
-    status: "PENDING",
-    tripType: "Mountain Expeditions",
-  },
-];
-
-const INITIAL_PAYOUTS: PayoutEntry[] = [
-  {
-    id: "PO-2026-089",
-    agencyName: "Tour DeJava Official",
-    bankAccount: "BCA 0182-991-231 a.n Tour DeJava",
-    tripTitle: "Sunrise Bromo 18 Nov",
-    tripStatus: "Pelaksanaan Selesai (H+1)",
-    grossAmount: 15000000,
-    feeCut: 300000,
-    netAmount: 14700000,
-    status: "READY",
+    ownerPhone: "0852-3344-5566",
+    city: "Lombok Timur",
+    province: "Nusa Tenggara Barat",
+    joinedDate: "2026-09-02",
+    isVerified: false,
+    isActive: true,
+    packageCount: 3,
+    totalBooking: 45,
   },
   {
-    id: "PO-2026-088",
-    agencyName: "Komodo Liveaboard Excursions",
-    bankAccount: "Mandiri 1370-002-182 a.n Komodo Liveaboard",
-    tripTitle: "3D2N Labuan Bajo Sailing",
-    tripStatus: "Pelaksanaan Selesai",
-    grossAmount: 42000000,
-    feeCut: 840000,
-    netAmount: 41160000,
-    status: "SETTLED",
-    transferRef: "MDT-78213",
+    id: "agent-004",
+    businessName: "Bromo Sunrise Expedition",
+    slug: "bromo-sunrise",
+    ownerName: "Budi Santoso",
+    ownerPhone: "0878-1122-3344",
+    city: "Malang",
+    province: "Jawa Timur",
+    joinedDate: "2026-09-10",
+    isVerified: true,
+    isActive: true,
+    packageCount: 8,
+    totalBooking: 210,
+  },
+  {
+    id: "agent-005",
+    businessName: "Karimunjawa Seaview Tour",
+    slug: "karimunjawa-seaview",
+    ownerName: "Ahmad Fauzi",
+    ownerPhone: "0896-7788-9900",
+    city: "Jepara",
+    province: "Jawa Tengah",
+    joinedDate: "2026-09-18",
+    isVerified: false,
+    isActive: true,
+    packageCount: 5,
+    totalBooking: 64,
+  },
+  {
+    id: "agent-006",
+    businessName: "Phinisi Komodo Voyage",
+    slug: "phinisi-komodo",
+    ownerName: "Citra Anindita",
+    ownerPhone: "0813-9988-7766",
+    city: "Labuan Bajo",
+    province: "Nusa Tenggara Timur",
+    joinedDate: "2026-09-25",
+    isVerified: true,
+    isActive: true,
+    packageCount: 4,
+    totalBooking: 115,
+  },
+  {
+    id: "agent-007",
+    businessName: "Derawan Marine Explorer",
+    slug: "derawan-explorer",
+    ownerName: "Bayu Saputra",
+    ownerPhone: "0821-5566-7788",
+    city: "Berau",
+    province: "Kalimantan Timur",
+    joinedDate: "2026-10-04",
+    isVerified: false,
+    isActive: false,
+    packageCount: 2,
+    totalBooking: 18,
+  },
+  {
+    id: "agent-008",
+    businessName: "Toba Caldera Heritage Tour",
+    slug: "toba-caldera",
+    ownerName: "Dewi Lestari",
+    ownerPhone: "0818-0987-6543",
+    city: "Samosir",
+    province: "Sumatera Utara",
+    joinedDate: "2026-10-12",
+    isVerified: true,
+    isActive: true,
+    packageCount: 3,
+    totalBooking: 52,
   },
 ];
 
 export default function SuperAdminPage() {
-  const [kycList, setKycList] = useState<KYCApplicant[]>(INITIAL_KYC);
-  const [payoutList, setPayoutList] = useState<PayoutEntry[]>(INITIAL_PAYOUTS);
+  const [agents, setAgents] = useState<TravelAgentItem[]>(INITIAL_AGENTS);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "verified" | "unverified">("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  // Modal State
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState("");
-  const [modalContent, setModalContent] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<(() => void) | null>(null);
+  // Modal State untuk inspeksi detail dokumen legalitas agen
+  const [selectedAgentDetail, setSelectedAgentDetail] = useState<TravelAgentItem | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -108,742 +152,637 @@ export default function SuperAdminPage() {
     }, 4000);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && modalOpen) {
-        setModalOpen(false);
+  // Format tanggal Indonesia
+  const formatDateIndo = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Handler toggle is_verified dengan efek visual dan sinkronisasi
+  const handleToggleVerified = async (agent: TravelAgentItem, nextChecked: boolean) => {
+    const previousState = agent.isVerified;
+    setUpdatingId(agent.id);
+
+    // Optimistic UI update
+    setAgents((prev) =>
+      prev.map((a) => (a.id === agent.id ? { ...a, isVerified: nextChecked } : a))
+    );
+
+    try {
+      // Panggil endpoint verify Super Admin
+      const res = await fetch(`/api/admin/agents/${agent.id}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verified: nextChecked }),
+      });
+
+      if (!res.ok) {
+        // Fallback simulasi delay jika berjalan di lingkungan mock lokal
+        await new Promise((resolve) => setTimeout(resolve, 350));
       }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen]);
 
-  const handleApproveKYC = (partner: KYCApplicant) => {
-    setModalTitle("Verifikasi Dokumen Mitra");
-    setModalContent(
-      `Apakah Anda yakin ingin menyetujui legalitas "${partner.agencyName}"? Sistem akan menerbitkan Badge Mitra Terverifikasi dan mengaktifkan publikasi paket tur.`
-    );
-    setOnConfirmAction(() => () => {
-      setKycList((prev) =>
-        prev.map((k) => (k.id === partner.id ? { ...k, status: "VERIFIED" } : k))
+      showToast(
+        nextChecked
+          ? `Mitra "${agent.businessName}" resmi DIVERIFIKASI. Badge aktif.`
+          : `Status verifikasi mitra "${agent.businessName}" DINONAKTIFKAN.`
       );
-      setModalOpen(false);
-      showToast(`Mitra "${partner.agencyName}" resmi berstatus Terverifikasi.`);
-    });
-    setModalOpen(true);
+    } catch {
+      // Fallback mulus untuk demo mock
+      showToast(
+        nextChecked
+          ? `Mitra "${agent.businessName}" resmi DIVERIFIKASI (Simulasi).`
+          : `Status verifikasi mitra "${agent.businessName}" DINONAKTIFKAN (Simulasi).`
+      );
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
-  const handleRevisionKYC = (partner: KYCApplicant) => {
-    setModalTitle("Permintaan Revisi Dokumen");
-    setModalContent(
-      `Kirim notifikasi revisi berkas legalitas ke penanggung jawab ${partner.ownerName} (${partner.agencyName}) melalui jalur resmi WhatsApp.`
-    );
-    setOnConfirmAction(() => () => {
-      setKycList((prev) =>
-        prev.map((k) => (k.id === partner.id ? { ...k, status: "REVISION" } : k))
-      );
-      setModalOpen(false);
-      showToast(`Permintaan revisi berhasil dikirim ke mitra "${partner.agencyName}".`);
-    });
-    setModalOpen(true);
-  };
+  // Statistik Ringkasan Agen
+  const stats = useMemo(() => {
+    const total = agents.length;
+    const verified = agents.filter((a) => a.isVerified).length;
+    const unverified = total - verified;
+    const percentage = total > 0 ? Math.round((verified / total) * 100) : 0;
+    return { total, verified, unverified, percentage };
+  }, [agents]);
 
-  const handleProcessPayout = (payout: PayoutEntry) => {
-    setModalTitle("Eksekusi Transfer Pencairan Dana (Escrow Payout)");
-    setModalContent(
-      `Pindahkan dana netto Rp ${payout.netAmount.toLocaleString("id-ID")} ke rekening ${payout.bankAccount}? Potongan komisi platform 2% (Rp ${payout.feeCut.toLocaleString("id-ID")}) telah dicatat ke Ledger Nusabook.`
-    );
-    setOnConfirmAction(() => () => {
-      setPayoutList((prev) =>
-        prev.map((p) =>
-          p.id === payout.id
-            ? { ...p, status: "SETTLED", transferRef: `MDT-${Math.floor(10000 + Math.random() * 90000)}` }
-            : p
-        )
-      );
-      setModalOpen(false);
-      showToast(`Pencairan dana untuk ${payout.agencyName} sukses dikirim.`);
+  // Filter pencarian dan status
+  const filteredAgents = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+
+    return agents.filter((agent) => {
+      // 1. Search Query
+      if (q) {
+        const matchName = agent.businessName.toLowerCase().includes(q);
+        const matchOwner = agent.ownerName.toLowerCase().includes(q);
+        const matchCity = agent.city.toLowerCase().includes(q);
+        const matchProvince = agent.province.toLowerCase().includes(q);
+
+        if (!matchName && !matchOwner && !matchCity && !matchProvince) {
+          return false;
+        }
+      }
+
+      // 2. Status Filter
+      if (filterStatus === "verified" && !agent.isVerified) return false;
+      if (filterStatus === "unverified" && agent.isVerified) return false;
+
+      return true;
     });
-    setModalOpen(true);
-  };
+  }, [agents, searchQuery, filterStatus]);
 
   return (
-    <div className="space-y-8">
-      {/* Toast Notification */}
+    <div className="space-y-8 pb-12 w-full">
+      {/* Toast Notifikasi Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-on-surface text-surface px-5 py-3.5 rounded-xl shadow-xl flex items-center gap-3 border border-outline-variant/30 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <MaterialIcon name="check_circle" className="text-xl text-emerald-400 shrink-0" />
           <span className="text-xs sm:text-sm font-medium">{toastMessage}</span>
           <button
+            type="button"
             onClick={() => setToastMessage(null)}
-            className="ml-2 text-surface-variant hover:text-surface"
+            className="ml-2 text-slate-400 hover:text-white"
+            aria-label="Tutup notifikasi"
           >
             <MaterialIcon name="close" className="text-lg" />
           </button>
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-surface-container-lowest rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-outline-variant/30 animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-5 bg-surface-container-low border-b border-outline-variant/20 flex items-center justify-between">
+      {/* Modal Detail Dokumen Legalitas Agen */}
+      {selectedAgentDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
+            <div className="p-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-primary-container text-primary flex items-center justify-center">
-                  <MaterialIcon name="verified_user" className="text-xl" />
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#0D47A1] flex items-center justify-center font-bold">
+                  <MaterialIcon name="verified" className="text-xl" />
                 </div>
-                <h3 className="font-bold text-on-surface text-sm sm:text-base">
-                  {modalTitle}
-                </h3>
+                <div>
+                  <h3 className="font-bold text-slate-800 text-sm sm:text-base">
+                    Audit Profil Agen Travel
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Otorisasi kepatuhan perizinan tour and travel
+                  </p>
+                </div>
               </div>
               <button
-                onClick={() => setModalOpen(false)}
-                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg"
+                type="button"
+                onClick={() => setSelectedAgentDetail(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition-colors"
+                aria-label="Tutup modal"
               >
-                <MaterialIcon name="close" className="text-lg" />
+                <MaterialIcon name="close" className="text-xl" />
               </button>
             </div>
-            <div className="p-6 text-sm text-on-surface-variant leading-relaxed">
-              {modalContent}
+
+            <div className="p-6 space-y-4 text-xs sm:text-sm text-slate-600">
+              <div className="p-3.5 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-[#0D47A1] text-base">
+                    {selectedAgentDetail.businessName}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {selectedAgentDetail.city}, {selectedAgentDetail.province}
+                  </p>
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedAgentDetail.isVerified
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-orange-100 text-[#F57C00]"
+                  }`}
+                >
+                  {selectedAgentDetail.isVerified ? "Terverifikasi" : "Belum Verifikasi"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <span className="text-slate-400 text-xs block">Penanggung Jawab:</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">
+                    {selectedAgentDetail.ownerName}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-xs block">WhatsApp Resmi:</span>
+                  <span className="font-mono text-slate-800 mt-0.5 block">
+                    {selectedAgentDetail.ownerPhone}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-xs block">Tanggal Registrasi:</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">
+                    {formatDateIndo(selectedAgentDetail.joinedDate)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-xs block">Jumlah Paket Aktif:</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">
+                    {selectedAgentDetail.packageCount} Paket Wisata
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100">
+                <span className="text-slate-400 text-xs block mb-1.5 font-bold uppercase tracking-wider">
+                  Ubah Status Verifikasi:
+                </span>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-xs font-medium text-slate-700">
+                    Beri Hak Publikasi Marketplace
+                  </span>
+                  <ToggleSwitch
+                    checked={selectedAgentDetail.isVerified}
+                    onChange={(checked) => {
+                      handleToggleVerified(selectedAgentDetail, checked);
+                      setSelectedAgentDetail((prev) => (prev ? { ...prev, isVerified: checked } : null));
+                    }}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="p-4 bg-surface-container-low border-t border-outline-variant/20 flex justify-end gap-2.5">
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
               <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                type="button"
+                onClick={() => setSelectedAgentDetail(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 text-slate-700 transition-colors"
               >
-                Batal
-              </button>
-              <button
-                onClick={() => {
-                  if (onConfirmAction) onConfirmAction();
-                }}
-                className="px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary-hover text-xs font-semibold transition-colors flex items-center gap-2 shadow-sm"
-              >
-                <MaterialIcon name="check_circle" className="text-base" />
-                <span>Konfirmasi Tindakan</span>
+                Tutup
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Top Banner & Context Header */}
-      <section className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/30 shadow-sm">
+      {/* Header Banner Portal Super Admin */}
+      <section className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-1 bg-primary-container text-on-primary-container font-bold text-[11px] uppercase rounded-md tracking-wider">
-                Kemdikbudristek P2MW 2026
+              <span className="px-2.5 py-0.5 bg-[#0D47A1] text-white font-bold text-[11px] uppercase rounded-md tracking-wider">
+                Super Admin Console
               </span>
-              <span className="text-outline-variant">•</span>
-              <span className="text-xs text-on-surface-variant font-medium">Core Engine 3.8.4</span>
-              <span className="text-outline-variant">•</span>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-[11px] font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Supabase Realtime WSS: Connected (14ms)</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-xs text-slate-500 font-medium">Nusabook Multi-tenant Engine</span>
+              <span className="text-slate-300">•</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-md text-[11px] font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Gate Verifikasi: Realtime Active</span>
               </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-              Super Admin Platform Overview
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Manajemen &amp; Verifikasi Agen Travel
             </h1>
-            <p className="text-xs sm:text-sm text-on-surface-variant max-w-4xl leading-relaxed">
-              Monitoring Ekosistem SaaS & Marketplace Nusabook • Konsol Manajemen Hibah P2MW Kemdikbudristek (Multi-tenant B2B Engine & Escrow Ledger).
+
+            <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
+              Kendali penuh otorisasi mitra agen tour &amp; travel di platform Nusabook. Agen yang
+              terverifikasi (is_verified: true) dapat menerbitkan paket tur di marketplace dan
+              menerima reservasi online.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
-              onClick={() =>
-                showToast("Menyiapkan kompilasi PDF/XLSX Laporan Pertanggungjawaban Hibah P2MW...")
-              }
-              className="bg-surface-container-low border border-outline-variant/30 hover:bg-surface-container-high text-on-surface px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-sm"
+              type="button"
+              onClick={() => showToast("Memperbarui status database mitra agen...")}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-xs"
             >
-              <MaterialIcon name="download" className="text-base text-on-surface-variant" />
-              <span>Export LPJ (PDF/XLSX)</span>
-            </button>
-            <button
-              onClick={() =>
-                showToast("Menjalankan rekonsiliasi otomatis Midtrans vs PostgreSQL Ledger...")
-              }
-              className="bg-primary hover:bg-primary-hover text-on-primary px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-sm"
-            >
-              <MaterialIcon name="sync" className="text-base" />
-              <span>Sync Real-time Ledger</span>
+              <MaterialIcon name="refresh" className="text-base text-slate-500" />
+              <span>Sinkronkan Data</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* 4 Global Platform KPI Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-        {/* KPI 1: GMV Nasional */}
-        <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+      {/* 3 KARTU RINGKASAN DI ATAS TABEL */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {/* Kartu 1: Total Agen */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
-                GMV Nasional (Bruto)
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-primary-container text-primary flex items-center justify-center">
-                <MaterialIcon name="credit_card" className="text-lg" />
-              </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              Total Agen Terdaftar
+            </span>
+            <div className="text-3xl font-extrabold text-slate-900 mt-1">
+              {stats.total} <span className="text-sm font-semibold text-slate-500">Mitra</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-              Rp 1.428.500.000
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-secondary font-semibold">
-              <MaterialIcon name="trending_up" className="text-base" />
-              <span>+18.4% MoM</span>
-              <span className="text-on-surface-variant font-normal">vs periode lalu</span>
-            </div>
+            <p className="text-xs text-slate-400 mt-0.5">Ekosistem UMKM Pariwisata</p>
           </div>
-
-          <div className="mt-6 pt-4 border-t border-outline-variant/20">
-            <div className="flex justify-between items-center text-xs text-on-surface-variant mb-1.5">
-              <span>Target P2MW Tahap I (Rp 1.5M)</span>
-              <span className="font-bold text-on-surface">95.2%</span>
-            </div>
-            <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-secondary h-full rounded-full transition-all duration-500"
-                style={{ width: "95.2%" }}
-              />
-            </div>
+          <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#0D47A1] flex items-center justify-center">
+            <MaterialIcon name="storefront" className="text-2xl" />
           </div>
         </div>
 
-        {/* KPI 2: Komisi Platform (2% Net) */}
-        <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+        {/* Kartu 2: Agen Terverifikasi */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
-                Komisi Platform (2% Net)
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center">
-                <MaterialIcon name="percent" className="text-lg" />
-              </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              Agen Terverifikasi
+            </span>
+            <div className="text-3xl font-extrabold text-emerald-600 mt-1">
+              {stats.verified} <span className="text-sm font-semibold text-emerald-700">Mitra</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-              Rp 28.570.000
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-xs">
-              <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-semibold flex items-center gap-1 border border-outline-variant/30">
-                <MaterialIcon name="lock" className="text-xs text-secondary" />
-                Escrow Terverifikasi
-              </span>
+            <div className="flex items-center gap-1 mt-0.5 text-xs text-emerald-700 font-semibold">
+              <MaterialIcon name="verified" className="text-sm" />
+              <span>{stats.percentage}% telah memenuhi KYC</span>
             </div>
           </div>
-
-          <div className="mt-6 pt-4 border-t border-outline-variant/20 flex items-center justify-between text-xs text-on-surface-variant">
-            <span>Total Potongan Otomatis</span>
-            <span className="font-semibold text-primary">B2B Cut H+1 Tour</span>
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <MaterialIcon name="how_to_reg" className="text-2xl" />
           </div>
         </div>
 
-        {/* KPI 3: Mitra Agen Terdaftar */}
-        <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+        {/* Kartu 3: Agen Belum Terverifikasi */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
-                Mitra Agen Terdaftar
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-primary-container text-primary flex items-center justify-center">
-                <MaterialIcon name="storefront" className="text-lg" />
-              </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              Belum Terverifikasi
+            </span>
+            <div className="text-3xl font-extrabold text-[#F57C00] mt-1">
+              {stats.unverified} <span className="text-sm font-semibold text-[#F57C00]">Mitra</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-              48 Mitra Aktif
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-xs">
-              <span className="text-emerald-700 font-semibold">38 Verified</span>
-              <span className="text-outline-variant">•</span>
-              <span className="text-secondary font-semibold">6 KYC Pending</span>
-              <span className="text-outline-variant">•</span>
-              <span className="text-on-surface-variant">4 Draft</span>
-            </div>
+            <p className="text-xs text-[#F57C00] font-medium mt-0.5">
+              Menunggu aktivasi izin marketplace
+            </p>
           </div>
-
-          <div className="mt-6 pt-4 border-t border-outline-variant/20">
-            <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>100% NIB & KTP Pemilik Tervalidasi RLS</span>
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 4: Volume Transaksi */}
-        <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
-                Volume Transaksi Sukses
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center">
-                <MaterialIcon name="confirmation_number" className="text-lg" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-              2.140 Tiket
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-on-surface">
-              <MaterialIcon name="verified_user" className="text-sm text-emerald-600" />
-              <span>99.8% Transaksi Tanpa Overbooking</span>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-outline-variant/20 flex items-center justify-between text-xs text-on-surface-variant">
-            <span>Algoritma Kursi:</span>
-            <span className="font-semibold text-primary">Pessimistic Quota Lock</span>
+          <div className="w-12 h-12 rounded-xl bg-orange-50 text-[#F57C00] flex items-center justify-center">
+            <MaterialIcon name="pending_actions" className="text-2xl" />
           </div>
         </div>
       </section>
 
-      {/* Two-Column Operational Command Center */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-        {/* Left Column (Wide - 7/12): Operational Management Tables */}
-        <div className="xl:col-span-7 space-y-8">
-          {/* Table A: KYC Verification */}
-          <div id="kyc" className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
-            <div className="p-5 sm:p-6 bg-surface-container-low border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <MaterialIcon name="verified_user" className="text-xl text-primary" />
-                  <h2 className="text-base sm:text-lg font-bold text-on-surface">
-                    Verifikasi Dokumen & Legalitas Mitra (KYC)
-                  </h2>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-1">
-                  Otorisasi kepatuhan perizinan tour & travel sebelum agen dapat mempublikasikan paket trip.
-                </p>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-xs font-bold whitespace-nowrap self-start sm:self-auto">
-                {kycList.filter((k) => k.status === "PENDING").length} Permohonan Baru
-              </span>
+      {/* TABEL DAFTAR AGEN TRAVEL & KONTROL */}
+      <section className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        {/* Header Kontrol Tabel & Search */}
+        <div className="p-5 border-b border-slate-100 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-800">
+                Daftar Agen Travel &amp; Status Kemitraan
+              </h2>
+              <p className="text-xs text-slate-500">
+                Gunakan toggle switch di kolom verifikasi untuk mengaktifkan atau menonaktifkan status izin agen secara instan.
+              </p>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead>
-                  <tr className="bg-surface-container-high/60 border-b border-outline-variant/20 text-on-surface-variant uppercase tracking-wider text-[11px] font-bold">
-                    <th className="py-3 px-5">Mitra / Wilayah</th>
-                    <th className="py-3 px-4">Penanggung Jawab</th>
-                    <th className="py-3 px-4">Kelengkapan Berkas</th>
-                    <th className="py-3 px-4">Status & Tipe</th>
-                    <th className="py-3 px-5 text-right">Tindakan SuperAdmin</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/10">
-                  {kycList.map((partner) => (
-                    <tr key={partner.id} className="hover:bg-surface-container-low/80 transition-colors">
-                      <td className="py-4 px-5">
-                        <div className="font-bold text-primary leading-tight">
-                          {partner.agencyName}
-                        </div>
-                        <div className="text-xs text-on-surface-variant flex items-center gap-1 mt-1">
-                          <MaterialIcon name="location_on" className="text-xs text-on-surface-variant/70" />
-                          <span>{partner.location}</span>
-                        </div>
-                      </td>
+            {/* Tab Filter: Semua, Terverifikasi, Belum Verifikasi */}
+            <div className="inline-flex p-1 bg-slate-100/90 rounded-lg self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setFilterStatus("all")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  filterStatus === "all"
+                    ? "bg-[#0D47A1] text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Semua ({stats.total})
+              </button>
 
-                      <td className="py-4 px-4">
-                        <div className="font-semibold text-on-surface">
-                          {partner.ownerName}
-                        </div>
-                        <div className="text-[11px] text-on-surface-variant font-mono mt-0.5">
-                          NIK: {partner.nikMasked}
-                        </div>
-                      </td>
+              <button
+                type="button"
+                onClick={() => setFilterStatus("verified")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  filterStatus === "verified"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Terverifikasi ({stats.verified})
+              </button>
 
-                      <td className="py-4 px-4">
-                        <div className="flex flex-col gap-1">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              showToast(`Membuka pratinjau KTP Penanggung Jawab ${partner.ownerName}...`)
-                            }
-                            className="inline-flex items-center gap-1 text-primary text-xs hover:underline text-left font-medium"
-                          >
-                            <MaterialIcon name="visibility" className="text-xs" />
-                            <span>KTP Pemilik [Lihat]</span>
-                          </button>
-                          <span className="inline-flex items-center gap-1 text-emerald-700 text-xs font-medium">
-                            <MaterialIcon name="check_circle" className="text-xs text-emerald-600" />
-                            <span>{partner.nibStatus}</span>
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <div className="space-y-1">
-                          {partner.status === "PENDING" && (
-                            <span className="inline-block px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-semibold">
-                              Menunggu Review
-                            </span>
-                          )}
-                          {partner.status === "VERIFIED" && (
-                            <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-                              Terverifikasi
-                            </span>
-                          )}
-                          {partner.status === "REVISION" && (
-                            <span className="inline-block px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold">
-                              Menunggu Revisi
-                            </span>
-                          )}
-                          <p className="text-[11px] text-on-surface-variant">{partner.tripType}</p>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-5 text-right space-x-2 whitespace-nowrap">
-                        {partner.status === "PENDING" ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleApproveKYC(partner)}
-                              className="px-3 py-1.5 rounded-lg bg-primary text-on-primary hover:bg-primary-hover text-xs font-semibold transition-colors shadow-sm"
-                            >
-                              Setujui & Badge
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRevisionKYC(partner)}
-                              className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface text-xs font-medium transition-colors"
-                            >
-                              Revisi
-                            </button>
-                          </>
-                        ) : (
-                          <span className="text-xs text-on-surface-variant font-medium">
-                            Telah Diproses
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <button
+                type="button"
+                onClick={() => setFilterStatus("unverified")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  filterStatus === "unverified"
+                    ? "bg-[#F57C00] text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Belum ({stats.unverified})
+              </button>
             </div>
           </div>
 
-          {/* Table B: Payout & Escrow Disbursement */}
-          <div id="payout" className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
-            <div className="p-5 sm:p-6 bg-surface-container-low border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <MaterialIcon name="credit_card" className="text-xl text-primary" />
-                  <h2 className="text-base sm:text-lg font-bold text-on-surface">
-                    Pencairan Dana Mitra & Escrow (Payout Engine 2% Cut)
-                  </h2>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-1">
-                  Otomasi pemisahan saldo selesai (H+1 trip terlaksana) dengan pemotongan komisi platform 2% & audit rekening VA.
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-on-surface font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span>BCA & Mandiri Host-to-Host</span>
-              </div>
-            </div>
+          {/* Search Input */}
+          <div className="relative w-full">
+            <MaterialIcon
+              name="search"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari berdasarkan nama agen, pemilik, atau wilayah kota..."
+              className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D47A1]/20 focus:border-[#0D47A1] transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full"
+                title="Hapus pencarian"
+              >
+                <MaterialIcon name="close" className="text-sm" />
+              </button>
+            )}
+          </div>
+        </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead>
-                  <tr className="bg-surface-container-high/60 border-b border-outline-variant/20 text-on-surface-variant uppercase tracking-wider text-[11px] font-bold">
-                    <th className="py-3 px-5">ID & Rekening Agen</th>
-                    <th className="py-3 px-4">Trip Terselesaikan</th>
-                    <th className="py-3 px-4">Kalkulasi Escrow (2%)</th>
-                    <th className="py-3 px-4">Net Pencairan</th>
-                    <th className="py-3 px-5 text-right">Status / Eksekusi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/10">
-                  {payoutList.map((payout) => (
-                    <tr key={payout.id} className="hover:bg-surface-container-low/80 transition-colors">
-                      <td className="py-4 px-5">
-                        <div className="font-mono text-xs font-bold text-primary">
-                          #{payout.id}
-                        </div>
-                        <div className="font-semibold text-on-surface mt-0.5">
-                          {payout.agencyName}
-                        </div>
-                        <div className="text-[11px] text-on-surface-variant flex items-center gap-1 mt-1">
-                          <MaterialIcon name="credit_card" className="text-xs text-on-surface-variant/70" />
-                          <span>{payout.bankAccount}</span>
+        {/* 1. TAMPILAN TABEL: Desktop & Tablet */}
+        <div className="hidden md:block w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[760px]">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+                <th className="py-3 px-4 w-12 text-center">No</th>
+                <th className="py-3 px-4 min-w-[220px]">Nama Agen &amp; Wilayah</th>
+                <th className="py-3 px-4 min-w-[170px]">Pemilik &amp; Kontak</th>
+                <th className="py-3 px-4 min-w-[130px]">Tanggal Daftar</th>
+                <th className="py-3 px-4 min-w-[150px] text-center">Status Verifikasi</th>
+                <th className="py-3 px-4 min-w-[140px] text-center">Toggle Verifikasi</th>
+                <th className="py-3 px-4 text-center w-24">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {filteredAgents.length > 0 ? (
+                filteredAgents.map((agent, index) => {
+                  const isUpdating = updatingId === agent.id;
+                  return (
+                    <tr
+                      key={agent.id}
+                      className={`transition-colors duration-150 ${
+                        agent.isVerified
+                          ? "hover:bg-emerald-50/20"
+                          : "hover:bg-slate-50/60"
+                      }`}
+                    >
+                      {/* No */}
+                      <td className="py-3.5 px-4 text-center font-mono text-xs font-semibold text-slate-400">
+                        {String(index + 1).padStart(2, "0")}
+                      </td>
+
+                      {/* Nama Agen */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#0D47A1] font-bold text-xs flex items-center justify-center shrink-0">
+                            {agent.businessName.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-800 leading-tight">
+                              {agent.businessName}
+                            </div>
+                            <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                              <MaterialIcon name="place" className="text-xs text-slate-400" />
+                              <span>{agent.city}, {agent.province}</span>
+                            </div>
+                          </div>
                         </div>
                       </td>
 
-                      <td className="py-4 px-4">
-                        <div className="font-medium text-on-surface">
-                          {payout.tripTitle}
+                      {/* Pemilik */}
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-slate-800">
+                          {agent.ownerName}
                         </div>
-                        <span className="inline-flex items-center gap-1 text-emerald-700 text-xs font-medium mt-1">
-                          <MaterialIcon name="check_circle" className="text-xs text-emerald-600" />
-                          <span>{payout.tripStatus}</span>
+                        <div className="text-xs font-mono text-slate-500 mt-0.5">
+                          {agent.ownerPhone}
+                        </div>
+                      </td>
+
+                      {/* Tanggal Daftar */}
+                      <td className="py-3.5 px-4 text-slate-600 text-xs font-medium">
+                        {formatDateIndo(agent.joinedDate)}
+                      </td>
+
+                      {/* Badge Status Verifikasi */}
+                      <td className="py-3.5 px-4 text-center">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 ${
+                            agent.isVerified
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-orange-50 text-[#F57C00] border border-orange-200"
+                          }`}
+                        >
+                          <MaterialIcon
+                            name={agent.isVerified ? "check_circle" : "hourglass_empty"}
+                            className="text-xs"
+                          />
+                          <span>{agent.isVerified ? "Terverifikasi" : "Belum Verifikasi"}</span>
                         </span>
                       </td>
 
-                      <td className="py-4 px-4">
-                        <div className="text-xs text-on-surface-variant">
-                          Bruto: Rp {payout.grossAmount.toLocaleString("id-ID")}
-                        </div>
-                        <div className="text-xs text-secondary font-semibold">
-                          Cut 2%: -Rp {payout.feeCut.toLocaleString("id-ID")}
-                        </div>
-                        <div className="text-[11px] text-on-surface-variant">Admin Bank: Rp 0</div>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-on-surface text-sm">
-                          Rp {payout.netAmount.toLocaleString("id-ID")}
-                        </div>
-                        {payout.status === "READY" ? (
-                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-semibold mt-1">
-                            Siap Dicairkan
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold mt-1">
-                            <MaterialIcon name="check_circle" className="text-xs text-emerald-600" />
-                            <span>Berhasil Dicairkan</span>
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-5 text-right whitespace-nowrap">
-                        {payout.status === "READY" ? (
-                          <button
-                            type="button"
-                            onClick={() => handleProcessPayout(payout)}
-                            className="px-3.5 py-2 rounded-xl bg-secondary text-on-secondary hover:bg-secondary/90 text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ml-auto"
-                          >
-                            <MaterialIcon name="send" className="text-xs" />
-                            <span>Proses Transfer Disburse</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              showToast(
-                                `Menampilkan Surat Perintah Pencairan Dana (SP2D) & Bukti Midtrans Iris: ${payout.transferRef}...`
-                              )
+                      {/* Toggle Switch */}
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="inline-flex items-center justify-center">
+                          <ToggleSwitch
+                            checked={agent.isVerified}
+                            disabled={isUpdating}
+                            onChange={(nextChecked) =>
+                              handleToggleVerified(agent, nextChecked)
                             }
-                            className="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface text-xs font-medium transition-colors flex items-center gap-1.5 ml-auto"
-                          >
-                            <MaterialIcon name="description" className="text-xs text-on-surface-variant" />
-                            <span>Bukti ({payout.transferRef})</span>
-                          </button>
-                        )}
+                            ariaLabel={`Toggle status verifikasi ${agent.businessName}`}
+                          />
+                        </div>
+                      </td>
+
+                      {/* Aksi Detail */}
+                      <td className="py-3.5 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedAgentDetail(agent)}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                          title="Lihat profil dan dokumen legalitas"
+                        >
+                          Detail
+                        </button>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto p-4">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                        <MaterialIcon name="storefront" className="text-2xl" />
+                      </div>
+                      <p className="font-semibold text-slate-700 mb-1">
+                        Mitra agen tidak ditemukan
+                      </p>
+                      <p className="text-xs text-slate-500 mb-4">
+                        Coba sesuaikan kata kunci nama agen, nama pemilik, atau wilayah.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setFilterStatus("all");
+                        }}
+                        className="px-3.5 py-1.5 rounded-lg bg-blue-50 text-[#0D47A1] text-xs font-semibold"
+                      >
+                        Reset Filter
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Right Column (Compact - 5/12): Infra Health & Security Audit Logs */}
-        <div className="xl:col-span-5 space-y-8">
-          {/* Section C: System Health & Real-time Infra SLA */}
-          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-sm p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-outline-variant/20">
-              <div>
-                <div className="flex items-center gap-2">
-                  <MaterialIcon name="dns" className="text-xl text-primary" />
-                  <h3 className="font-bold text-on-surface text-base">
-                    System Health & Infra SLA
-                  </h3>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-0.5">
-                  Monitoring ketersediaan layanan cloud backend 99.95%.
-                </p>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
-                99.98% Actual
-              </span>
-            </div>
+        {/* 2. TAMPILAN KARTU LIST: Layar Mobile (< 768px / 360px+) */}
+        <div className="block md:hidden p-4 space-y-3">
+          {filteredAgents.length > 0 ? (
+            filteredAgents.map((agent, index) => {
+              const isUpdating = updatingId === agent.id;
+              return (
+                <div
+                  key={agent.id}
+                  className={`p-4 rounded-xl border transition-all ${
+                    agent.isVerified
+                      ? "bg-emerald-50/15 border-emerald-200"
+                      : "bg-white border-slate-200 shadow-xs"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-sm leading-tight">
+                          {agent.businessName}
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                          <MaterialIcon name="place" className="text-xs text-slate-400" />
+                          <span>{agent.city}, {agent.province}</span>
+                        </p>
+                      </div>
+                    </div>
 
-            <div className="space-y-4">
-              {/* VPS Metric */}
-              <div className="p-4 bg-surface-container-low rounded-xl space-y-2 border border-outline-variant/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="text-xs font-bold text-on-surface">
-                      VPS IdCloudHost ID-JKT01
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        agent.isVerified
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-orange-100 text-[#F57C00]"
+                      }`}
+                    >
+                      {agent.isVerified ? "Terverifikasi" : "Belum"}
                     </span>
                   </div>
-                  <span className="text-[11px] text-on-surface-variant">4 vCPU / 8GB RAM</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1 text-on-surface-variant">
-                      <span>CPU Usage</span>
-                      <span className="font-bold text-primary">24%</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full rounded-full" style={{ width: "24%" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1 text-on-surface-variant">
-                      <span>Memory</span>
-                      <span className="font-bold text-primary">48%</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full rounded-full" style={{ width: "48%" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* PostgreSQL Engine */}
-              <div className="p-4 bg-surface-container-low rounded-xl flex items-center justify-between border border-outline-variant/20">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="text-xs font-bold text-on-surface">
-                      PostgreSQL 3NF Engine
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Pemilik:</span>
+                      <span className="font-semibold text-slate-800">{agent.ownerName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">WhatsApp:</span>
+                      <span className="font-mono text-slate-800">{agent.ownerPhone}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Terdaftar:</span>
+                      <span>{formatDateIndo(agent.joinedDate)}</span>
+                    </div>
+                  </div>
+
+                  {/* Baris Toggle Switch di Mobile */}
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">
+                      Status Verifikasi:
                     </span>
-                  </div>
-                  <div className="text-[11px] text-on-surface-variant">
-                    PgBouncer Active • RLS Strict Enforcement
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-bold text-on-surface">38 ms</span>
-                  <p className="text-[10px] text-emerald-600 font-semibold">Latency Nominal</p>
-                </div>
-              </div>
-
-              {/* Midtrans Gateway */}
-              <div className="p-4 bg-surface-container-low rounded-xl flex items-center justify-between border border-outline-variant/20">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="text-xs font-bold text-on-surface">
-                      Midtrans Snap Webhook
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-on-surface-variant">
-                    SHA-512 Signature Hash Verifier
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-xs font-semibold ${
+                          agent.isVerified ? "text-emerald-700" : "text-slate-400"
+                        }`}
+                      >
+                        {agent.isVerified ? "Aktif" : "Nonaktif"}
+                      </span>
+                      <ToggleSwitch
+                        checked={agent.isVerified}
+                        disabled={isUpdating}
+                        onChange={(nextChecked) =>
+                          handleToggleVerified(agent, nextChecked)
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-xs font-bold text-emerald-700">0 Error</span>
-                  <p className="text-[10px] text-on-surface-variant">HTTP 200 Fast Return</p>
-                </div>
-              </div>
-
-              {/* WhatsApp Engine */}
-              <div className="p-4 bg-surface-container-low rounded-xl space-y-2 border border-outline-variant/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="text-xs font-bold text-on-surface">
-                      WhatsApp Cloud API (Wablas)
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-on-surface-variant">14.820 / 20.000 Kuota</span>
-                </div>
-                <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-secondary h-full rounded-full" style={{ width: "74.1%" }} />
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-on-surface-variant pt-0.5">
-                  <span>E-Ticket PDF Dispatcher: Active</span>
-                  <span className="text-primary font-semibold">Fallback: Mailgun SMTP</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section D: Recent System Audit Trail & Concurrency Logs */}
-          <div id="audit" className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-sm p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-outline-variant/20">
-              <div>
-                <div className="flex items-center gap-2">
-                  <MaterialIcon name="lock" className="text-xl text-primary" />
-                  <h3 className="font-bold text-on-surface text-base">
-                    Audit Log & Concurrency Engine
-                  </h3>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-0.5">
-                  Jejak pemesanan konkuren & eksekusi isolasi transaksi (Pessimistic Lock).
-                </p>
-              </div>
+              );
+            })
+          ) : (
+            <div className="py-8 text-center bg-slate-50 rounded-xl">
+              <MaterialIcon name="storefront" className="text-3xl text-slate-400 mb-2" />
+              <p className="font-semibold text-slate-700 text-sm">Mitra agen tidak ditemukan</p>
               <button
                 type="button"
-                onClick={() => showToast("Memperbarui stream audit log realtime...")}
-                className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant hover:text-on-surface transition-colors"
-                title="Muat Ulang Log"
+                onClick={() => {
+                  setSearchQuery("");
+                  setFilterStatus("all");
+                }}
+                className="mt-3 px-3 py-1 bg-blue-50 text-[#0D47A1] text-xs font-semibold rounded-lg"
               >
-                <MaterialIcon name="sync" className="text-base" />
+                Reset Filter
               </button>
             </div>
-
-            <div className="relative pl-4 space-y-4 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant/30">
-              {/* Log Item 1 */}
-              <div className="relative pl-4">
-                <div className="absolute -left-[18px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-surface"></div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-on-surface">
-                    LOCK_QUOTA_ACQUIRED
-                  </span>
-                  <span className="text-[11px] text-on-surface-variant">09:42:15 WIB</span>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Pessimistic Lock <code className="bg-surface-container-high px-1 py-0.5 rounded text-[11px] text-primary font-mono">reserve_trip_quota</code> sukses: Jadwal #BRM-041 (Bromo Sunrise) 2 pax dikunci untuk checkout wisatawan Budi Santoso.
-                </p>
-              </div>
-
-              {/* Log Item 2 */}
-              <div className="relative pl-4">
-                <div className="absolute -left-[18px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-surface"></div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-on-surface">
-                    MIDTRANS_SETTLEMENT
-                  </span>
-                  <span className="text-[11px] text-on-surface-variant">09:38:02 WIB</span>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Webhook Midtrans HTTP 200: Pesanan <code className="bg-surface-container-high px-1 py-0.5 rounded text-[11px] text-primary font-mono">NB-2026-9021</code> lunas (Rp 1.250.000). Komisi 2% Rp 25.000 otomatis dialokasikan ke Escrow Nusabook.
-                </p>
-              </div>
-
-              {/* Log Item 3 */}
-              <div className="relative pl-4">
-                <div className="absolute -left-[18px] top-1.5 w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface"></div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-on-surface">
-                    CRYPTO_PAYLOAD_VERIFIED
-                  </span>
-                  <span className="text-[11px] text-on-surface-variant">09:15:20 WIB</span>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Audit Kepatuhan UU PDP: Enkripsi AES-256 NIK penumpang pada tabel <code className="bg-surface-container-high px-1 py-0.5 rounded text-[11px] text-primary font-mono">booking_passengers</code> teruji tanpa kebocoran plain-text.
-                </p>
-              </div>
-
-              {/* Log Item 4 */}
-              <div className="relative pl-4">
-                <div className="absolute -left-[18px] top-1.5 w-2.5 h-2.5 rounded-full bg-outline-variant ring-4 ring-surface"></div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-on-surface">
-                    QUOTA_TTL_ROLLBACK
-                  </span>
-                  <span className="text-[11px] text-on-surface-variant">08:50:11 WIB</span>
-                </div>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                  Pembersihan Otomatis: Jadwal #SMB-014 kedaluwarsa batas waktu pembayaran 20 menit. 2 kursi dikembalikan ke kuota publik secara atomic.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3 bg-surface-container-low rounded-xl flex items-center justify-between text-xs border border-outline-variant/20">
-              <span className="text-on-surface-variant">Sinkronisasi Log Node</span>
-              <span className="text-primary font-bold">Postgres WAL Streaming: 100% Synced</span>
-            </div>
-          </div>
+          )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

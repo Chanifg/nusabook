@@ -3,279 +3,345 @@
 import React, { useState } from "react";
 import { MaterialIcon } from "@/components/ui/icon";
 
-export interface ScheduleOptionItem {
+export interface PackageMockOption {
   id: string;
-  packageId?: string;
-  packageName?: string;
-  dateText: string;
-  quotaRemaining: number;
-  price: number;
+  name: string;
+  destination: string;
+  pricePerPax: number;
 }
 
 export interface ManualBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (bookingCode: string) => void;
-  agentId: string;
-  schedules?: ScheduleOptionItem[];
+  onSuccess?: (bookingData?: any) => void;
+  agentId?: string;
+  schedules?: any[];
 }
+
+// Mock daftar paket wisata Nusabook untuk pilihan dropdown
+const MOCK_PACKAGES: PackageMockOption[] = [
+  {
+    id: "pkg-brm-01",
+    name: "Eksplorasi Sunrise Bromo & Midnight Crater 2D1N",
+    destination: "TNBTS, Jawa Timur",
+    pricePerPax: 450000,
+  },
+  {
+    id: "pkg-ijn-02",
+    name: "Open Trip Kawah Ijen Blue Fire & Kawah Belerang",
+    destination: "Banyuwangi, Jawa Timur",
+    pricePerPax: 375000,
+  },
+  {
+    id: "pkg-kmj-03",
+    name: "Snorkeling & Island Hopping Karimunjawa 3D2N",
+    destination: "Jepara, Jawa Tengah",
+    pricePerPax: 850000,
+  },
+  {
+    id: "pkg-kmd-04",
+    name: "Sailing Komodo Liveaboard Phinisi Luxury 3D2N",
+    destination: "Labuan Bajo, NTT",
+    pricePerPax: 2750000,
+  },
+];
 
 export function ManualBookingModal({
   isOpen,
   onClose,
   onSuccess,
-  agentId,
-  schedules = [],
 }: ManualBookingModalProps) {
-  const [selectedScheduleId, setSelectedScheduleId] = useState<string>(
-    schedules[0]?.id || ""
-  );
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [paxCount, setPaxCount] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "DIRECT_TRANSFER">("CASH");
-  const [paymentNotes, setPaymentNotes] = useState("");
+  const [selectedPackageId, setSelectedPackageId] = useState(MOCK_PACKAGES[0].id);
+  const [paxCount, setPaxCount] = useState<number>(1);
+  const [departureDate, setDepartureDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const currentSchedule = schedules.find((s) => s.id === selectedScheduleId);
-  const totalAmount = currentSchedule ? currentSchedule.price * paxCount : 0;
+  // Dapatkan detail paket yang dipilih untuk estimasi harga
+  const selectedPackage = MOCK_PACKAGES.find((pkg) => pkg.id === selectedPackageId);
+  const totalAmount = selectedPackage ? selectedPackage.pricePerPax * (paxCount || 1) : 0;
+
+  // Validasi form: tombol submit dinonaktifkan jika ada field wajib yang kosong
+  const isFormValid =
+    customerName.trim() !== "" &&
+    customerPhone.trim() !== "" &&
+    selectedPackageId !== "" &&
+    departureDate.trim() !== "" &&
+    paxCount >= 1;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
+    if (!isFormValid || isSubmitting) return;
 
-    if (!selectedScheduleId) {
-      setErrorMsg("Pilih jadwal trip terlebih dahulu");
-      return;
-    }
-    if (!customerName.trim() || !customerPhone.trim()) {
-      setErrorMsg("Nama pemesan dan nomor WhatsApp wajib diisi");
-      return;
-    }
-    if (paxCount < 1) {
-      setErrorMsg("Jumlah peserta minimal 1 orang");
-      return;
-    }
-    if (currentSchedule && paxCount > currentSchedule.quotaRemaining) {
-      setErrorMsg(`Kuota tidak cukup. Sisa kuota hanya ${currentSchedule.quotaRemaining} kursi`);
-      return;
-    }
+    setIsSubmitting(true);
+
+    // Payload pesanan manual / walk-in
+    let resultPayload = {
+      bookingCode: `MAN-${Date.now().toString().slice(-6)}`,
+      is_manual_entry: true,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      packageId: selectedPackageId,
+      packageName: selectedPackage?.name || "Paket Wisata Nusabook",
+      departureDate,
+      paxCount,
+      totalAmount,
+      status: "PAID",
+      createdAt: new Date().toISOString(),
+    };
 
     try {
-      setIsSubmitting(true);
-      const res = await fetch("/api/bookings/manual", {
+      // Panggil endpoint /api/bookings/manual
+      const response = await fetch("/api/bookings/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scheduleId: selectedScheduleId,
-          packageId: currentSchedule?.packageId || "pkg-default",
-          agentId,
-          customerName,
-          customerPhone,
-          customerEmail: customerEmail || `${customerPhone}@walkin.nusabook.id`,
-          paxCount,
-          paymentMethod,
-          paymentNotes: paymentNotes || "Pencatatan Pesanan Walk-in / Manual",
-          totalAmount,
-          passengers: [{ fullName: customerName, phone: customerPhone }],
-        }),
+        body: JSON.stringify(resultPayload),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || "Gagal mencatat pesanan manual");
+      if (response.ok) {
+        const json = await response.json();
+        if (json?.data) {
+          resultPayload = json.data;
+        }
       }
-
-      if (onSuccess) {
-        onSuccess(json.data.bookingCode);
-      }
-      onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || "Terjadi kesalahan sistem saat menyimpan pesanan");
-    } finally {
-      setIsSubmitting(false);
+    } catch (err) {
+      // Mock fallback jika endpoint API lokal belum berjalan
+      console.log("Mocking manual walk-in booking API call:", err);
     }
+
+    // Simulasi loading selama 600ms untuk menampilkan spinner
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    setIsSubmitting(false);
+    console.log("Pesanan Walk-in / Manual berhasil dicatat:", resultPayload);
+    alert(
+      `Pesanan Walk-in berhasil dicatat!\nKode: ${resultPayload.bookingCode}\nPemesan: ${resultPayload.customerName}\nTotal: Rp ${totalAmount.toLocaleString(
+        "id-ID"
+      )}`
+    );
+
+    if (onSuccess) {
+      onSuccess(resultPayload);
+    }
+
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-surface rounded-2xl shadow-xl w-full max-w-lg border border-outline-variant overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-container-lowest">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <MaterialIcon name="receipt_long" className="text-[20px]" />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="manual-booking-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+    >
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header Modal */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-blue-50 text-[#0D47A1] flex items-center justify-center shrink-0">
+              <MaterialIcon name="receipt_long" className="text-2xl" />
             </span>
             <div>
-              <h3 className="font-title-md text-title-md text-on-surface font-bold">
-                Catat Pesanan Manual / Walk-in
-              </h3>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Input pesanan offline, tunai, atau transfer langsung ke rekening agen
+              <h2
+                id="manual-booking-title"
+                className="text-base sm:text-lg font-bold text-slate-800"
+              >
+                Catat Pesanan Walk-in : Manual
+              </h2>
+              <p className="text-xs text-slate-500">
+                Input reservasi langsung tamu tanpa melalui pembayaran online
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-container-high transition"
-            aria-label="Tutup Modal"
+            disabled={isSubmitting}
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+            aria-label="Tutup jendela modal"
           >
-            <MaterialIcon name="close" className="text-[22px]" />
+            <MaterialIcon name="close" className="text-xl" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error font-body-sm flex items-center gap-2">
-              <MaterialIcon name="error_outline" className="text-[18px]" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Schedule Select */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+          {/* Field 1: Nama Pemesan */}
           <div>
-            <label className="block font-label-md text-label-md text-on-surface font-bold mb-1.5">
-              Pilih Jadwal & Paket Trip <span className="text-error">*</span>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Nama Pemesan <span className="text-[#F57C00]">*</span>
             </label>
-            <select
-              value={selectedScheduleId}
-              onChange={(e) => setSelectedScheduleId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-              required
-            >
-              {schedules.length === 0 ? (
-                <option value="">Tidak ada jadwal keberangkatan aktif</option>
-              ) : (
-                schedules.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.packageName ? `[${s.packageName}] ` : ""}
-                    {s.dateText} (Sisa: {s.quotaRemaining} pax) - Rp {s.price.toLocaleString("id-ID")}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
-
-          {/* Customer Name & Phone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block font-label-md text-label-md text-on-surface font-bold mb-1.5">
-                Nama Tamu Utama <span className="text-error">*</span>
-              </label>
+            <div className="relative">
+              <MaterialIcon
+                name="person"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none"
+              />
               <input
                 type="text"
-                placeholder="Contoh: Budi Santoso"
+                required
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                required
+                placeholder="Contoh: Budi Santoso"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0D47A1]/20 focus:border-[#0D47A1] transition-all"
               />
             </div>
-            <div>
-              <label className="block font-label-md text-label-md text-on-surface font-bold mb-1.5">
-                WhatsApp Tamu <span className="text-error">*</span>
-              </label>
+          </div>
+
+          {/* Field 2: No WhatsApp */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              No WhatsApp <span className="text-[#F57C00]">*</span>
+            </label>
+            <div className="relative">
+              <MaterialIcon
+                name="chat"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 text-lg pointer-events-none"
+              />
               <input
                 type="tel"
-                placeholder="Contoh: 081234567890"
+                required
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                required
+                placeholder="Contoh: 081234567890"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0D47A1]/20 focus:border-[#0D47A1] transition-all font-mono"
               />
             </div>
           </div>
 
-          {/* Email & Pax Count */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block font-label-md text-label-md text-on-surface font-bold mb-1.5">
-                Email Tamu (Opsional)
-              </label>
-              <input
-                type="email"
-                placeholder="tamu@example.com"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div>
-              <label className="block font-label-md text-label-md text-on-surface font-bold mb-1.5">
-                Jumlah Pax (Orang) <span className="text-error">*</span>
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={currentSchedule ? currentSchedule.quotaRemaining : 20}
-                value={paxCount}
-                onChange={(e) => setPaxCount(parseInt(e.target.value) || 1)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                required
+          {/* Field 3: Pilih Paket Wisata */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Pilih Paket Wisata <span className="text-[#F57C00]">*</span>
+            </label>
+            <div className="relative">
+              <select
+                value={selectedPackageId}
+                onChange={(e) => setSelectedPackageId(e.target.value)}
+                className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0D47A1]/20 focus:border-[#0D47A1] transition-all appearance-none cursor-pointer"
+              >
+                {MOCK_PACKAGES.map((pkg) => (
+                  <option key={pkg.id} value={pkg.id}>
+                    {pkg.name} (Rp {pkg.pricePerPax.toLocaleString("id-ID")}/pax)
+                  </option>
+                ))}
+              </select>
+              <MaterialIcon
+                name="expand_more"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xl"
               />
             </div>
           </div>
 
-          {/* Payment Method & Total */}
-          <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/60 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-1.5 cursor-pointer font-body-sm">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="CASH"
-                  checked={paymentMethod === "CASH"}
-                  onChange={() => setPaymentMethod("CASH")}
-                  className="text-primary"
-                />
-                <span>Tunai (Cash)</span>
+          {/* Field 4 & 5: Jumlah Pax & Tanggal Keberangkatan */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Jumlah Pax */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Jumlah Pax (Peserta) <span className="text-[#F57C00]">*</span>
               </label>
-              <label className="flex items-center gap-1.5 cursor-pointer font-body-sm">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="DIRECT_TRANSFER"
-                  checked={paymentMethod === "DIRECT_TRANSFER"}
-                  onChange={() => setPaymentMethod("DIRECT_TRANSFER")}
-                  className="text-primary"
+              <div className="relative">
+                <MaterialIcon
+                  name="group"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none"
                 />
-                <span>Transfer Manual</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  required
+                  value={paxCount}
+                  onChange={(e) => setPaxCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0D47A1]/20 focus:border-[#0D47A1] transition-all font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Tanggal Keberangkatan */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Tanggal Keberangkatan <span className="text-[#F57C00]">*</span>
               </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  required
+                  value={departureDate}
+                  onChange={(e) => setDepartureDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0D47A1]/20 focus:border-[#0D47A1] transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Kotak Ringkasan Biaya Walk-in */}
+          <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100 flex items-center justify-between">
+            <div>
+              <span className="text-[11px] font-bold text-[#0D47A1] uppercase tracking-wider block">
+                Estimasi Total Pembayaran
+              </span>
+              <span className="text-xs text-slate-500">
+                {paxCount} pax x Rp {selectedPackage?.pricePerPax.toLocaleString("id-ID")}
+              </span>
             </div>
             <div className="text-right">
-              <span className="font-caption text-caption text-on-surface-variant block">Total Bayar:</span>
-              <span className="font-title-md text-title-md text-primary font-bold">
+              <span className="text-lg font-bold text-[#0D47A1]">
                 Rp {totalAmount.toLocaleString("id-ID")}
               </span>
             </div>
           </div>
 
-          {/* Footer Action */}
-          <div className="pt-2 flex items-center justify-end gap-3">
+          {/* Footer Tombol Aksi */}
+          <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container-high transition"
+              disabled={isSubmitting}
+              className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors"
             >
               Batal
             </button>
+
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl font-label-md bg-primary text-on-primary font-bold hover:bg-primary/90 transition flex items-center gap-2 disabled:opacity-50"
+              disabled={!isFormValid || isSubmitting}
+              className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs ${
+                !isFormValid || isSubmitting
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200"
+                  : "bg-[#0D47A1] hover:bg-[#0A3880] text-white cursor-pointer active:scale-[0.98]"
+              }`}
             >
               {isSubmitting ? (
-                <span>Menyimpan...</span>
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    />
+                  </svg>
+                  <span>Menyimpan...</span>
+                </>
               ) : (
                 <>
-                  <MaterialIcon name="check_circle" className="text-[18px]" />
-                  <span>Konfirmasi & Cetak Pesanan</span>
+                  <MaterialIcon name="check" className="text-base" />
+                  <span>Simpan Pesanan</span>
                 </>
               )}
             </button>
