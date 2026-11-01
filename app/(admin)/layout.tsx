@@ -30,7 +30,7 @@ export default async function AdminLayout({
     .from("profiles")
     .select("full_name, phone_number, role")
     .eq("id", user.id)
-    .maybeSingle();
+    .maybeSingle() as any;
 
   if (profile?.role !== "superadmin") {
     redirect("/dashboard");
@@ -41,7 +41,7 @@ export default async function AdminLayout({
     adminName
       .split(" ")
       .filter(Boolean)
-      .map((n) => n[0])
+      .map((n: string) => n[0])
       .slice(0, 2)
       .join("")
       .toUpperCase() || "SA";
@@ -219,3 +219,5 @@ export default async function AdminLayout({
     </div>
   );
 }
+
+
