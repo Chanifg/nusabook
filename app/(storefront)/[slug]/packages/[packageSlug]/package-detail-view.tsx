@@ -46,75 +46,104 @@ export interface PackageDetailViewProps {
 }
 
 
+function getDefaultThumbnail(slug: string, packageSlug: string, title: string): string {
+  const text = (slug + " " + packageSlug + " " + title).toLowerCase();
+  if (text.includes("merapi")) {
+    return "https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (text.includes("borobudur")) {
+    return "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (text.includes("bromo")) {
+    return "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (text.includes("komodo") || text.includes("labuan") || text.includes("bajo") || text.includes("phinisi")) {
+    return "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (text.includes("ijen")) {
+    return "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (text.includes("karimunjawa") || text.includes("karimun")) {
+    return "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (text.includes("dieng")) {
+    return "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (text.includes("derawan") || text.includes("maratua")) {
+    return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80";
+  }
+  return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80";
+}
+
 function getDestinationGallery(slug: string, packageSlug: string, title: string) {
   const text = (slug + " " + packageSlug + " " + title).toLowerCase();
   if (text.includes("merapi")) {
     return [
-      { url: "https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=800&q=80", label: "Puncak Merapi" },
-      { url: "https://images.unsplash.com/photo-1698397201841-3a56c70c96ac?auto=format&fit=crop&w=800&q=80", label: "Jeep 4x4 Hardtop" },
-      { url: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80", label: "Bunker Kaliadem" },
-      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Dokumentasi Trip" },
+      { url: "https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=800&q=80", label: "Puncak Gunung Merapi" },
+      { url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80", label: "Armada Jeep 4x4 Offroad" },
+      { url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80", label: "Panorama Kaliurang" },
+      { url: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80", label: "Manuver Air Kali Kuning" },
     ];
   }
   if (text.includes("borobudur")) {
     return [
-      { url: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=800&q=80", label: "Stupa Borobudur" },
-      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Punthuk Setumbu" },
-      { url: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?auto=format&fit=crop&w=800&q=80", label: "Kemegahan Candi" },
-      { url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80", label: "Pemandu Lokal" },
+      { url: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=800&q=80", label: "Stupa Candi Borobudur" },
+      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Sunrise Punthuk Setumbu" },
+      { url: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?auto=format&fit=crop&w=800&q=80", label: "Relief Ukiran Candi" },
+      { url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80", label: "Pemandu Lokal Berlisensi" },
     ];
   }
   if (text.includes("bromo")) {
     return [
-      { url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80", label: "Sunrise Bromo" },
-      { url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80", label: "Savana Teletubbies" },
-      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Lautan Pasir Bromo" },
-      { url: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80", label: "Armada Jeep 4x4" },
+      { url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80", label: "Golden Sunrise Penanjakan" },
+      { url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80", label: "Kawah Aktif Bromo" },
+      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Savana Bukit Teletubbies" },
+      { url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80", label: "Lautan Pasir Bromo" },
     ];
   }
   if (text.includes("komodo") || text.includes("labuan") || text.includes("bajo") || text.includes("phinisi")) {
     return [
-      { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Pulau Padar" },
-      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Kapal Phinisi AC" },
-      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Pink Beach & Manta" },
-      { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Taman Nasional Komodo" },
+      { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Trekking Puncak Pulau Padar" },
+      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Kapal Phinisi Superior AC" },
+      { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Pantai Pasir Pink Beach" },
+      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Manta Point & Snorkeling" },
     ];
   }
   if (text.includes("ijen")) {
     return [
-      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Blue Fire Ijen" },
-      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Danau Kawah Toska" },
-      { url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80", label: "Kawah Wurung Savana" },
-      { url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80", label: "Puncak Kawah Ijen" },
+      { url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80", label: "Fenomena Blue Fire Ijen" },
+      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Danau Kawah Hijau Toska" },
+      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Jalur Pendakian Paltuding" },
+      { url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80", label: "Savana Kawah Wurung" },
     ];
   }
   if (text.includes("karimunjawa") || text.includes("karimun")) {
     return [
-      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Spot Terumbu Karang" },
+      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Terumbu Karang Menjangan" },
       { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Pulau Menjangan Cilik" },
-      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Konservasi Penyu" },
-      { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Pantai Ujung Gelam" },
+      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Konservasi Penyu & Hiu" },
+      { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Pantai Pasir Putih Gelam" },
     ];
   }
   if (text.includes("dieng")) {
     return [
-      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Golden Sunrise Sikunir" },
-      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Telaga Warna Dieng" },
-      { url: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?auto=format&fit=crop&w=800&q=80", label: "Kawah Sikidang" },
-      { url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80", label: "Candi Arjuna Dieng" },
+      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Golden Sunrise Bukit Sikunir" },
+      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Telaga Warna & Pengilon" },
+      { url: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?auto=format&fit=crop&w=800&q=80", label: "Kawah Vulkanik Sikidang" },
+      { url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80", label: "Kompleks Candi Arjuna" },
     ];
   }
   if (text.includes("derawan") || text.includes("maratua")) {
     return [
       { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Kepulauan Derawan" },
-      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Danau Ubur-ubur Kakaban" },
-      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Laguna Maratua" },
+      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Danau Ubur-Ubur Kakaban" },
+      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Laguna Pulau Maratua" },
       { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Hiu Paus Talisayan" },
     ];
   }
   return [
-    { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Destinasi Eksotis" },
-    { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Aktivitas Wisata" },
+    { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Destinasi Terverifikasi" },
+    { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Aktivitas Perjalanan" },
     { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Pemandu Resmi" },
     { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Dokumentasi Lengkap" },
   ];
@@ -358,35 +387,38 @@ export function PackageDetailView({
 
           {/* Hero Bento Gallery Section */}
           <section className="w-full bg-surface-container-lowest px-6 lg:px-12 pb-space-lg">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-space-sm h-auto lg:h-[480px]">
-              <div className="relative md:col-span-4 lg:col-span-7 h-72 md:h-96 lg:h-full rounded-xl overflow-hidden group shadow-md">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-space-sm h-auto lg:h-[460px] overflow-hidden rounded-2xl">
+              {/* Foto Utama */}
+              <div className="relative lg:col-span-7 h-72 sm:h-80 lg:h-full rounded-2xl overflow-hidden group shadow-md">
                 <img
                   alt={pkg.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   src={
-                    pkg.thumbnail_url ||
-                    "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80"
+                    (pkg.thumbnail_url && !pkg.thumbnail_url.includes("photo-1588668214407") && !pkg.thumbnail_url.includes("photo-1537996194471"))
+                      ? pkg.thumbnail_url
+                      : getDefaultThumbnail(slug, packageSlug, pkg.title)
                   }
                   fetchPriority="high"
                   decoding="async"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 <div className="absolute bottom-4 left-4 text-white">
-                  <span className="bg-primary/90 text-on-primary font-micro-badge text-micro-badge px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                  <span className="bg-primary text-on-primary font-micro-badge text-micro-badge px-2.5 py-1 rounded font-bold uppercase tracking-wider">
                     Foto Utama
                   </span>
-                  <p className="font-title-md text-title-md font-bold mt-1">
-                    Panorama {pkg.destination_city}
+                  <p className="font-title-md text-title-md font-bold mt-1 text-white text-lg sm:text-xl">
+                    Destinasi {pkg.destination_city}
                   </p>
                 </div>
               </div>
 
+              {/* 4 Foto Grid Proporsional 2x2 */}
               {(() => {
                 const dynamicMedia = getDestinationGallery(slug, packageSlug, pkg.title);
                 return (
-                  <div className="grid grid-cols-2 lg:col-span-5 gap-space-sm h-full">
+                  <div className="grid grid-cols-2 grid-rows-2 lg:col-span-5 gap-space-sm h-72 sm:h-80 lg:h-full">
                     {dynamicMedia.map((media, mIdx) => (
-                      <div key={mIdx} className="relative rounded-xl overflow-hidden group h-36 md:h-44 lg:h-full shadow-sm">
+                      <div key={mIdx} className="relative rounded-xl overflow-hidden group h-full w-full shadow-sm">
                         <img
                           alt={media.label}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -394,7 +426,8 @@ export function PackageDetailView({
                           loading="lazy"
                           decoding="async"
                         />
-                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/65 backdrop-blur-sm rounded text-white font-caption text-caption text-[11px] font-semibold">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-90" />
+                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded text-white font-caption text-caption text-[11px] font-semibold">
                           {media.label}
                         </div>
                       </div>
@@ -593,7 +626,7 @@ export function PackageDetailView({
               </div>
 
               {/* RIGHT COLUMN: Interactive Booking Card (5 Columns) */}
-              <aside className="lg:col-span-5 lg:sticky lg:top-24 z-20 flex flex-col gap-space-md">
+              <aside className="lg:col-span-5 lg:sticky lg:top-24 self-start z-10 flex flex-col gap-space-md">
                 <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xl flex flex-col gap-5">
                   {/* Pricing Header */}
                   <div className="flex items-baseline justify-between pb-4 border-b border-surface-container">
