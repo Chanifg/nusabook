@@ -377,6 +377,29 @@ export function PackageDetailView({
                   </p>
                 </div>
 
+                {/* Titik Kumpul (Meeting Point) Card */}
+                {pkg.meeting_point && (
+                  <div className="bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-low shadow-sm">
+                    <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-sm flex items-center gap-2">
+                      <MaterialIcon name="place" className="text-secondary text-xl" />
+                      <span>Titik Kumpul (Meeting Point)</span>
+                    </h2>
+                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
+                      <div className="w-9 h-9 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 mt-0.5">
+                        <MaterialIcon name="pin_drop" className="text-xl" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-body-semibold text-body-semibold text-on-surface font-bold">
+                          {pkg.meeting_point}
+                        </span>
+                        <span className="font-caption text-caption text-on-surface-variant text-xs mt-0.5">
+                          Harap tiba di lokasi 15-30 menit sebelum keberangkatan untuk presensi dan briefing perjalanan.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Inclusions / Exclusions */}
                 <div className="bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-low shadow-sm">
                   <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-md flex items-center gap-2">
@@ -429,6 +452,82 @@ export function PackageDetailView({
                       </ul>
                     </div>
                   </div>
+                </div>
+
+                {/* Rencana Perjalanan (Itinerary Timeline) */}
+                <div className="bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-low shadow-sm">
+                  <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-md flex items-center gap-2">
+                    <MaterialIcon name="schedule" className="text-primary text-xl" />
+                    <span>Rencana Perjalanan (Itinerary)</span>
+                  </h2>
+
+                  {(() => {
+                    const rawItinerary = pkg.itinerary;
+                    let parsedDays: Array<{ day?: number; title?: string; activities: Array<{ time?: string; title?: string; activity?: string; description?: string }> }> = [];
+
+                    if (Array.isArray(rawItinerary)) {
+                      if (rawItinerary.length > 0 && typeof rawItinerary[0] === "object" && rawItinerary[0] !== null && "activities" in rawItinerary[0]) {
+                        parsedDays = rawItinerary as any;
+                      } else {
+                        parsedDays = [
+                          {
+                            day: 1,
+                            title: "Rangkaian Perjalanan",
+                            activities: rawItinerary as any,
+                          },
+                        ];
+                      }
+                    }
+
+                    if (parsedDays.length === 0) {
+                      return (
+                        <p className="font-body-regular text-body-regular text-on-surface-variant text-sm">
+                          Rincian kegiatan akan disampaikan langsung oleh tour leader saat berkumpul di titik kumpul.
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-6">
+                        {parsedDays.map((dayGroup, dayIdx) => (
+                          <div key={dayIdx} className="space-y-3">
+                            {parsedDays.length > 1 && (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-body-semibold text-xs font-bold">
+                                <span>Hari ke-{dayGroup.day || dayIdx + 1}</span>
+                                {dayGroup.title && <span>: {dayGroup.title}</span>}
+                              </div>
+                            )}
+                            <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant/40">
+                              {(dayGroup.activities || []).map((act, actIdx) => (
+                                <div key={actIdx} className="relative flex items-start gap-3">
+                                  <span className="absolute -left-6 top-1.5 w-4 h-4 rounded-full border-2 border-primary bg-surface flex items-center justify-center">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                  </span>
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                      {act.time && (
+                                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-surface-container text-primary">
+                                          {act.time}
+                                        </span>
+                                      )}
+                                      <span className="font-body-semibold text-body-semibold text-on-surface text-sm font-bold">
+                                        {act.title || act.activity || "Kegiatan Wisata"}
+                                      </span>
+                                    </div>
+                                    {act.description && (
+                                      <p className="font-body-regular text-on-surface-variant text-xs mt-0.5">
+                                        {act.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Escrow Guarantee Highlight */}

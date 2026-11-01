@@ -18,3 +18,14 @@ test("Paket 1: Footer detail paket tidak boleh mengarahkan ke rute mati 404", ()
   assert.ok(!content.includes('href="/terms"'), "Masih ada link mati ke /terms");
   assert.ok(!content.includes('href="/safety"'), "Masih ada link mati ke /safety");
 });
+
+test("Paket 1: Package detail merender komponen itinerary dinamis dan titik kumpul", () => {
+  const content = fs.readFileSync(
+    "app/(storefront)/[slug]/packages/[packageSlug]/package-detail-view.tsx",
+    "utf8"
+  );
+  assert.ok(content.includes("pkg.itinerary"), "Itinerary tidak dirender dari props pkg");
+  assert.ok(content.includes("pkg.meeting_point"), "Meeting point tidak dirender dari props pkg");
+  assert.ok(content.includes("Titik Kumpul"), "Label Titik Kumpul tidak ditemukan");
+});
+
