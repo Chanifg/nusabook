@@ -718,7 +718,7 @@ export default function MarketplaceExplorePage() {
                     </div>
                   </div>
 
-                  {/* Tanggal Keberangkatan — Kalender Picker */}
+                  {/* Tanggal Keberangkatan - Kalender Picker */}
                   <div className="lg:col-span-2 flex flex-col gap-1.5 relative" ref={calRef}>
                     <label className="font-micro-badge text-micro-badge text-on-surface-variant uppercase tracking-wider flex items-center gap-1 font-bold">
                       <MaterialIcon name="calendar_today" className="text-[15px] text-primary" />
@@ -893,7 +893,7 @@ export default function MarketplaceExplorePage() {
           {/* 2-COLUMN MAIN CONTENT: FILTER SIDEBAR + TOUR PACKAGES GRID */}
           <section className="max-w-7xl mx-auto px-6 lg:px-12 py-10 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start lg:h-[calc(100vh-5rem)]">
-              {/* STICKY FILTER SIDEBAR (LEFT) — scrolls independently */}
+              {/* STICKY FILTER SIDEBAR (LEFT) - scrolls independently */}
               <aside className="lg:col-span-3 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-6 scrollbar-thin scrollbar-thumb-outline-variant/30 scrollbar-track-transparent">
                 <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm space-y-6">
                   {/* Filter Header */}
@@ -996,7 +996,7 @@ export default function MarketplaceExplorePage() {
                 </div>
               </aside>
 
-              {/* RESULTS & TOUR CATALOG (RIGHT) — scrollable independently */}
+              {/* RESULTS & TOUR CATALOG (RIGHT) - scrollable independently */}
               <div className="lg:col-span-9 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-6 pr-1 scrollbar-thin scrollbar-thumb-outline-variant/30 scrollbar-track-transparent">
                 {/* Header Info Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
