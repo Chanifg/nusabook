@@ -88,3 +88,4 @@ test("Quota Decrement 2: Pembatalan atau kadaluarsa mengembalikan kuota kursi", 
   assert.equal(q.reserved, 0, "Reserved quota harus kembali 0 setelah booking dibatalkan/kadaluarsa");
   assert.equal(q.booked, 0);
 });
+
