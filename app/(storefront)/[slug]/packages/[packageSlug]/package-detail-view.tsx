@@ -197,7 +197,7 @@ export function PackageDetailView({
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-16 pb-20 lg:pb-0">
         <div className="flex flex-col gap-0">
           {/* Breadcrumb & Title Hero Header */}
           <section className="w-full bg-surface-container-lowest border-b border-surface-container-low px-6 lg:px-12 py-space-md">
@@ -755,6 +755,28 @@ export function PackageDetailView({
           </div>
         </div>
       </footer>
+
+      {/* STICKY BOTTOM BAR FOR MOBILE SCREENS (< 1024px) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3">
+        <div className="flex flex-col">
+          <span className="text-[11px] text-on-surface-variant font-medium">
+            Total {paxCount} Peserta
+          </span>
+          <div className="font-headline-sm text-base sm:text-lg font-bold text-primary">
+            {formatRupiah(subtotal)}
+          </div>
+        </div>
+
+        <button
+          onClick={handleBooking}
+          disabled={!selectedSchedule || selectedSchedule.isSoldOut}
+          type="button"
+          className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container disabled:bg-surface-container disabled:text-outline text-on-primary font-body-semibold text-sm font-bold shadow-md transition-all flex items-center gap-1.5 shrink-0"
+        >
+          <MaterialIcon name="book_online" className="text-lg" />
+          <span>Pesan Sekarang</span>
+        </button>
+      </div>
     </div>
   );
 }

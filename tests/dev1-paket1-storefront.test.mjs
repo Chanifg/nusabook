@@ -29,3 +29,15 @@ test("Paket 1: Package detail merender komponen itinerary dinamis dan titik kump
   assert.ok(content.includes("Titik Kumpul"), "Label Titik Kumpul tidak ditemukan");
 });
 
+test("Paket 1: Memiliki sticky bottom bar untuk navigasi mobile", () => {
+  const content = fs.readFileSync(
+    "app/(storefront)/[slug]/packages/[packageSlug]/package-detail-view.tsx",
+    "utf8"
+  );
+  assert.ok(
+    content.includes("lg:hidden fixed bottom-0") || content.includes("md:hidden fixed bottom-0"),
+    "Tidak ada sticky bottom bar di layar mobile"
+  );
+});
+
+
