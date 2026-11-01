@@ -6,6 +6,24 @@ DECLARE
     v_package_id UUID := '22222222-2222-2222-2222-222222222222';
     v_schedule_id UUID := '33333333-3333-3333-3333-333333333333';
 BEGIN
+    -- 0. Seed Auth User (satisfy profiles_id_fkey)
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'users') THEN
+        INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+        VALUES (
+            v_profile_id,
+            '00000000-0000-0000-0000-000000000000',
+            'authenticated',
+            'authenticated',
+            'budi@pesonamerapi.id',
+            '',
+            NOW(),
+            '{"provider":"email","providers":["email"]}'::jsonb,
+            '{"full_name":"Budi Santoso"}'::jsonb,
+            NOW(),
+            NOW()
+        ) ON CONFLICT (id) DO NOTHING;
+    END IF;
+
     -- 1. Seed Profile
     INSERT INTO profiles (id, full_name, phone_number, role)
     VALUES (

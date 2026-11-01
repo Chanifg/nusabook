@@ -43,7 +43,7 @@ SELECT
       )
     ELSE bp.id_card_number
   END AS id_card_number_decrypted,
-  bp.phone,
+  bp.phone_number,
   bp.is_checked_in,
   bp.checked_in_at,
   bp.created_at
