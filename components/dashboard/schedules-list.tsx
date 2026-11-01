@@ -37,6 +37,16 @@ export function SchedulesList({
   const [editingSchedule, setEditingSchedule] = useState<ScheduleWithPackage | null>(null);
   const [statusChangingSchedule, setStatusChangingSchedule] = useState<ScheduleWithPackage | null>(null);
   const [deleteSchedule, setDeleteSchedule] = useState<ScheduleWithPackage | null>(null);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
+
+  // Batch Generator Fields
+  const [batchPackageId, setBatchPackageId] = useState(packages[0]?.id || "");
+  const [batchDayOfWeek, setBatchDayOfWeek] = useState<number[]>([6]); // 0=Sun, 6=Sat
+  const [batchWeeks, setBatchWeeks] = useState(8);
+  const [batchTotalQuota, setBatchTotalQuota] = useState(14);
+  const [batchPricePerPax, setBatchPricePerPax] = useState(375000);
+  const [batchDurationDays, setBatchDurationDays] = useState(1);
+  const [batchResult, setBatchResult] = useState<{ count: number } | null>(null);
 
   // Form Fields
   const [formPackageId, setFormPackageId] = useState(packages[0]?.id || "");
@@ -62,11 +72,12 @@ export function SchedulesList({
         if (editingSchedule) setEditingSchedule(null);
         if (statusChangingSchedule) setStatusChangingSchedule(null);
         if (deleteSchedule) setDeleteSchedule(null);
+        if (isBatchModalOpen) setIsBatchModalOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isAddModalOpen, editingSchedule, statusChangingSchedule, deleteSchedule]);
+  }, [isAddModalOpen, editingSchedule, statusChangingSchedule, deleteSchedule, isBatchModalOpen]);
 
   // Filtered schedules
   const filteredSchedules = schedules.filter((sch) => {
@@ -233,6 +244,105 @@ export function SchedulesList({
     }
   };
 
+  const handleQuickToggle = async (sch: ScheduleWithPackage) => {
+    const newStatus: ScheduleStatus = sch.status === "OPEN" ? "CLOSED" : "OPEN";
+    try {
+      const { data, error } = await supabase
+        .from("trip_schedules")
+        .update({ status: newStatus })
+        .eq("id", sch.id)
+        .select("*, tour_package:tour_packages(id, title, slug, category, destination_city)")
+        .single();
+      if (error) throw error;
+      setSchedules((prev) =>
+        prev.map((s) => (s.id === sch.id ? (data as unknown as ScheduleWithPackage) : s))
+      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal mengubah status";
+      alert(message);
+    }
+  };
+
+  const handleBatchGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!batchPackageId) {
+      setModalError("Pilih paket wisata");
+      return;
+    }
+    if (batchDayOfWeek.length === 0) {
+      setModalError("Pilih minimal satu hari keberangkatan");
+      return;
+    }
+    if (batchTotalQuota < 1) {
+      setModalError("Kapasitas kuota minimal 1");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setModalError(null);
+
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() + batchWeeks * 7);
+
+      const scheduleRows: Array<{
+        package_id: string;
+        departure_date: string;
+        return_date: string;
+        total_quota: number;
+        reserved_quota: number;
+        booked_quota: number;
+        price_per_pax: number;
+        status: ScheduleStatus;
+      }> = [];
+
+      const cursor = new Date(today);
+      cursor.setDate(cursor.getDate() + 1); // start from tomorrow
+      while (cursor <= endDate) {
+        if (batchDayOfWeek.includes(cursor.getDay())) {
+          const dep = cursor.toISOString().split("T")[0];
+          const ret = new Date(cursor);
+          ret.setDate(ret.getDate() + batchDurationDays - 1);
+          scheduleRows.push({
+            package_id: batchPackageId,
+            departure_date: dep,
+            return_date: ret.toISOString().split("T")[0],
+            total_quota: batchTotalQuota,
+            reserved_quota: 0,
+            booked_quota: 0,
+            price_per_pax: batchPricePerPax,
+            status: "OPEN",
+          });
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      if (scheduleRows.length === 0) {
+        setModalError("Tidak ada jadwal yang dihasilkan. Coba tambah jumlah minggu atau hari.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("trip_schedules")
+        .insert(scheduleRows)
+        .select("*, tour_package:tour_packages(id, title, slug, category, destination_city)");
+
+      if (error) throw error;
+
+      setSchedules((prev) => [...(data as unknown as ScheduleWithPackage[]), ...prev]);
+      setBatchResult({ count: scheduleRows.length });
+      router.refresh();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal generate jadwal batch";
+      setModalError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full gap-space-lg">
       {/* Header & Primary Controls */}
@@ -270,6 +380,25 @@ export function SchedulesList({
               ))}
             </select>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setBatchPackageId(packages[0]?.id || "");
+              setBatchDayOfWeek([6, 0]);
+              setBatchWeeks(8);
+              setBatchTotalQuota(14);
+              setBatchPricePerPax(375000);
+              setBatchDurationDays(1);
+              setBatchResult(null);
+              setModalError(null);
+              setIsBatchModalOpen(true);
+            }}
+            className="inline-flex items-center gap-space-xs bg-surface-container hover:bg-surface-container-high text-primary font-body-semibold text-body-semibold px-space-md py-space-sm rounded-lg shadow-sm transition-all duration-150"
+          >
+            <MaterialIcon name="calendar_add_on" className="text-lg" />
+            <span>Generate Jadwal Berkala</span>
+          </button>
 
           <button
             type="button"
@@ -692,6 +821,22 @@ export function SchedulesList({
 
                       <td className="py-space-md px-space-md align-top text-right">
                         <div className="flex items-center justify-end gap-space-xs">
+                          <button
+                            type="button"
+                            onClick={() => handleQuickToggle(sch)}
+                            title={sch.status === "OPEN" ? "Tutup Kuota Sekarang" : "Buka Kuota"}
+                            className={`px-space-sm py-1.5 rounded-lg font-body-semibold text-caption transition-colors flex items-center gap-1 ${
+                              sch.status === "OPEN"
+                                ? "bg-error-container text-error hover:bg-error hover:text-on-error"
+                                : "bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary"
+                            }`}
+                          >
+                            <MaterialIcon
+                              name={sch.status === "OPEN" ? "lock" : "lock_open"}
+                              className="text-sm"
+                            />
+                            <span>{sch.status === "OPEN" ? "Tutup" : "Buka"}</span>
+                          </button>
                           <Link
                             href={`/dashboard/schedules/${sch.id}/manifest`}
                             className="px-space-sm py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary font-body-semibold text-caption transition-colors flex items-center gap-1"
@@ -1043,6 +1188,208 @@ export function SchedulesList({
                 {isSubmitting ? "Menghapus..." : "Ya, Hapus Jadwal"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Generate Jadwal Berkala */}
+      {isBatchModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/50 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-xl max-w-lg w-full p-space-lg shadow-xl border border-outline-variant/30 flex flex-col gap-space-md animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <div className="flex items-center gap-2">
+                <MaterialIcon name="calendar_add_on" className="text-primary text-xl" />
+                <h3 className="font-title-md text-title-md text-on-surface font-bold">
+                  Generate Jadwal Berkala
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBatchModalOpen(false);
+                  setBatchResult(null);
+                  setModalError(null);
+                }}
+                className="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container"
+              >
+                <MaterialIcon name="close" className="text-xl" />
+              </button>
+            </div>
+
+            <p className="font-caption text-caption text-on-surface-variant">
+              Buat jadwal keberangkatan otomatis setiap hari tertentu selama beberapa minggu ke depan.
+            </p>
+
+            {modalError && (
+              <div className="p-3 rounded-lg bg-error-container text-on-error-container text-caption flex items-center gap-2">
+                <MaterialIcon name="error" className="text-base" />
+                <span>{modalError}</span>
+              </div>
+            )}
+
+            {batchResult && (
+              <div className="p-3 rounded-lg bg-surface-container-high text-primary text-caption flex items-center gap-2">
+                <MaterialIcon name="check_circle" className="text-base" />
+                <span>{batchResult.count} jadwal berhasil dibuat dan ditambahkan ke daftar.</span>
+              </div>
+            )}
+
+            {!batchResult && (
+              <form onSubmit={handleBatchGenerate} className="flex flex-col gap-space-sm">
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Paket Wisata
+                  </label>
+                  <select
+                    value={batchPackageId}
+                    onChange={(e) => setBatchPackageId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                    required
+                  >
+                    {packages.map((pkg) => (
+                      <option key={pkg.id} value={pkg.id}>
+                        {pkg.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption font-semibold text-on-surface">
+                    Hari Keberangkatan
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { label: "Senin", val: 1 },
+                      { label: "Selasa", val: 2 },
+                      { label: "Rabu", val: 3 },
+                      { label: "Kamis", val: 4 },
+                      { label: "Jumat", val: 5 },
+                      { label: "Sabtu", val: 6 },
+                      { label: "Minggu", val: 0 },
+                    ].map(({ label, val }) => (
+                      <label
+                        key={val}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer font-caption text-caption border transition-colors ${
+                          batchDayOfWeek.includes(val)
+                            ? "bg-primary text-on-primary border-primary"
+                            : "bg-surface-container-low text-on-surface border-outline-variant/30 hover:bg-surface-container"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={batchDayOfWeek.includes(val)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setBatchDayOfWeek([...batchDayOfWeek, val]);
+                            } else {
+                              setBatchDayOfWeek(batchDayOfWeek.filter((d) => d !== val));
+                            }
+                          }}
+                        />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-space-sm">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-caption text-caption font-semibold text-on-surface">
+                      Jumlah Minggu ke Depan
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="26"
+                      value={batchWeeks}
+                      onChange={(e) => setBatchWeeks(parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="font-caption text-caption font-semibold text-on-surface">
+                      Durasi Trip (Hari)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={batchDurationDays}
+                      onChange={(e) => setBatchDurationDays(parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-space-sm">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-caption text-caption font-semibold text-on-surface">
+                      Kuota per Batch
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={batchTotalQuota}
+                      onChange={(e) => setBatchTotalQuota(parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="font-caption text-caption font-semibold text-on-surface">
+                      Harga per Pax (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={batchPricePerPax}
+                      onChange={(e) => setBatchPricePerPax(parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 mt-space-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBatchModalOpen(false);
+                      setModalError(null);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-body-semibold hover:bg-surface-container-high transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-semibold transition-colors disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Membuat Jadwal..." : "Generate Sekarang"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {batchResult && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBatchModalOpen(false);
+                    setBatchResult(null);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-primary text-on-primary font-body-semibold hover:bg-primary-container transition-colors"
+                >
+                  Tutup
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

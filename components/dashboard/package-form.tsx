@@ -159,6 +159,31 @@ export function PackageForm({
     setItinerary(updated);
   };
 
+  const handleAddDay = () => {
+    const nextDay = itinerary.length + 1;
+    setItinerary([
+      ...itinerary,
+      {
+        day: nextDay,
+        activities: [
+          {
+            time: "08:00",
+            title: "Aktivitas Hari ke-" + nextDay,
+            description: "Rincian agenda kegiatan hari ke-" + nextDay + ".",
+          },
+        ],
+      },
+    ]);
+  };
+
+  const handleRemoveDay = (dayIndex: number) => {
+    if (itinerary.length <= 1) return;
+    const updated = itinerary
+      .filter((_, i) => i !== dayIndex)
+      .map((d, i) => ({ ...d, day: i + 1 }));
+    setItinerary(updated);
+  };
+
   const handleSave = async (publish: boolean) => {
     if (!title.trim()) {
       setErrorMessage("Nama paket wisata wajib diisi");
@@ -546,6 +571,14 @@ export function PackageForm({
                   </p>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={handleAddDay}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-colors"
+              >
+                <MaterialIcon name="add" className="text-xs" />
+                Tambah Hari
+              </button>
             </div>
 
             {itinerary.map((dayGroup, dIdx) => (
@@ -554,13 +587,24 @@ export function PackageForm({
                   <span className="font-body-semibold text-primary font-bold">
                     Hari ke-{dayGroup.day}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleAddActivity(dIdx)}
-                    className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline"
-                  >
-                    <MaterialIcon name="add" className="text-xs" /> Tambah Aktivitas
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleAddActivity(dIdx)}
+                      className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline"
+                    >
+                      <MaterialIcon name="add" className="text-xs" /> Tambah Aktivitas
+                    </button>
+                    {itinerary.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDay(dIdx)}
+                        className="text-xs text-error font-semibold flex items-center gap-1 hover:underline"
+                      >
+                        <MaterialIcon name="remove_circle" className="text-xs" /> Hapus Hari
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -738,11 +782,25 @@ export function PackageForm({
 
             <div className="rounded-xl overflow-hidden bg-surface-container-low border border-outline-variant/20 shadow-sm flex flex-col">
               <div className="relative h-44 w-full bg-surface-container">
-                <img
-                  src={thumbnailUrl}
-                  alt={title || "Paket"}
-                  className="w-full h-full object-cover"
-                />
+                {thumbnailUrl ? (
+                  <img
+                    src={thumbnailUrl}
+                    alt={title || "Paket"}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                      const placeholder = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (placeholder) placeholder.style.display = "flex";
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="w-full h-full flex items-center justify-center bg-surface-container-high text-on-surface-variant flex-col gap-2"
+                  style={{ display: thumbnailUrl ? "none" : "flex" }}
+                >
+                  <MaterialIcon name="broken_image" className="text-3xl text-outline" />
+                  <span className="text-xs text-on-surface-variant">Pratinjau Foto</span>
+                </div>
                 <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary text-on-primary font-micro-badge text-micro-badge font-bold uppercase">
                   {category === "private_trip" ? "PRIVATE TRIP" : "OPEN TRIP"}
                 </span>

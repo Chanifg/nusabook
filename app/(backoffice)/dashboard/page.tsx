@@ -104,6 +104,7 @@ export default async function DashboardPage() {
 
   // Calculate live metrics or realistic seeds
   const omzetKotor = paidBookingsData.reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
+  const platformFeeTotal = paidBookingsData.reduce((sum, b) => sum + Number(b.platform_fee || 0), 0);
   const pendapatanBersih = paidBookingsData.reduce(
     (sum, b) => sum + Number(b.agent_payout_amount || 0),
     0
@@ -218,114 +219,108 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* Core Metric KPI Cards Grid (4 Cards) */}
+      {/* Core Metric KPI Cards Grid - Financial Summary (FR-Dev2 Contract) */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
-        {/* Card 1: Total Kuota Terjual */}
-        <div className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+        {/* Card 1: Total Omzet Kotor */}
+        <div className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all border border-outline-variant/20">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
-              <span className="font-caption text-caption text-on-surface-variant font-medium">
-                Total Kuota Terjual Bulan Ini
+              <span className="font-caption text-caption text-on-surface-variant font-medium uppercase tracking-wide">
+                Total Omzet Kotor
               </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="font-headline-lg text-headline-lg font-bold text-on-surface">
-                  {displayKursiTerjual}
-                </span>
-                <span className="font-title-md text-title-md text-on-surface-variant font-medium">
-                  Pax
+              <div className="mt-1">
+                <span className="font-headline-sm text-headline-sm font-bold text-on-surface tracking-tight">
+                  {omzetKotor > 0 ? formatRupiah(omzetKotor) : formatRupiah(152445000)}
                 </span>
               </div>
             </div>
-            <div className="p-2 rounded-lg bg-surface-container text-primary">
-              <MaterialIcon name="confirmation_number" className="text-xl" />
+            <div className="p-2 rounded-lg bg-primary-fixed text-primary">
+              <MaterialIcon name="monitoring" className="text-xl" />
             </div>
           </div>
           <div className="mt-space-md pt-space-xs flex flex-col gap-1.5">
             <div className="flex items-center justify-between text-caption font-caption">
               <span className="inline-flex items-center gap-0.5 text-primary font-semibold">
-                <MaterialIcon name="trending_up" className="text-sm" /> +18.4%
+                <MaterialIcon name="trending_up" className="text-sm" /> SUM(total_amount)
               </span>
-              <span className="text-on-surface-variant">vs bulan lalu</span>
+              <span className="text-on-surface-variant">Pembayaran PAID</span>
             </div>
             <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
-              <div className="bg-primary h-1.5 rounded-full" style={{ width: "89.2%" }} />
+              <div className="bg-primary h-1.5 rounded-full" style={{ width: "100%" }} />
             </div>
-            <span className="font-caption text-caption text-on-surface-variant flex justify-between">
-              <span>
-                Okupansi Rata-rata <strong>89.2%</strong>
-              </span>
-              <span className="font-semibold text-on-surface">
-                {upcomingSchedules.length} slot aktif
-              </span>
-            </span>
           </div>
         </div>
 
-        {/* Card 2: Escrow Terproteksi */}
-        <div className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+        {/* Card 2: Potongan Nusabook 2% */}
+        <div className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all border border-error-container/40">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
-              <span className="font-caption text-caption text-on-surface-variant font-medium">
-                Dana Escrow Terproteksi
+              <span className="font-caption text-caption text-on-surface-variant font-medium uppercase tracking-wide">
+                Potongan Nusabook 2%
               </span>
               <div className="mt-1">
-                <span className="font-headline-sm text-headline-sm font-bold text-primary tracking-tight">
-                  {formatRupiah(displayEscrow)}
+                <span className="font-headline-sm text-headline-sm font-bold text-error tracking-tight">
+                  {platformFeeTotal > 0 ? formatRupiah(platformFeeTotal) : formatRupiah(3048900)}
                 </span>
               </div>
             </div>
-            <div className="p-2 rounded-lg bg-primary-fixed text-on-primary-fixed">
-              <MaterialIcon name="verified_user" className="text-xl" />
+            <div className="p-2 rounded-lg bg-error-container text-error">
+              <MaterialIcon name="percent" className="text-xl" />
             </div>
           </div>
           <div className="mt-space-md pt-space-xs flex flex-col gap-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container text-tertiary font-micro-badge text-micro-badge font-semibold">
-              <MaterialIcon name="shield" className="text-xs" />
-              Safe Vault™ NusaBook Terlindungi
+            <div className="flex items-center justify-between text-caption font-caption">
+              <span className="inline-flex items-center gap-0.5 text-error font-semibold">
+                <MaterialIcon name="remove_circle" className="text-sm" /> SUM(platform_fee)
+              </span>
+              <span className="text-on-surface-variant">Komisi Platform</span>
             </div>
-            <span className="font-caption text-caption text-on-surface-variant">
-              Menunggu keberangkatan &amp; verifikasi check-in QR
-            </span>
+            <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+              <div className="bg-error h-1.5 rounded-full" style={{ width: "2%" }} />
+            </div>
           </div>
         </div>
 
-        {/* Card 3: Dana Siap Cair */}
-        <div className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+        {/* Card 3: Pendapatan Bersih Mitra 98% */}
+        <div className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all border border-outline-variant/20">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
-              <span className="font-caption text-caption text-on-surface-variant font-medium">
-                Dana Siap Cair (Disbursement)
+              <span className="font-caption text-caption text-on-surface-variant font-medium uppercase tracking-wide">
+                Pendapatan Bersih 98%
               </span>
               <div className="mt-1">
-                <span className="font-headline-sm text-headline-sm font-bold text-secondary tracking-tight">
-                  {formatRupiah(displaySiapCair)}
+                <span className="font-headline-sm text-headline-sm font-bold text-primary tracking-tight">
+                  {pendapatanBersih > 0 ? formatRupiah(pendapatanBersih) : formatRupiah(149396100)}
                 </span>
               </div>
             </div>
             <div className="p-2 rounded-lg bg-secondary-fixed text-on-secondary-fixed">
-              <MaterialIcon name="payments" className="text-xl" />
+              <MaterialIcon name="account_balance_wallet" className="text-xl" />
             </div>
           </div>
-          <div className="mt-space-md pt-space-xs flex items-center justify-between gap-2">
-            <span className="font-caption text-caption text-on-surface-variant">
-              4 trip sukses terverifikasi
-            </span>
-            <button className="px-2.5 py-1.5 rounded-lg bg-secondary-container text-on-primary hover:bg-secondary font-micro-badge text-micro-badge font-bold transition-all shadow-sm shrink-0">
-              Tarik ke Rekening
-            </button>
+          <div className="mt-space-md pt-space-xs flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-caption font-caption">
+              <span className="inline-flex items-center gap-0.5 text-primary font-semibold">
+                <MaterialIcon name="add_circle" className="text-sm" /> SUM(agent_payout_amount)
+              </span>
+              <span className="text-on-surface-variant">Escrow Mitra</span>
+            </div>
+            <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+              <div className="bg-primary h-1.5 rounded-full" style={{ width: "98%" }} />
+            </div>
           </div>
         </div>
 
-        {/* Card 4: Kursi Sedang Terkunci */}
+        {/* Card 4: Pessimistic Seat Hold Live */}
         <div className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
-              <span className="font-caption text-caption text-on-surface-variant font-medium">
+              <span className="font-caption text-caption text-on-surface-variant font-medium uppercase tracking-wide">
                 Pessimistic Seat Hold (Live)
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="font-headline-lg text-headline-lg font-bold text-tertiary">
-                  {displayReserved}
+                  {totalReservedSeats > 0 ? totalReservedSeats : displayReserved}
                 </span>
                 <span className="font-title-md text-title-md text-on-surface-variant font-medium">
                   Kursi Kunci
@@ -338,13 +333,13 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-space-md pt-space-xs flex flex-col gap-1">
             <div className="flex items-center justify-between text-caption font-caption">
-              <span className="text-on-surface font-semibold">2 Checkout Aktif</span>
+              <span className="text-on-surface font-semibold">{upcomingSchedules.length} Trip Aktif</span>
               <span className="text-secondary font-mono font-bold text-micro-badge text-micro-badge bg-secondary-fixed/50 px-1.5 py-0.5 rounded">
-                TTL: 11:42
+                TTL: 20 mnt
               </span>
             </div>
             <span className="font-caption text-caption text-on-surface-variant">
-              Calon wisatawan sedang menginput NIK manifes
+              Calon wisatawan sedang dalam proses checkout
             </span>
           </div>
         </div>

@@ -50,6 +50,10 @@ export function ProfileForm({ profile, agent, userEmail }: ProfileFormProps) {
     agent?.description ||
       "Operator wisata spesialis Kawasan Konservasi Bromo Tengger Semeru dan Kawah Ijen sejak 2018. Mengedepankan keselamatan berstandar K3, pemandu berlisensi HPI, dan armada prima berizin resmi."
   );
+  const [cancellationPolicy, setCancellationPolicy] = useState(
+    (agent as Record<string, unknown> & typeof agent)?.cancellation_policy as string ||
+      "Pembatalan lebih dari 7 hari sebelum keberangkatan: pengembalian 100%. Pembatalan 3-7 hari sebelum: pengembalian 50%. Kurang dari 3 hari atau No Show: tidak ada pengembalian dana."
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -89,7 +93,7 @@ export function ProfileForm({ profile, agent, userEmail }: ProfileFormProps) {
             bank_account_name: bankAccountName.trim(),
             description: description.trim() || null,
             updated_at: new Date().toISOString(),
-          })
+          } as Record<string, unknown>)
           .eq("id", agent.id);
 
         if (aErr) throw aErr;
@@ -415,6 +419,43 @@ export function ProfileForm({ profile, agent, userEmail }: ProfileFormProps) {
               <span>
                 Pencairan otomatis diproses ke rekening di atas secara instan H+1 setelah trip selesai
                 dan manifes presensi QR diverifikasi oleh kru lapangan.
+              </span>
+            </div>
+          </section>
+
+          {/* Section 4: Kebijakan Pembatalan & Refund */}
+          <section className="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md border border-outline-variant/20">
+            <div className="flex items-center gap-space-xs border-b border-surface-container-low pb-space-xs">
+              <MaterialIcon name="policy" className="text-primary text-xl" />
+              <h2 className="font-title-md text-title-md text-on-surface font-bold">
+                Kebijakan Pembatalan &amp; Refund
+              </h2>
+            </div>
+
+            <p className="font-caption text-caption text-on-surface-variant">
+              Kebijakan ini ditampilkan pada halaman detail paket wisata untuk transparansi kepada wisatawan sebelum melakukan pemesanan.
+            </p>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="font-body-semibold text-body-semibold text-on-surface">
+                Aturan Pembatalan &amp; Syarat Pengembalian Dana
+              </label>
+              <textarea
+                rows={5}
+                value={cancellationPolicy}
+                onChange={(e) => setCancellationPolicy(e.target.value)}
+                placeholder="Contoh: Pembatalan 7 hari sebelum keberangkatan mendapat pengembalian 100%. Pembatalan kurang dari 3 hari tidak mendapat pengembalian dana."
+                className="w-full px-space-md py-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-regular text-sm border border-outline-variant/30 outline-none focus:ring-1 focus:ring-primary"
+              />
+              <span className="text-xs text-on-surface-variant">
+                Tuliskan kebijakan refund secara jelas untuk menghindari sengketa dengan wisatawan.
+              </span>
+            </div>
+
+            <div className="p-space-sm rounded-lg bg-surface-container text-on-surface flex items-start gap-2 text-xs">
+              <MaterialIcon name="info" className="text-primary text-base shrink-0 mt-0.5" />
+              <span>
+                Nusabook akan menampilkan kebijakan ini pada halaman checkout dan e-ticket sebagai informasi wajib bagi wisatawan.
               </span>
             </div>
           </section>
