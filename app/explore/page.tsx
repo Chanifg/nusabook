@@ -105,7 +105,7 @@ const EXPLORE_PACKAGES: ExplorePackage[] = [
     destinationCity: "Yogyakarta",
     locationDetails: "Kaliurang, Sleman, Yogyakarta",
     thumbnailUrl:
-      "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=1200&q=80",
     thumbnailAlt: "Jeep lava tour Kaliadem berlatar Gunung Merapi yang megah",
     agentName: "Pesona Merapi Tour & Travel",
     agentSlug: "pesona-merapi",
@@ -1252,7 +1252,7 @@ export default function MarketplaceExplorePage() {
                             </div>
                           </div>
                           <Link
-                            href={`/${pkg.agentSlug}`}
+                            href={`/${pkg.agentSlug}/packages/${pkg.slug}`}
                             className="px-4 py-2 bg-secondary-container hover:bg-[#e07106] text-surface-container-lowest font-body-semibold text-body-semibold rounded-lg shadow-sm transition-all flex items-center gap-1 font-bold"
                           >
                             <span>Pesan Sekarang</span>

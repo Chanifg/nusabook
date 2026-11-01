@@ -172,7 +172,7 @@ BEGIN
             ARRAY['Jeep 4x4 dan Driver Berpengalaman', 'BBM dan Tiket Masuk Objek Wisata', 'Pemandu Lokal', 'Air Mineral dan Snack Ringan', 'Asuransi Jasa Raharja'],
             ARRAY['Pengeluaran Pribadi', 'Transportasi ke Meeting Point', 'Tips Sukarela Driver'],
             'Pembatalan hingga H-3 mendapatkan pengembalian 50%. Pembatalan kurang dari 48 jam tidak dapat di-refund.',
-            'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1200&q=80', TRUE
+            'https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=1200&q=80', TRUE
         ),
         (
             v_p1_2, v_a1, 'Private Heritage Sunset Ratu Boko & Candi Prambanan', 'private-heritage-ratu-boko',
