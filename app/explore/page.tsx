@@ -171,7 +171,7 @@ const EXPLORE_PACKAGES: ExplorePackage[] = [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCcX4F4QbtGOXCOeZQ4KaZdUizrGjplMtolbXn1KUVk0GAgCI6pk7ZaN-hqQbhtq-4yeeXkphBG5LNAPi6n-QqybUe21PrPA155-tfdWzAHm7KQEMOSl2-DwHjDIluIbjNKTbOCPcgCe2eS6b_bHps-qa0dg37yhRmljsIy3EGSRFGC5Lh91nkFkwsqZYPRIpZl4jm5jd0OdnwcGZv-OZSj6yA6TZladJWPrMy-3NV4SVGElyLHsCk",
     thumbnailAlt: "Dramatic sunrise over Mount Bromo with sea of clouds and Mount Semeru erupting",
     agentName: "Pesona Nusantara Tour (Malang)",
-    agentSlug: "pesona-merapi",
+    agentSlug: "bromo-overland",
     isVerified: true,
     nextDepartureDate: "Minggu, 18 Okt 2026",
     originalPrice: 550000,

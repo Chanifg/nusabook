@@ -646,9 +646,17 @@ export const CATALOG_PACKAGES: CatalogPackage[] = [
 ];
 
 export function findCatalogPackage(agentSlug: string, packageSlug: string): CatalogPackage | undefined {
-  return CATALOG_PACKAGES.find(
-    (p) => p.agent.slug.toLowerCase() === agentSlug.toLowerCase() && p.slug.toLowerCase() === packageSlug.toLowerCase()
+  const normAgent = (agentSlug || "").toLowerCase();
+  const normPkg = (packageSlug || "").toLowerCase();
+
+  // 1. Exact match agent and package
+  const exact = CATALOG_PACKAGES.find(
+    (p) => p.agent.slug.toLowerCase() === normAgent && p.slug.toLowerCase() === normPkg
   );
+  if (exact) return exact;
+
+  // 2. Fallback match by package slug (guarantees accessibility even if legacy URL uses different agent slug)
+  return CATALOG_PACKAGES.find((p) => p.slug.toLowerCase() === normPkg);
 }
 
 export function findCatalogAgent(agentSlug: string) {
