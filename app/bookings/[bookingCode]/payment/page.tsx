@@ -881,7 +881,6 @@ export default function PaymentInstructionPage({
               </div>
             </div>
           </div>
-        </div>
       </main>
 
       {/* FOOTER */}

@@ -1,8 +1,33 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
+import { createClient } from "@/lib/supabase/client";
+
+function formatRupiah(amount: number): string {
+  return "Rp " + amount.toLocaleString("id-ID");
+}
+
+function maskNik(nik?: string | null): string {
+  if (!nik || nik.length < 16) return "3507************";
+  return nik.substring(0, 4) + "********" + nik.substring(12);
+}
+
+function formatDateIndo(dateStr?: string | null): string {
+  if (!dateStr) return "Sesuai Jadwal Reservasi";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
 export default function ETicketPage({
   params,
@@ -13,18 +38,91 @@ export default function ETicketPage({
   const [downloading, setDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
+  // Dynamic booking state
+  const [customerName, setCustomerName] = useState<string>("Tamu Nusabook");
+  const [customerEmail, setCustomerEmail] = useState<string>("tamu@nusabook.id");
+  const [customerWhatsapp, setCustomerWhatsapp] = useState<string>("+62 812-0000-0000");
+  const [tripTitle, setTripTitle] = useState<string>("Paket Wisata Nusantara");
+  const [operatorName, setOperatorName] = useState<string>("Pesona Merapi Adventure");
+  const [departureDate, setDepartureDate] = useState<string>("2026-10-18");
+  const [meetingPoint, setMeetingPoint] = useState<string>("Pintu Timur Stasiun KA Malang Kota Baru");
+  const [totalPax, setTotalPax] = useState<number>(1);
+  const [totalAmount, setTotalAmount] = useState<number>(500000);
+  const [paymentStatus, setPaymentStatus] = useState<string>("PAID");
+  const [passengers, setPassengers] = useState<Array<{ full_name: string; id_card_number?: string | null }>>([]);
+  const [agentWhatsapp, setAgentWhatsapp] = useState<string>("6281388229100");
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBooking() {
+      try {
+        const supabase = createClient();
+        const { data: bData } = await supabase
+          .from("bookings")
+          .select("*, travel_agents(*), trip_schedules(*, tour_packages(*)), booking_passengers(*)")
+          .eq("booking_code", bookingCode)
+          .maybeSingle();
+
+        if (bData && isMounted) {
+          if (bData.customer_name) setCustomerName(bData.customer_name);
+          if (bData.customer_email) setCustomerEmail(bData.customer_email);
+          if (bData.customer_whatsapp) setCustomerWhatsapp(bData.customer_whatsapp);
+          if (bData.total_pax) setTotalPax(Number(bData.total_pax));
+          if (bData.total_amount) setTotalAmount(Number(bData.total_amount));
+          if (bData.payment_status) setPaymentStatus(bData.payment_status);
+
+          const pkg = (bData as any).trip_schedules?.tour_packages;
+          if (pkg?.title) setTripTitle(pkg.title);
+          if (pkg?.meeting_point) setMeetingPoint(pkg.meeting_point);
+
+          const sched = (bData as any).trip_schedules;
+          if (sched?.departure_date) setDepartureDate(sched.departure_date);
+
+          const agent = (bData as any).travel_agents;
+          if (agent) {
+            if (agent.business_name) setOperatorName(agent.business_name);
+            if (agent.whatsapp_number) {
+              const cleanWa = agent.whatsapp_number.replace(/\D/g, "");
+              if (cleanWa) setAgentWhatsapp(cleanWa);
+            }
+          }
+
+          if (bData.booking_passengers && Array.isArray(bData.booking_passengers) && bData.booking_passengers.length > 0) {
+            setPassengers(bData.booking_passengers);
+          } else if (bData.customer_name) {
+            setPassengers([
+              {
+                full_name: bData.customer_name,
+                id_card_number: null,
+              },
+            ]);
+          }
+        }
+      } catch {
+        // Fallback default retained
+      }
+    }
+
+    loadBooking();
+    return () => {
+      isMounted = false;
+    };
+  }, [bookingCode]);
+
   const handleDownloadPdf = () => {
     setDownloading(true);
     setTimeout(() => {
       setDownloading(false);
       setDownloadSuccess(true);
+      window.print();
       setTimeout(() => setDownloadSuccess(false), 2500);
-    }, 1200);
+    }, 600);
   };
 
-  const handleWhatsApp = () => {
-    alert("Tautan E-Tiket dan kartu SIMAKSI resmi berhasil dikirimkan ulang ke nomor WhatsApp (+62 812-3456-7890)!");
-  };
+  const cleanWaNumber = (customerWhatsapp || "").replace(/\D/g, "") || "6281234567890";
+  const whatsappUrl = `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(
+    `Halo, berikut adalah bukti reservasi dan E-Tiket resmi Nusabook untuk kode booking: ${bookingCode}`
+  )}`;
 
   return (
     <div className="bg-background font-body-regular text-on-surface antialiased min-h-screen flex flex-col print:bg-white">
@@ -70,16 +168,14 @@ export default function ETicketPage({
               </button>
             </div>
             <div className="flex items-center gap-space-sm pl-space-xs">
-              <img
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-surface-container-high"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9zORNB2FPjTW_H98NevCLhXNTN4IUGGfqvD1zb38cqGydAcZU48wcSbV80amSRL8i_DH5E_ANNVnRQ5hVC780G4txUSnM5zYnxX59hHqUPbG3q8hLDgzB6qU6VW4G70E7kwTaZw6RRGkbhYqovfRas5W09tau4zjA7iNaXZYFS4CyUgS1b3lrz0k4sEZJJs6OHpCHs4aMJEIYyIb_CIvpLbu2PnKxrjhPx8uzaQ5vlH1GX4IaRks"
-              />
+              <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs ring-2 ring-surface-container-high">
+                {customerName ? customerName.charAt(0).toUpperCase() : "U"}
+              </div>
               <div className="hidden md:flex flex-col text-left">
                 <span className="font-body-semibold text-body-semibold text-on-surface leading-tight font-bold">
-                  Bambang Pamungkas
+                  {customerName}
                 </span>
-                <span className="font-caption text-caption text-outline">Pesona Nusantara</span>
+                <span className="font-caption text-caption text-outline">{operatorName}</span>
               </div>
             </div>
           </div>
@@ -158,7 +254,7 @@ export default function ETicketPage({
                 <div className="flex flex-col">
                   <div className="flex items-center gap-space-xs flex-wrap">
                     <h2 className="font-headline-md text-headline-md text-primary font-bold">
-                      Pembayaran Berhasil & Reservasi Terkonfirmasi!
+                      {paymentStatus === "PAID" ? "Pembayaran Berhasil & Reservasi Terkonfirmasi!" : "Reservasi Tiket Terdaftar"}
                     </h2>
                     <span className="inline-flex items-center gap-1 bg-[#ecfdf5] text-[#059669] px-2 py-0.5 rounded-full font-micro-badge text-micro-badge font-bold">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
@@ -167,9 +263,9 @@ export default function ETicketPage({
                   </div>
                   <p className="font-body-regular text-body-regular text-on-surface-variant mt-0.5">
                     E-Tiket resmi telah diterbitkan dan dikirimkan secara otomatis ke{" "}
-                    <span className="font-body-semibold text-on-surface font-bold">anindya.paramitha@gmail.com</span>{" "}
+                    <span className="font-body-semibold text-on-surface font-bold">{customerEmail}</span>{" "}
                     serta WhatsApp{" "}
-                    <span className="font-body-semibold text-on-surface font-bold">+62 812-3456-7890</span>.
+                    <span className="font-body-semibold text-on-surface font-bold">{customerWhatsapp}</span>.
                   </p>
                 </div>
               </div>
@@ -184,14 +280,15 @@ export default function ETicketPage({
                   <MaterialIcon name="print" className="text-[18px]" />
                   <span>Cetak</span>
                 </button>
-                <button
+                <a
                   className="inline-flex items-center gap-1.5 bg-surface-container-low hover:bg-surface-container text-on-surface px-space-sm py-2 rounded-lg font-body-semibold text-body-semibold transition-colors font-bold cursor-pointer"
-                  onClick={handleWhatsApp}
-                  type="button"
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <MaterialIcon name="chat" className="text-[18px] text-[#059669]" />
                   <span>Kirim WhatsApp</span>
-                </button>
+                </a>
                 <button
                   className="inline-flex items-center gap-1.5 bg-secondary-container hover:bg-secondary text-on-secondary px-space-md py-2 rounded-lg font-body-semibold text-body-semibold shadow-sm transition-colors font-bold cursor-pointer"
                   onClick={handleDownloadPdf}
@@ -200,12 +297,12 @@ export default function ETicketPage({
                   {downloading ? (
                     <>
                       <MaterialIcon name="progress_activity" className="text-[18px] animate-spin" />
-                      <span>Membuat Dokumen SIMAKSI PDF...</span>
+                      <span>Mempersiapkan Dokumen...</span>
                     </>
                   ) : downloadSuccess ? (
                     <>
                       <MaterialIcon name="check" className="text-[18px]" />
-                      <span>PDF Berhasil Diunduh!</span>
+                      <span>Membuka Jendela Cetak</span>
                     </>
                   ) : (
                     <>
@@ -234,14 +331,14 @@ export default function ETicketPage({
                         </span>
                       </div>
                       <span className="font-caption text-caption text-on-surface-variant">
-                        Operator: Pesona Nusantara Tour & Travel
+                        Operator: {operatorName}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-space-sm">
                     <div className="inline-flex items-center gap-1.5 bg-[#ecfdf5] text-[#059669] px-space-sm py-1 rounded-full font-micro-badge text-micro-badge font-bold">
                       <span className="w-2 h-2 rounded-full bg-[#10b981] animate-ping" />
-                      <span>TERBAYAR LUNAS</span>
+                      <span>{paymentStatus === "PAID" ? "TERBAYAR LUNAS" : "MENUNGGU VERIFIKASI"}</span>
                     </div>
                   </div>
                 </div>
@@ -253,14 +350,14 @@ export default function ETicketPage({
                     <span>Paket Wisata Terdaftar</span>
                   </div>
                   <h3 className="font-headline-md text-headline-md text-on-surface mt-1 leading-snug font-bold">
-                    Open Trip Bromo Golden Sunrise, Kawah Aktif, Pasir Berbisik & Savana Teletubbies
+                    {tripTitle}
                   </h3>
                   <p className="font-body-regular text-body-regular text-on-surface-variant mt-1">
                     Kode Booking Resmi:{" "}
                     <span className="font-body-semibold text-primary select-all font-bold font-mono">
                       {bookingCode}
                     </span>{" "}
-                    • Kategori: Open Trip
+                    • Kategori: Open / Private Trip
                   </p>
                 </div>
 
@@ -276,7 +373,7 @@ export default function ETicketPage({
                         Jadwal Keberangkatan
                       </span>
                       <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                        Minggu, 18 Okt 2026
+                        {formatDateIndo(departureDate)}
                       </span>
                       <span className="font-caption text-caption text-secondary font-semibold font-bold">
                         Tepat Waktu / Confirmed
@@ -310,9 +407,9 @@ export default function ETicketPage({
                     <div>
                       <span className="font-caption text-caption text-on-surface-variant block">Kapasitas Kursi</span>
                       <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                        2 Pax (Dewasa)
+                        {totalPax} Pax (Dewasa)
                       </span>
-                      <span className="font-caption text-caption text-on-surface-variant">Allotment Jeep Bromo #07</span>
+                      <span className="font-caption text-caption text-on-surface-variant">Allotment Wisata Resmi</span>
                     </div>
                   </div>
 
@@ -326,10 +423,10 @@ export default function ETicketPage({
                         Titik Kumpul / Pickup Station
                       </span>
                       <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                        Pintu Timur Stasiun KA Malang Kota Baru
+                        {meetingPoint}
                       </span>
                       <span className="font-caption text-caption text-on-surface-variant">
-                        Depan Indomaret Point, koordinasi kru berseragam rompi oranye & bendera Nusabook
+                        Koordinasi kru berseragam identitas {operatorName} dan bendera Nusabook
                       </span>
                     </div>
                   </div>
@@ -341,13 +438,13 @@ export default function ETicketPage({
                     </div>
                     <div>
                       <span className="font-caption text-caption text-on-surface-variant block">
-                        Shuttle & Armada Jeep
+                        Shuttle & Armada
                       </span>
                       <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                        Jeep 4x4 #Bromo-07
+                        Armada Resmi Mitra
                       </span>
                       <span className="font-caption text-caption text-on-surface-variant">
-                        HiAce Plat N 7102 UB (Driver: Mas Joko)
+                        Standar Operasional Tour Aman
                       </span>
                     </div>
                   </div>
@@ -359,11 +456,11 @@ export default function ETicketPage({
                     <div className="flex items-center gap-space-xs">
                       <MaterialIcon name="badge" className="text-[18px] text-primary" />
                       <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                        Manifes Penumpang Resmi TNBTS & Asuransi Jasa Raharja
+                        Manifes Penumpang Resmi & Asuransi Perjalanan
                       </h4>
                     </div>
                     <span className="font-caption text-caption text-on-surface-variant hidden sm:inline">
-                      2 Data Terverifikasi Dukcapil
+                      {passengers.length} Data Terverifikasi
                     </span>
                   </div>
 
@@ -375,52 +472,37 @@ export default function ETicketPage({
                           <th className="py-2.5 px-3">Nama Penumpang</th>
                           <th className="py-2.5 px-3">Nomor Identitas (NIK)</th>
                           <th className="py-2.5 px-3">Status Asuransi</th>
-                          <th className="py-2.5 px-3">ID SIMAKSI TNBTS</th>
+                          <th className="py-2.5 px-3">ID Boarding / SIMAKSI</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-surface-container-low">
-                        <tr className="hover:bg-surface-container-low transition-colors">
-                          <td className="py-2.5 px-3 font-semibold text-primary font-bold">01</td>
-                          <td className="py-2.5 px-3 font-body-semibold text-on-surface font-bold">
-                            Anindya Paramitha
-                            <span className="block font-caption text-caption text-outline font-normal">
-                              Lead Passenger (Kontak Utama)
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 font-caption text-caption text-on-surface-variant font-mono">
-                            3578015509950003 (WNI)
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className="inline-flex items-center gap-1 bg-[#ecfdf5] text-[#059669] px-2 py-0.5 rounded text-[11px] font-semibold font-bold">
-                              <MaterialIcon name="security" className="text-[12px]" />
-                              #JR-98214-BTM
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 font-caption text-caption font-semibold text-primary font-bold font-mono">
-                            TNBTS/2026/X/0842-1
-                          </td>
-                        </tr>
-                        <tr className="hover:bg-surface-container-low transition-colors bg-surface-container-low/20">
-                          <td className="py-2.5 px-3 font-semibold text-primary font-bold">02</td>
-                          <td className="py-2.5 px-3 font-body-semibold text-on-surface font-bold">
-                            Reza Herdian
-                            <span className="block font-caption text-caption text-outline font-normal">
-                              Penumpang Pendamping
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 font-caption text-caption text-on-surface-variant font-mono">
-                            3273021403940001 (WNI)
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className="inline-flex items-center gap-1 bg-[#ecfdf5] text-[#059669] px-2 py-0.5 rounded text-[11px] font-semibold font-bold">
-                              <MaterialIcon name="security" className="text-[12px]" />
-                              #JR-98214-BTM
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 font-caption text-caption font-semibold text-primary font-bold font-mono">
-                            TNBTS/2026/X/0842-2
-                          </td>
-                        </tr>
+                        {passengers.map((p, idx) => (
+                          <tr key={idx} className="hover:bg-surface-container-low transition-colors">
+                            <td className="py-2.5 px-3 font-semibold text-primary font-bold">
+                              {String(idx + 1).padStart(2, "0")}
+                            </td>
+                            <td className="py-2.5 px-3 font-body-semibold text-on-surface font-bold">
+                              {p.full_name}
+                              {idx === 0 && (
+                                <span className="block font-caption text-caption text-outline font-normal">
+                                  Lead Passenger (Kontak Utama)
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 font-caption text-caption text-on-surface-variant font-mono">
+                              {maskNik(p.id_card_number)} (WNI)
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className="inline-flex items-center gap-1 bg-[#ecfdf5] text-[#059669] px-2 py-0.5 rounded text-[11px] font-semibold font-bold">
+                                <MaterialIcon name="security" className="text-[12px]" />
+                                Tercover Asuransi
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 font-caption text-caption font-semibold text-primary font-bold font-mono">
+                              NUSA/{bookingCode}/{idx + 1}
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
@@ -478,7 +560,7 @@ export default function ETicketPage({
                   </div>
 
                   <div className="mt-space-sm font-caption text-caption text-on-surface font-semibold tracking-wider font-mono">
-                    NUSA-AUTH-9a8f4c2b-e10842
+                    NUSA-AUTH-{bookingCode}
                   </div>
                   <p className="font-caption text-caption text-on-surface-variant mt-space-xs leading-relaxed max-w-xs">
                     Tunjukkan QR Code ini kepada Tour Leader / Crew Lapangan saat penjemputan untuk verifikasi kehadiran.
@@ -513,20 +595,22 @@ export default function ETicketPage({
                     <div>
                       <div className="flex items-center gap-space-xs">
                         <h4 className="font-title-md text-title-md text-on-surface font-bold">
-                          Grup WhatsApp Peserta Bromo 18 Okt
+                          Grup WhatsApp Peserta {tripTitle}
                         </h4>
                         <span className="bg-[#ecfdf5] text-[#059669] text-[10px] font-bold px-1.5 py-0.5 rounded">
                           Resmi Terverifikasi
                         </span>
                       </div>
                       <p className="font-caption text-caption text-on-surface-variant">
-                        12 Peserta lain & Driver telah bergabung. Dapatkan live update koordinasi posisi Jeep secara langsung.
+                        Koordinasi langsung dengan Driver dan Tour Leader resmi {operatorName}.
                       </p>
                     </div>
                   </div>
                   <a
                     className="shrink-0 bg-[#059669] hover:bg-[#047857] text-white px-space-md py-2.5 rounded-lg font-body-semibold text-body-semibold inline-flex items-center gap-1.5 shadow-sm transition-colors font-bold"
-                    href="https://chat.whatsapp.com"
+                    href={`https://wa.me/${agentWhatsapp}?text=${encodeURIComponent(
+                      `Halo ${operatorName}, saya ingin bergabung ke grup koordinasi untuk booking ${bookingCode}`
+                    )}`}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
@@ -545,7 +629,7 @@ export default function ETicketPage({
                       </h3>
                     </div>
                     <span className="font-caption text-caption text-secondary font-semibold font-bold">
-                      Suhu Ekstrem: 5° - 10° C
+                      Suhu Nyaman: Siapkan Pakaian Sesuai
                     </span>
                   </div>
 
@@ -554,34 +638,10 @@ export default function ETicketPage({
                       <MaterialIcon name="check_box" className="text-[18px] text-primary shrink-0 mt-0.5" />
                       <div>
                         <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                          Jaket Tebal / Windbreaker
+                          Jaket Hangat / Windbreaker
                         </span>
                         <span className="font-caption text-caption text-on-surface-variant">
-                          Kawasan Penanjakan 1 berangin kencang sebelum terbit fajar.
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-space-xs p-space-sm rounded-lg bg-surface-container-low">
-                      <MaterialIcon name="check_box" className="text-[18px] text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                          Sarung Tangan & Kupluk Wol
-                        </span>
-                        <span className="font-caption text-caption text-on-surface-variant">
-                          Melindungi jemari tangan dari gigitan dingin subuh.
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-space-xs p-space-sm rounded-lg bg-surface-container-low">
-                      <MaterialIcon name="check_box" className="text-[18px] text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                          Masker Penutup Debu Belerang
-                        </span>
-                        <span className="font-caption text-caption text-on-surface-variant">
-                          Wajib di bibir kawah aktif & area Pasir Berbisik.
+                          Melindungi dari angin dan hawa dingin pagi hari.
                         </span>
                       </div>
                     </div>
@@ -593,7 +653,7 @@ export default function ETicketPage({
                           Sepatu Kets / Trekking
                         </span>
                         <span className="font-caption text-caption text-on-surface-variant">
-                          Grip sol yang baik untuk menapaki 250 anak tangga kawah.
+                          Grip sol yang baik untuk berjalan di area alam terbuka.
                         </span>
                       </div>
                     </div>
@@ -602,10 +662,10 @@ export default function ETicketPage({
                       <MaterialIcon name="check_box" className="text-[18px] text-primary shrink-0 mt-0.5" />
                       <div>
                         <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                          Powerbank & Kamera
+                          Kartu Identitas Asli (KTP / Paspor)
                         </span>
                         <span className="font-caption text-caption text-on-surface-variant">
-                          Baterai smartphone cepat drop pada suhu dingin.
+                          Wajib dicocokkan dengan manifes reservasi saat penjemputan.
                         </span>
                       </div>
                     </div>
@@ -614,10 +674,10 @@ export default function ETicketPage({
                       <MaterialIcon name="check_box" className="text-[18px] text-primary shrink-0 mt-0.5" />
                       <div>
                         <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                          Obat-Obatan Pribadi / Tolak Angin
+                          Obat-Obatan Pribadi
                         </span>
                         <span className="font-caption text-caption text-on-surface-variant">
-                          Mencegah mabuk darat pada rute kelok pegunungan.
+                          Mencegah mabuk darat dan menjaga daya tahan tubuh.
                         </span>
                       </div>
                     </div>
@@ -628,10 +688,10 @@ export default function ETicketPage({
                     <MaterialIcon name="storefront" className="text-[24px] text-primary shrink-0" />
                     <div className="flex-1">
                       <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                        Basecamp Transit & Rest Area Tumpang
+                        Titik Penjemputan Utama: {meetingPoint}
                       </span>
                       <span className="font-caption text-caption text-on-surface-variant">
-                        Jl. Raya Bromo No. 42 Tumpang, Malang (Tempat oper jeep, toilet bersih, dan sarapan pagi)
+                        Harap hadir 15 menit sebelum waktu keberangkatan untuk koordinasi logistik.
                       </span>
                     </div>
                   </div>
@@ -648,20 +708,20 @@ export default function ETicketPage({
                     <div className="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
                       <div className="flex items-center gap-space-sm">
                         <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold">
-                          DR
+                          {operatorName ? operatorName.charAt(0) : "T"}
                         </div>
                         <div>
                           <span className="font-body-semibold text-body-semibold text-on-surface block font-bold">
-                            Dimas Raharjo, S.Par
+                            {operatorName}
                           </span>
                           <span className="font-caption text-caption text-on-surface-variant">
-                            Tour Leader Resmi (Lisensi HPI #9921)
+                            Penyelenggara Wisata Resmi
                           </span>
                         </div>
                       </div>
                       <a
                         className="w-9 h-9 rounded-full bg-[#ecfdf5] text-[#059669] flex items-center justify-center hover:bg-[#d1fae5] transition-colors"
-                        href="https://wa.me/6281388229100"
+                        href={`https://wa.me/${agentWhatsapp}`}
                         title="Hubungi WhatsApp"
                       >
                         <MaterialIcon name="call" className="text-[20px]" />
@@ -679,7 +739,7 @@ export default function ETicketPage({
                             Nusabook Customer Support
                           </span>
                           <span className="font-caption text-caption text-on-surface-variant">
-                            +62 811-300-NUSA (Hotline 24/7)
+                            Hotline Bantuan 24/7
                           </span>
                         </div>
                       </div>
@@ -708,21 +768,21 @@ export default function ETicketPage({
 
                   <div className="flex flex-col gap-space-xs text-body-regular">
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-on-surface-variant">Metode Pembayaran</span>
+                      <span className="text-on-surface-variant">Status Pembayaran</span>
                       <span className="font-body-semibold text-on-surface font-bold">
-                        BCA Virtual Account
+                        {paymentStatus === "PAID" ? "Terbayar Lunas" : "Menunggu Konfirmasi"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-on-surface-variant">Waktu Penyelesaian</span>
-                      <span className="font-body-semibold text-on-surface font-bold">
-                        14 Okt 2026, 14:42 WIB
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-on-surface-variant">No. Referensi</span>
+                      <span className="text-on-surface-variant">No. Referensi Booking</span>
                       <span className="font-mono text-caption text-on-surface font-semibold font-bold">
-                        TRX-BCA-20261014-991823
+                        {bookingCode}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-on-surface-variant">Jumlah Peserta</span>
+                      <span className="font-body-semibold text-on-surface font-bold">
+                        {totalPax} Orang
                       </span>
                     </div>
 
@@ -733,11 +793,11 @@ export default function ETicketPage({
                           Total Tagihan
                         </span>
                         <span className="font-headline-sm text-headline-sm text-primary font-bold">
-                          Rp 850.000
+                          {formatRupiah(totalAmount)}
                         </span>
                       </div>
                       <span className="bg-[#ecfdf5] text-[#059669] font-body-semibold text-body-semibold px-2.5 py-1 rounded-full font-bold">
-                        Lunas
+                        {paymentStatus === "PAID" ? "Lunas" : "Terkonfirmasi"}
                       </span>
                     </div>
                   </div>
@@ -749,12 +809,12 @@ export default function ETicketPage({
                     <div className="flex items-center gap-space-xs">
                       <MaterialIcon name="location_on" className="text-[20px] text-primary" />
                       <h4 className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                        Peta Lokasi Titik Kumpul
+                        Peta Titik Kumpul
                       </h4>
                     </div>
                     <a
                       className="font-caption text-caption text-secondary font-bold hover:underline flex items-center gap-0.5"
-                      href="https://maps.google.com"
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPoint)}`}
                       rel="noopener noreferrer"
                       target="_blank"
                     >
@@ -763,36 +823,24 @@ export default function ETicketPage({
                     </a>
                   </div>
 
-                  <div
-                    className="w-full h-44 rounded-lg bg-surface-container flex flex-col items-center justify-center p-space-md relative overflow-hidden bg-cover bg-center"
-                    style={{
-                      backgroundImage:
-                        "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBIPf9jLpQYVxL_Wu4NBM-t8cxsiNnUthJCr5XNgvBYr6EvWDdF84su-TxBA_vf-FfZ2xHGTSBMkwjA9v9HD_Ikj-zkMD3hR6N0TRoLld4v4J4Itz4VI3fcyUOWPG3L6Zo9PUzZAf_X2u6vuIfmslzg4mCvzKx8nLGu8FQkW5tgFuiSzgJMAo_csxZc_mSqYl_YPe5RdHzvS_Lapxw_iZ2rd_z_fk6DC3jN3teQoPvXMq_XqqqIpe0')",
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-primary/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-on-primary p-space-sm text-center">
-                      <MaterialIcon name="navigation" className="text-[32px] text-secondary-container" />
-                      <span className="font-body-semibold text-body-semibold mt-1 font-bold">
-                        Stasiun KA Malang Kota Baru
-                      </span>
-                      <span className="font-caption text-caption opacity-90">
-                        Pintu Keluar Timur • Titik Jemput Utama
-                      </span>
-                    </div>
+                  <div className="w-full p-space-md rounded-lg bg-surface-container text-left flex flex-col gap-1">
+                    <span className="font-body-semibold text-body-semibold text-on-surface font-bold">
+                      {meetingPoint}
+                    </span>
+                    <span className="font-caption text-caption text-on-surface-variant">
+                      Silakan tunjukkan QR Code pada E-Tiket saat berkumpul di lokasi.
+                    </span>
                   </div>
-                  <span className="font-caption text-caption text-on-surface-variant">
-                    Tips: Jika tiba lebih awal dengan kereta api (Gajayana / Jayabaya), silakan menunggu di ruang tunggu ber-AC lantai dasar.
-                  </span>
                 </div>
 
                 {/* Cancellation & Reschedule Terms Summary */}
                 <div className="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-md flex flex-col gap-space-xs">
                   <div className="flex items-center gap-space-xs text-primary font-caption text-caption font-semibold font-bold">
                     <MaterialIcon name="info" className="text-[16px]" />
-                    <span>Ketentuan Perubahan & Force Majeure</span>
+                    <span>Ketentuan Perjalanan & Layanan</span>
                   </div>
                   <p className="font-caption text-caption text-on-surface-variant leading-relaxed">
-                    Dalam hal erupsi vulkanik Bromo atau penutupan resmi TNBTS karena cuaca ekstrem, reservasi ini dilindungi jaminan pengembalian dana penuh atau penjadwalan ulang bebas biaya hingga 90 hari.
+                    Reservasi ini dilindungi oleh garansi perjalanan Nusabook. Jika terjadi kendala operasional atau faktor cuaca ekstrem, hubungi operator wisata atau customer support kami untuk penyesuaian jadwal.
                   </p>
                 </div>
               </div>
@@ -836,7 +884,7 @@ export default function ETicketPage({
             <span className="font-caption text-caption text-outline">Program P2MW 2026</span>
           </div>
           <div className="flex gap-space-lg font-caption text-caption">
-            <Link className="hover:text-on-surface transition-colors" href="/terms">
+            <Link className="hover:text-on-surface transition-colors" href="/explore">
               Syarat & Ketentuan
             </Link>
           </div>
