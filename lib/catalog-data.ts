@@ -248,7 +248,7 @@ export const CATALOG_PACKAGES: CatalogPackage[] = [
     ],
     facilities_excluded: ["Sewa Kuda di Kawah", "Makan dan Jaket Hangat"],
     cancellation_policy: "Garansi berangkat setiap hari. Pembatalan H-1 dikenakan biaya 100%.",
-    thumbnail_url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80",
+    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcX4F4QbtGOXCOeZQ4KaZdUizrGjplMtolbXn1KUVk0GAgCI6pk7ZaN-hqQbhtq-4yeeXkphBG5LNAPi6n-QqybUe21PrPA155-tfdWzAHm7KQEMOSl2-DwHjDIluIbjNKTbOCPcgCe2eS6b_bHps-qa0dg37yhRmljsIy3EGSRFGC5Lh91nkFkwsqZYPRIpZl4jm5jd0OdnwcGZv-OZSj6yA6TZladJWPrMy-3NV4SVGElyLHsCk",
     gallery_urls: [
       "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
@@ -318,7 +318,7 @@ export const CATALOG_PACKAGES: CatalogPackage[] = [
     ],
     facilities_excluded: ["Tiket Masuk TN Komodo", "Tiket Pesawat ke Labuan Bajo", "Tips Kru Kapal"],
     cancellation_policy: "Reschedule gratis hingga H-14. Pembatalan H-7 tidak dapat di-refund.",
-    thumbnail_url: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80",
+    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBivb0bPrQvfD2TrcdjJxqpLb2GepfU8gv4L3xqBzlu5Wj4Y9LeQdIBQoXk4jmiBZggicy4XIubGjZhjP7uHUSH_cmVsZIag8tNrNfqLFORnCzGRb3uedKXIOPLNXRB9kH_4geKG9BrQl6IWrVqT33N1rbJptT4vx6AnFpgwHsb1O-YzxU-E7VnSY5SjDe2VnvNrqaJqLtmamds5wzTqywE2Fz45w6HD7Ep2QAS2yI6j_LQWpGZ-Sk",
     gallery_urls: [
       "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
@@ -390,7 +390,7 @@ export const CATALOG_PACKAGES: CatalogPackage[] = [
     ],
     facilities_excluded: ["Troli Dorong / Becak Ijen", "Makan Pribadi"],
     cancellation_policy: "Pembatalan sebelum 24 jam bebas biaya.",
-    thumbnail_url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCLgFs8-wRy35MRB1MmqXtf7lOHb2kq3f6Bp4AFu_m-g5jffFf5Nhk5lxyKwRrTl8T4sREu8v_k8qUJhZ7wjy4aGsv64QZKp6NJDXsWQBp_qmQabp5b8tG8YqO-EQTX3YxFgHFBWAQPN65m6FHIXfflaUmvlZLjlKUMrC8erx00tCp33bQC8rmNVcQBt8E8eDOnculalKBkzJnCncdsfzCB9f0fMvtbbzQbuk9xPOJWf21-qLA47Ic",
     gallery_urls: [
       "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80",
@@ -461,7 +461,7 @@ export const CATALOG_PACKAGES: CatalogPackage[] = [
     ],
     facilities_excluded: ["Transportasi Menuju Pelabuhan Kartini Jepara", "Pengeluaran Pribadi"],
     cancellation_policy: "Jadwal keberangkatan pasti hari Jumat dan Sabtu setiap pekan.",
-    thumbnail_url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80",
+    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDn3zNMCoxWEaGCCJWqM_r8VWXFf5cf99VKdK2pcsO-0xEYoS-VweBH-zxtDpKwp1H5OsFiliWX5E8pSigJepCqXNM1RMUqFwq9Ls4PUSs-IVj24LtpwE0WuQAnK6mQKv7E5m1d9eRpp5aWqkp3kFZ_qDl9uNIo_HaYE53mYiJGb3tWVocaAWKzHUvpx8u8f2Y_tB9hmmbriIZEBYi3xDteHV7dpi66wfZavqCwU-OCRMPGSdvCx1E",
     gallery_urls: [
       "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80",
@@ -530,7 +530,7 @@ export const CATALOG_PACKAGES: CatalogPackage[] = [
     ],
     facilities_excluded: ["Pengeluaran Pribadi", "Tips Sukarela"],
     cancellation_policy: "Pembatalan H-3 uang kembali 50%.",
-    thumbnail_url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=1200&q=80",
+    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuB18ZHxQoGmBSKU2KmCtG-OyjRLJniCW1TmJUjhUlx6rHfh8nXxmii_XAskAmH5jvbNcVTckIm9IpXExdJTMPw4q83tQ-YTHT_7GZCRQKIRQ8hxnsYXS3M73qVzfmLp1ECxH-n8AyZ4Y-tTCCsQt1-MuK2AlMG4UtquTalUjN-EhHdyl9UpTQOhUqAaaK5V2RLK4gQLDQZBnooYGTMY4_Fl3S2dHTG1o6UqKMlPC3WPpqm0fveY6nM",
     gallery_urls: [
       "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
@@ -602,7 +602,7 @@ export const CATALOG_PACKAGES: CatalogPackage[] = [
     ],
     facilities_excluded: ["Tiket Pesawat ke Berau", "Pengeluaran Pribadi"],
     cancellation_policy: "Pembatalan hingga H-7 mendapatkan pengembalian 50%.",
-    thumbnail_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCt6L0eIGDDDHL8-2AFfICpuGpwWbWMe-AtzfMj56vX-JzgMsg0NbdqU3q8qAivhki39IBeo0BCcBpCZn9W2oJwwlyDPqbGVYbtvoE7hJ9HOlAlImERLkgBkY74RnFaElXTyMVDv-0hCcVS_REOLP5ewHWi6L71qcXW9Y81SZdh60yHL2ovsy-c9VX9VabnvUdEcv0KhYOr82Jr6SBbxXK76CCzyMh0nD4-8RFVlJ9fClgA_-ktNIo",
     gallery_urls: [
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",

@@ -45,6 +45,81 @@ export interface PackageDetailViewProps {
   schedules: ScheduleOption[];
 }
 
+
+function getDestinationGallery(slug: string, packageSlug: string, title: string) {
+  const text = (slug + " " + packageSlug + " " + title).toLowerCase();
+  if (text.includes("merapi")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1704288038005-d64b6cbbd569?auto=format&fit=crop&w=800&q=80", label: "Puncak Merapi" },
+      { url: "https://images.unsplash.com/photo-1698397201841-3a56c70c96ac?auto=format&fit=crop&w=800&q=80", label: "Jeep 4x4 Hardtop" },
+      { url: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80", label: "Bunker Kaliadem" },
+      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Dokumentasi Trip" },
+    ];
+  }
+  if (text.includes("borobudur")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=800&q=80", label: "Stupa Borobudur" },
+      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Punthuk Setumbu" },
+      { url: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?auto=format&fit=crop&w=800&q=80", label: "Kemegahan Candi" },
+      { url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80", label: "Pemandu Lokal" },
+    ];
+  }
+  if (text.includes("bromo")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80", label: "Sunrise Bromo" },
+      { url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80", label: "Savana Teletubbies" },
+      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Lautan Pasir Bromo" },
+      { url: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80", label: "Armada Jeep 4x4" },
+    ];
+  }
+  if (text.includes("komodo") || text.includes("labuan") || text.includes("bajo") || text.includes("phinisi")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Pulau Padar" },
+      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Kapal Phinisi AC" },
+      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Pink Beach & Manta" },
+      { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Taman Nasional Komodo" },
+    ];
+  }
+  if (text.includes("ijen")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Blue Fire Ijen" },
+      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Danau Kawah Toska" },
+      { url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80", label: "Kawah Wurung Savana" },
+      { url: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80", label: "Puncak Kawah Ijen" },
+    ];
+  }
+  if (text.includes("karimunjawa") || text.includes("karimun")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Spot Terumbu Karang" },
+      { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Pulau Menjangan Cilik" },
+      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Konservasi Penyu" },
+      { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Pantai Ujung Gelam" },
+    ];
+  }
+  if (text.includes("dieng")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1609137144820-2810e75a6c3f?auto=format&fit=crop&w=800&q=80", label: "Golden Sunrise Sikunir" },
+      { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Telaga Warna Dieng" },
+      { url: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?auto=format&fit=crop&w=800&q=80", label: "Kawah Sikidang" },
+      { url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80", label: "Candi Arjuna Dieng" },
+    ];
+  }
+  if (text.includes("derawan") || text.includes("maratua")) {
+    return [
+      { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Kepulauan Derawan" },
+      { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Danau Ubur-ubur Kakaban" },
+      { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Laguna Maratua" },
+      { url: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=80", label: "Hiu Paus Talisayan" },
+    ];
+  }
+  return [
+    { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", label: "Destinasi Eksotis" },
+    { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", label: "Aktivitas Wisata" },
+    { url: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80", label: "Pemandu Resmi" },
+    { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", label: "Dokumentasi Lengkap" },
+  ];
+}
+
 function formatRupiah(amount: number): string {
   return "Rp " + amount.toLocaleString("id-ID");
 }
@@ -306,57 +381,27 @@ export function PackageDetailView({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 lg:col-span-5 gap-space-sm h-full">
-                <div className="relative rounded-xl overflow-hidden group h-36 md:h-44 lg:h-full shadow-sm">
-                  <img
-                    alt="Gallery 1"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white font-caption text-caption text-[11px]">
-                    Armada Jeep 4x4
+              {(() => {
+                const dynamicMedia = getDestinationGallery(slug, packageSlug, pkg.title);
+                return (
+                  <div className="grid grid-cols-2 lg:col-span-5 gap-space-sm h-full">
+                    {dynamicMedia.map((media, mIdx) => (
+                      <div key={mIdx} className="relative rounded-xl overflow-hidden group h-36 md:h-44 lg:h-full shadow-sm">
+                        <img
+                          alt={media.label}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          src={media.url}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/65 backdrop-blur-sm rounded text-white font-caption text-caption text-[11px] font-semibold">
+                          {media.label}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-                <div className="relative rounded-xl overflow-hidden group h-36 md:h-44 lg:h-full shadow-sm">
-                  <img
-                    alt="Gallery 2"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white font-caption text-caption text-[11px]">
-                    Destinasi Terverifikasi
-                  </div>
-                </div>
-                <div className="relative rounded-xl overflow-hidden group h-36 md:h-44 lg:h-full shadow-sm">
-                  <img
-                    alt="Gallery 3"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=800&q=80"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white font-caption text-caption text-[11px]">
-                    Pemandu Lisensi HPI
-                  </div>
-                </div>
-                <div className="relative rounded-xl overflow-hidden group h-36 md:h-44 lg:h-full shadow-sm cursor-pointer">
-                  <img
-                    alt="Gallery 4"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
-                    <MaterialIcon name="photo_library" className="text-2xl" />
-                    <span className="font-caption text-caption font-bold mt-1">Dokumentasi</span>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           </section>
 
@@ -548,37 +593,40 @@ export function PackageDetailView({
               </div>
 
               {/* RIGHT COLUMN: Interactive Booking Card (5 Columns) */}
-              <aside className="lg:col-span-5 sticky top-24 flex flex-col gap-space-md">
-                <div className="bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-low shadow-lg flex flex-col gap-space-md">
+              <aside className="lg:col-span-5 lg:sticky lg:top-24 z-20 flex flex-col gap-space-md">
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xl flex flex-col gap-5">
                   {/* Pricing Header */}
-                  <div className="flex items-end justify-between pb-space-sm border-b border-surface-container-low">
+                  <div className="flex items-baseline justify-between pb-4 border-b border-surface-container">
                     <div>
-                      <span className="font-caption text-caption text-on-surface-variant">Harga Mulai</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-headline-md text-headline-md font-bold text-primary">
+                      <span className="text-xs font-medium text-on-surface-variant uppercase tracking-wider block">Harga Mulai</span>
+                      <div className="flex items-baseline gap-2.5 mt-0.5">
+                        <span className="font-headline-md text-2xl lg:text-3xl font-extrabold text-[#ea580c]">
                           {formatRupiah(pricePerPax)}
                         </span>
-                        <span className="font-caption text-caption text-outline line-through text-xs">
+                        <span className="text-sm text-outline line-through">
                           {formatRupiah(originalPrice)}
                         </span>
                       </div>
                     </div>
-                    <span className="font-micro-badge text-micro-badge text-on-surface-variant uppercase font-mono">
-                      Per Orang
+                    <span className="px-2.5 py-1 rounded-full bg-orange-50 text-[#ea580c] font-bold text-xs uppercase tracking-wide">
+                      Per Pax
                     </span>
                   </div>
 
                   {/* Schedule Selector */}
-                  <div className="flex flex-col gap-2">
-                    <label className="font-body-semibold text-body-semibold text-on-surface flex items-center justify-between font-bold">
-                      <span>Pilih Jadwal Keberangkatan</span>
-                      <span className="font-caption text-caption text-primary font-normal text-xs">
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-sm font-bold text-on-surface flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <MaterialIcon name="calendar_today" className="text-base text-primary" />
+                        Pilih Jadwal Keberangkatan
+                      </span>
+                      <span className="text-xs font-semibold text-primary">
                         {schedules.length} Pilihan Batch
                       </span>
                     </label>
 
                     {schedules.length > 0 ? (
-                      <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+                      <div className="flex flex-col gap-2.5 max-h-64 overflow-y-auto pr-1">
                         {schedules.map((schedule) => {
                           const isSelected = schedule.id === selectedScheduleId;
 
@@ -586,20 +634,20 @@ export function PackageDetailView({
                             return (
                               <div
                                 key={schedule.id}
-                                className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low/50 opacity-60 cursor-not-allowed border border-dashed border-outline-variant"
+                                className="flex items-center justify-between p-3.5 rounded-xl bg-surface-container-low/50 opacity-50 cursor-not-allowed border border-dashed border-outline-variant"
                               >
-                                <div className="flex items-center gap-2.5">
-                                  <div className="w-4 h-4 rounded-full border border-outline" />
+                                <div className="flex items-center gap-3">
+                                  <div className="w-4 h-4 rounded-full border-2 border-outline" />
                                   <div className="flex flex-col">
-                                    <span className="font-body-semibold text-body-semibold text-outline font-bold">
+                                    <span className="text-sm font-semibold text-outline">
                                       {schedule.dateText}
                                     </span>
-                                    <span className="font-caption text-[11px] text-outline">
+                                    <span className="text-xs text-outline">
                                       {schedule.departureTime}
                                     </span>
                                   </div>
                                 </div>
-                                <span className="px-2 py-0.5 rounded-full bg-surface-container-highest text-outline font-micro-badge text-micro-badge font-bold">
+                                <span className="px-2.5 py-0.5 rounded-full bg-surface-container-highest text-outline text-xs font-bold">
                                   {schedule.statusBadge}
                                 </span>
                               </div>
@@ -607,44 +655,42 @@ export function PackageDetailView({
                           }
 
                           return (
-                            <label
+                            <div
                               key={schedule.id}
                               onClick={() => handleSelectSchedule(schedule)}
-                              className={`relative flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors shadow-sm focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 ${
+                              className={`relative flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all border shadow-sm ${
                                 isSelected
-                                  ? "bg-surface-container-high border-2 border-primary"
-                                  : "bg-surface-container-low hover:bg-surface-container"
+                                  ? "bg-orange-50/70 border-orange-500 ring-2 ring-orange-500/30"
+                                  : "bg-surface-container-lowest border-outline-variant/30 hover:border-orange-300 hover:bg-orange-50/20"
                               }`}
                             >
-                              <div className="flex items-center gap-2.5">
-                                <input
-                                  checked={isSelected}
-                                  onChange={() => handleSelectSchedule(schedule)}
-                                  className="w-4 h-4 text-primary focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary"
-                                  name="trip_date"
-                                  type="radio"
-                                />
+                              <div className="flex items-center gap-3">
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  isSelected ? "border-orange-500 bg-orange-500" : "border-outline-variant"
+                                }`}>
+                                  {isSelected && <span className="w-2 h-2 rounded-full bg-white" />}
+                                </div>
                                 <div className="flex flex-col">
-                                  <span className="font-body-semibold text-body-semibold text-on-surface font-bold">
+                                  <span className={`text-sm font-bold ${isSelected ? "text-orange-950" : "text-on-surface"}`}>
                                     {schedule.dateText}
                                   </span>
-                                  <span className="font-caption text-[11px] text-on-surface-variant">
+                                  <span className="text-xs text-on-surface-variant">
                                     {schedule.departureTime}
                                   </span>
                                 </div>
                               </div>
 
                               {schedule.status === "urgent" ? (
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-error-container text-error font-micro-badge text-micro-badge font-bold">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-error animate-ping" />
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold border border-red-200">
+                                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                                   <span>{schedule.statusBadge}</span>
                                 </div>
                               ) : (
-                                <span className="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-micro-badge text-micro-badge">
+                                <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
                                   {schedule.statusBadge}
                                 </span>
                               )}
-                            </label>
+                            </div>
                           );
                         })}
                       </div>
@@ -656,12 +702,12 @@ export function PackageDetailView({
                   </div>
 
                   {/* Pax Counter */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20">
                     <div>
-                      <span className="font-body-semibold text-body-semibold text-on-surface font-bold block">
+                      <span className="text-sm font-bold text-on-surface block">
                         Jumlah Peserta (Pax)
                       </span>
-                      <span className="font-caption text-caption text-on-surface-variant text-[11px]">
+                      <span className="text-xs text-on-surface-variant">
                         Maksimal {maxAllowedPax} tiket per pemesanan
                       </span>
                     </div>
@@ -671,51 +717,55 @@ export function PackageDetailView({
                         onClick={handleDecrementPax}
                         disabled={paxCount <= 1}
                         type="button"
-                        className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center font-bold text-on-surface disabled:opacity-40 hover:bg-surface-container-high transition-colors"
+                        aria-label="Kurangi peserta"
+                        className="w-9 h-9 rounded-lg bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center font-bold text-on-surface disabled:opacity-30 hover:bg-surface-container transition-all shadow-sm active:scale-95"
                       >
-                        -
+                        <MaterialIcon name="remove" className="text-base" />
                       </button>
-                      <span className="font-headline-sm text-headline-sm font-bold w-6 text-center">
+                      <span className="font-headline-sm text-lg font-extrabold w-7 text-center text-primary">
                         {paxCount}
                       </span>
                       <button
                         onClick={handleIncrementPax}
                         disabled={paxCount >= maxAllowedPax}
                         type="button"
-                        className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center font-bold text-on-surface disabled:opacity-40 hover:bg-surface-container-high transition-colors"
+                        aria-label="Tambah peserta"
+                        className="w-9 h-9 rounded-lg bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center font-bold text-on-surface disabled:opacity-30 hover:bg-surface-container transition-all shadow-sm active:scale-95"
                       >
-                        +
+                        <MaterialIcon name="add" className="text-base" />
                       </button>
                     </div>
                   </div>
 
                   {/* Total calculation */}
-                  <div className="pt-2 border-t border-surface-container-low flex items-center justify-between">
+                  <div className="pt-3 border-t border-surface-container flex items-center justify-between">
                     <div>
-                      <span className="font-caption text-caption text-on-surface-variant">Estimasi Total</span>
-                      <div className="font-headline-sm text-headline-sm font-bold text-primary">
+                      <span className="text-xs text-on-surface-variant font-medium block">Total Pembayaran</span>
+                      <div className="font-headline-md text-2xl font-black text-primary">
                         {formatRupiah(subtotal)}
                       </div>
                     </div>
-                    <span className="text-xs text-on-surface-variant">
-                      {paxCount} Peserta x {formatRupiah(pricePerPax)}
+                    <span className="text-xs text-on-surface-variant font-medium bg-surface-container px-2.5 py-1 rounded-md">
+                      {paxCount} Pax x {formatRupiah(pricePerPax)}
                     </span>
                   </div>
 
-                  {/* Booking CTA */}
+                  {/* Booking CTA Button (Prominent & High Converting) */}
                   <button
                     onClick={handleBooking}
                     disabled={!selectedSchedule || selectedSchedule.isSoldOut}
                     type="button"
-                    className="w-full py-3.5 px-4 rounded-xl bg-primary hover:bg-primary-container disabled:bg-surface-container disabled:text-outline text-on-primary font-body-semibold text-body-md shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer font-bold"
+                    className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-bold text-base shadow-lg hover:shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                   >
-                    <MaterialIcon name="book_online" className="text-xl" />
-                    <span>Lanjut Pemesanan &amp; Kunci Kursi</span>
+                    <MaterialIcon name="confirmation_number" className="text-xl" />
+                    <span>Pesan Sekarang</span>
+                    <MaterialIcon name="arrow_forward" className="text-xl ml-1" />
                   </button>
 
-                  <p className="text-[11px] text-center text-on-surface-variant">
-                    Pembayaran aman dengan QRIS &amp; Transfer Bank. Garansi uang kembali bila trip dibatalkan.
-                  </p>
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-on-surface-variant text-center">
+                    <MaterialIcon name="verified_user" className="text-sm text-emerald-600 shrink-0" />
+                    <span>Garansi Escrow Nusabook. Aman &amp; Bebas Overbooking.</span>
+                  </div>
                 </div>
               </aside>
             </div>
@@ -771,10 +821,11 @@ export function PackageDetailView({
           onClick={handleBooking}
           disabled={!selectedSchedule || selectedSchedule.isSoldOut}
           type="button"
-          className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container disabled:bg-surface-container disabled:text-outline text-on-primary font-body-semibold text-sm font-bold shadow-md transition-all flex items-center gap-1.5 shrink-0"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-bold text-sm shadow-md transition-all flex items-center gap-1.5 shrink-0"
         >
-          <MaterialIcon name="book_online" className="text-lg" />
+          <MaterialIcon name="confirmation_number" className="text-lg" />
           <span>Pesan Sekarang</span>
+          <MaterialIcon name="arrow_forward" className="text-lg" />
         </button>
       </div>
     </div>
