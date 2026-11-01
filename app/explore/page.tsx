@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
+import { CityChips } from "@/components/marketplace/city-chips";
+import { PartnerShowcase } from "@/components/marketplace/partner-showcase";
 
 // ─── Calendar Helpers ──────────────────────────────────────────────────────
 const MONTH_NAMES = [
@@ -91,6 +93,69 @@ interface ExplorePackage {
 }
 
 const EXPLORE_PACKAGES: ExplorePackage[] = [
+  {
+    id: "pkg-merapi",
+    title: "Sunrise Lava Tour Merapi & Bunker Kaliadem",
+    slug: "sunrise-lava-tour-merapi",
+    category: "open_trip",
+    categoryLabel: "Open Trip",
+    durationDays: 1,
+    durationNights: 0,
+    durationLabel: "1 Hari / Sunrise",
+    destinationCity: "Yogyakarta",
+    locationDetails: "Kaliurang, Sleman, Yogyakarta",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1200&q=80",
+    thumbnailAlt: "Jeep lava tour Kaliadem berlatar Gunung Merapi yang megah",
+    agentName: "Pesona Merapi Tour & Travel",
+    agentSlug: "pesona-merapi",
+    isVerified: true,
+    nextDepartureDate: "Sabtu, 24 Okt 2026",
+    originalPrice: 300000,
+    pricePerPax: 250000,
+    totalQuota: 12,
+    availableQuota: 6,
+    quotaStatus: "safe",
+    quotaLabel: "Tersisa 6 Kursi Tersedia",
+    quotaBadge: "Auto-Lock",
+    occupancyPercent: 50,
+    rating: 4.9,
+    reviewCount: 310,
+    vehicleType: "Jeep 4x4 Hardtop",
+    facility: "Tiket & Asuransi Masuk",
+  },
+  {
+    id: "pkg-borobudur",
+    title: "Private Premium Trip Candi Borobudur & Punthuk Setumbu",
+    slug: "borobudur-punthuk-setumbu",
+    category: "private_trip",
+    categoryLabel: "Private Trip",
+    durationDays: 1,
+    durationNights: 0,
+    durationLabel: "1 Hari",
+    destinationCity: "Magelang",
+    locationDetails: "Magelang, Jawa Tengah",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=1200&q=80",
+    thumbnailAlt: "Siluet stupa Candi Borobudur di pagi hari",
+    agentName: "Borobudur Sunrise Tour",
+    agentSlug: "borobudur-sunrise",
+    isVerified: true,
+    nextDepartureDate: "Minggu, 25 Okt 2026",
+    originalPrice: 750000,
+    pricePerPax: 650000,
+    totalQuota: 8,
+    availableQuota: 4,
+    quotaStatus: "safe",
+    quotaLabel: "Tersisa 4 Kursi",
+    quotaBadge: "Private Guide",
+    occupancyPercent: 50,
+    rating: 4.9,
+    reviewCount: 165,
+    vehicleType: "Innova Reborn AC",
+    facility: "Tiket Candi & Guide Lokal",
+  },
+
   {
     id: "pkg-1",
     title: "Open Trip Bromo Sunrise & Savana Teletubbies 1D",
@@ -327,7 +392,7 @@ export default function MarketplaceExplorePage() {
   }, [calOpen]);
 
   const departureDateLabel = dateStart && dateEnd
-    ? `${formatShort(dateStart)} – ${formatShort(dateEnd)}`
+    ? `${formatShort(dateStart)} s/d ${formatShort(dateEnd)}`
     : dateStart ? formatShort(dateStart) : "Pilih Jadwal";
 
   // Build calendar grid days
@@ -390,15 +455,22 @@ export default function MarketplaceExplorePage() {
 
       // City filter
       if (selectedCity && selectedCity !== "all") {
-        const cityMap: Record<string, string[]> = {
-          "mlg-sby": ["malang", "surabaya"],
-          bwx: ["banyuwangi"],
-          "smg-jpr": ["semarang", "jepara"],
-          lbj: ["labuan bajo"],
-          "yog-wsb": ["yogyakarta", "wonosobo"],
+                const cityMap: Record<string, string[]> = {
+          magelang: ["magelang", "borobudur"],
+          bromo: ["bromo", "malang", "probolinggo"],
+          malang: ["malang", "surabaya", "bromo"],
+          banyuwangi: ["banyuwangi", "ijen"],
+          dieng: ["dieng", "wonosobo"],
+          yogyakarta: ["yogyakarta", "jogja", "sleman"],
+          "labuan bajo": ["labuan bajo", "komodo", "flores"],
+          "mlg-sby": ["malang", "surabaya", "bromo"],
+          bwx: ["banyuwangi", "ijen"],
+          "smg-jpr": ["semarang", "jepara", "karimunjawa"],
+          lbj: ["labuan bajo", "komodo", "flores"],
+          "yog-wsb": ["yogyakarta", "wonosobo", "dieng", "sleman"],
         };
-        const targets = cityMap[selectedCity] || [selectedCity.toLowerCase()];
-        if (!targets.some((c) => pkg.destinationCity.toLowerCase().includes(c))) {
+        const targets = cityMap[selectedCity.toLowerCase()] || [selectedCity.toLowerCase()];
+        if (!targets.some((c) => pkg.destinationCity.toLowerCase().includes(c) || pkg.title.toLowerCase().includes(c) || (pkg.locationDetails || "").toLowerCase().includes(c))) {
           return false;
         }
       }
@@ -1259,33 +1331,7 @@ export default function MarketplaceExplorePage() {
             </div>
           </section>
 
-          {/* QUICK OPERATOR ONBOARDING CALLOUT STRIP */}
-          <section className="w-full bg-primary text-on-primary py-8">
-            <div className="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-1">
-                <h3 className="font-headline-sm text-headline-sm text-surface-container-lowest font-bold">
-                  Apakah Anda Pengelola Tour & Travel Lokal?
-                </h3>
-                <p className="font-body-regular text-body-regular text-primary-fixed-dim">
-                  Tingkatkan penjualan paket wisata dengan sistem kuota digital real-time & sinkronisasi manifest otomatis Nusabook.
-                </p>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <Link
-                  href="/register"
-                  className="px-5 py-2.5 rounded-lg bg-surface-container-lowest text-primary font-body-semibold text-body-semibold hover:bg-surface-container transition-all font-bold"
-                >
-                  Pelajari SaaS Operator
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-5 py-2.5 rounded-lg bg-secondary-container hover:bg-[#e07106] text-surface-container-lowest font-body-semibold text-body-semibold transition-all font-bold"
-                >
-                  Daftar Sebagai Mitra
-                </Link>
-              </div>
-            </div>
-          </section>
+          <PartnerShowcase />
         </div>
       </main>
 
