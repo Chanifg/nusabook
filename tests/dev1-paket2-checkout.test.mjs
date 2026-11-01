@@ -27,3 +27,17 @@ test("Paket 2: Harga dan judul trip diambil secara dinamis dari database/API", (
   );
 });
 
+test("Paket 2: Memiliki sticky bottom checkout bar di layar mobile dan nol tautan mati", () => {
+  const content = fs.readFileSync(
+    "app/(storefront)/[slug]/booking/page.tsx",
+    "utf8"
+  );
+  assert.ok(
+    content.includes("lg:hidden fixed bottom-0") || content.includes("md:hidden fixed bottom-0"),
+    "Tidak ada sticky checkout bar di layar mobile"
+  );
+  assert.ok(!content.includes('href="/terms"'), "Masih ada link mati /terms");
+  assert.ok(!content.includes('href="/privacy"'), "Masih ada link mati /privacy");
+});
+
+

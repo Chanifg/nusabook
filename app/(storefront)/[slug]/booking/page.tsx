@@ -187,10 +187,23 @@ export default function BookingPage() {
       return;
     }
 
+    const cleanPhone = customerWhatsapp.replace(/[\s-]/g, "");
+    if (!/^(\+62|62|08)[0-9]{8,13}$/.test(cleanPhone)) {
+      setErrorMsg("Nomor WhatsApp tidak valid. Gunakan format 08xx atau +62xx.");
+      return;
+    }
+
     for (let i = 0; i < passengers.length; i++) {
       if (!passengers[i].fullName.trim()) {
         setErrorMsg(`Nama lengkap peserta #${i + 1} wajib diisi.`);
         return;
+      }
+      if (passengers[i].idCardNumber && passengers[i].idCardNumber.trim()) {
+        const cleanNik = passengers[i].idCardNumber.trim();
+        if (!/^[0-9]{16}$/.test(cleanNik)) {
+          setErrorMsg(`NIK peserta #${i + 1} harus 16 digit angka.`);
+          return;
+        }
       }
     }
 
@@ -290,7 +303,7 @@ export default function BookingPage() {
       </header>
 
       {/* MAIN CONTAINER */}
-      <main className="w-full pt-16 bg-surface min-h-[calc(100vh-14rem)] flex-1">
+      <main className="w-full pt-16 bg-surface min-h-[calc(100vh-14rem)] flex-1 pb-20 lg:pb-0">
         <form onSubmit={handleSubmit} className="flex flex-col w-full">
           {/* Progress Stepper Tracker Bar */}
           <div className="w-full bg-surface-container-lowest shadow-[0_1px_3px_0_rgba(15,23,42,0.05)]">
@@ -995,14 +1008,10 @@ export default function BookingPage() {
                   </button>
                   <p className="font-caption text-caption text-outline text-center mt-space-sm leading-tight">
                     Dengan melanjutkan, Anda menyetujui{" "}
-                    <Link className="text-primary hover:underline" href="/terms">
-                      Syarat & Ketentuan
-                    </Link>{" "}
-                    serta{" "}
-                    <Link className="text-primary hover:underline" href="/privacy">
-                      Kebijakan Privasi
-                    </Link>{" "}
-                    Nusabook.
+                    <span className="text-primary font-semibold">
+                      Syarat &amp; Ketentuan Layanan
+                    </span>{" "}
+                    serta perlindungan privasi data peserta sesuai UU PDP No. 27/2022.
                   </p>
                 </div>
 
@@ -1022,6 +1031,27 @@ export default function BookingPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* STICKY BOTTOM CHECKOUT BAR FOR MOBILE (< 1024px) */}
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-[11px] text-on-surface-variant font-medium">
+                Total ({pax} Pax)
+              </span>
+              <div className="font-headline-sm text-base sm:text-lg font-bold text-primary">
+                {formatRupiah(subtotal)}
+              </div>
+            </div>
+
+            <button
+              disabled={isPending}
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-secondary-container hover:bg-secondary text-on-secondary font-body-semibold text-sm font-bold shadow-md transition-all flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer"
+            >
+              <span>{isPending ? "Memproses..." : "Lanjut Bayar"}</span>
+              <MaterialIcon name="arrow_forward" className="text-[18px]" />
+            </button>
           </div>
         </form>
       </main>
