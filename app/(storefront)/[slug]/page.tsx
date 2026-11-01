@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { findCatalogAgent } from "@/lib/catalog-data";
 import { formatRupiah } from "@/lib/utils";
 import { MaterialIcon } from "@/components/ui/icon";
 
@@ -28,12 +29,50 @@ export default async function StorefrontPage({
       .eq("is_published", true),
   ]);
 
-  const agentData = agentRes.data as any;
-  if (!agentData) {
-    notFound();
-  }
+  let agentData = agentRes.data as any;
+  let packages: any[] = (pkgRes.data as any[]) || [];
 
-  const packages: any[] = (pkgRes.data as any[]) || [];
+  if (!agentData) {
+    const catalogAgent = findCatalogAgent(slug);
+    if (!catalogAgent) {
+      notFound();
+    }
+    agentData = {
+      business_name: catalogAgent.business_name,
+      city: catalogAgent.city,
+      description: catalogAgent.description,
+      whatsapp_number: catalogAgent.whatsapp_number,
+      bank_name: catalogAgent.bank_name,
+      bank_account_number: catalogAgent.bank_account_number,
+      bank_account_name: catalogAgent.bank_account_name,
+    };
+    if (packages.length === 0) {
+      packages = catalogAgent.packages.map((pkg) => ({
+        id: pkg.id,
+        title: pkg.title,
+        slug: pkg.slug,
+        package_type: pkg.category,
+        category: pkg.category,
+        destination: pkg.destination_city,
+        destination_city: pkg.destination_city,
+        description: pkg.description,
+        thumbnail_url: pkg.thumbnail_url,
+        cover_image_url: pkg.thumbnail_url,
+        price_publish: pkg.pricePerPax,
+        duration_days: pkg.duration_days,
+        trip_schedules: pkg.schedules.map((sch) => ({
+          id: sch.id,
+          price_per_pax: sch.pricePerPax || pkg.pricePerPax,
+          departure_date: sch.departureDate,
+          quota_remaining: sch.availableSeats,
+          total_quota: sch.totalQuota,
+          quota_total: sch.totalQuota,
+          reserved_quota: sch.reservedQuota || 0,
+          booked_quota: sch.bookedQuota || 0,
+        })),
+      }));
+    }
+  }
 
   const businessName = agentData.business_name;
   const city = agentData.city || "";
