@@ -354,6 +354,17 @@ function formatRupiah(amount: number): string {
 export default function MarketplaceExplorePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Navbar scroll listener for transparent-to-solid transition
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Auto-play slide effect every 5 seconds with smooth crossfade blend
   useEffect(() => {
@@ -534,23 +545,41 @@ export default function MarketplaceExplorePage() {
   return (
     <div className="bg-surface font-body-regular text-on-surface antialiased min-h-screen flex flex-col">
       {/* HEADER */}
-      <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+      <header
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+          isScrolled
+            ? "bg-surface/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.06)] border-b border-outline-variant/15"
+            : "bg-transparent shadow-none border-b border-transparent"
+        }`}
+      >
         <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
           {/* LEFT: Logo + Live badge + active page pill */}
           <div className="flex items-center gap-3">
             <Link className="flex items-center gap-space-xs" href="/">
-              <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg">
+              <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg shadow-sm">
                 N
               </div>
-              <span className="font-headline-sm text-headline-sm text-primary font-bold">Nusabook</span>
+              <span
+                className={`font-headline-sm text-headline-sm font-bold transition-colors ${
+                  isScrolled ? "text-primary" : "text-white drop-shadow-sm"
+                }`}
+              >
+                Nusabook
+              </span>
             </Link>
-            <div className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-micro-badge text-micro-badge text-on-surface-variant font-bold">
+            <div
+              className={`hidden md:inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full transition-colors ${
+                isScrolled
+                  ? "bg-surface-container-low text-on-surface-variant"
+                  : "bg-black/40 backdrop-blur-md text-white/90 border border-white/20"
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-micro-badge text-micro-badge font-bold">
                 Live Sync Aktif
               </span>
             </div>
-            <span className="text-outline-variant hidden lg:block">|</span>
+            <span className={isScrolled ? "text-outline-variant hidden lg:block" : "text-white/40 hidden lg:block"}>|</span>
             <Link
               href="/explore"
               className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold transition-all shadow-sm"
@@ -563,7 +592,11 @@ export default function MarketplaceExplorePage() {
           <div className="flex items-center gap-space-md">
             <div className="relative">
               <button
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all"
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                  isScrolled
+                    ? "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                    : "text-white/90 hover:bg-white/15 hover:text-white"
+                }`}
                 type="button"
               >
                 <MaterialIcon name="notifications" className="text-[22px]" />
@@ -576,28 +609,42 @@ export default function MarketplaceExplorePage() {
               <button
                 type="button"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-space-sm pl-space-xs cursor-pointer hover:bg-surface-container-low p-1.5 rounded-xl transition-colors"
+                className={`flex items-center gap-space-sm pl-space-xs cursor-pointer p-1.5 rounded-xl transition-colors ${
+                  isScrolled
+                    ? "hover:bg-surface-container-low text-on-surface"
+                    : "hover:bg-white/15 text-white"
+                }`}
               >
                 <div className="w-8 h-8 rounded-full bg-primary-container text-primary font-bold text-xs flex items-center justify-center shadow-sm">
                   PN
                 </div>
                 <div className="hidden sm:flex flex-col text-left">
-                  <span className="font-body-semibold text-body-semibold text-on-surface leading-tight font-bold">
+                  <span
+                    className={`font-body-semibold text-body-semibold leading-tight font-bold ${
+                      isScrolled ? "text-on-surface" : "text-white drop-shadow-xs"
+                    }`}
+                  >
                     Mitra Agen
                   </span>
-                  <span className="font-caption text-caption text-outline">Pesona Nusantara</span>
+                  <span
+                    className={`font-caption text-caption ${
+                      isScrolled ? "text-outline" : "text-white/75"
+                    }`}
+                  >
+                    Pesona Nusantara
+                  </span>
                 </div>
                 <MaterialIcon
                   name="expand_more"
-                  className={`text-lg text-on-surface-variant transition-transform duration-200 ${
+                  className={`text-lg transition-transform duration-200 ${
                     isProfileOpen ? "rotate-180" : ""
-                  }`}
+                  } ${isScrolled ? "text-on-surface-variant" : "text-white/80"}`}
                 />
               </button>
 
               {/* Profile Dropdown Menu */}
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-2 z-50 text-xs">
+                <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-2 z-50 text-xs text-on-surface">
                   <div className="px-4 py-2.5 border-b border-outline-variant/15">
                     <p className="font-body-semibold text-on-surface font-bold text-xs">
                       Pesona Nusantara Tour
@@ -630,23 +677,12 @@ export default function MarketplaceExplorePage() {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="w-full pt-16 bg-surface min-h-[calc(100vh-14rem)] flex-1">
-        {/* Top Breadcrumb Bar (Matching Etalase Paket) */}
-        <div className="w-full bg-surface-container-low py-space-sm px-6 lg:px-12 border-b border-outline-variant/15">
-          <div className="max-w-7xl mx-auto flex items-center gap-space-xs text-on-surface-variant font-caption text-caption flex-wrap">
-            <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
-              <MaterialIcon name="home" className="text-sm" /> Beranda
-            </Link>
-            <span className="text-outline-variant">/</span>
-            <span className="font-body-semibold text-primary font-bold">Jelajah Wisata Nusantara</span>
-          </div>
-        </div>
-
+      <main className="w-full bg-surface min-h-[calc(100vh-14rem)] flex-1">
         <div className="flex flex-col w-full">
-          {/* HERO BANNER SECTION (EXACT MATCH WITH ETALASE BANNER DIMENSIONS & GRADIENT) */}
+          {/* HERO BANNER SECTION */}
           <section className="relative w-full">
             {/* Cover Banner with Slider */}
-            <div className="w-full h-72 sm:h-80 lg:h-96 relative bg-cover bg-center overflow-hidden">
+            <div className="w-full h-80 sm:h-96 lg:h-[430px] relative bg-cover bg-center overflow-hidden">
               {/* Crossfade Background Carousel */}
               {HERO_SLIDES.map((slide, idx) => {
                 const isActive = currentSlide === idx;
@@ -667,10 +703,10 @@ export default function MarketplaceExplorePage() {
               })}
 
               {/* Exact Gradient Overlay from Etalase: Fades image into surface background */}
-              <div className="absolute inset-0 z-20 bg-gradient-to-t from-surface via-primary/30 to-black/50 pointer-events-none" />
+              <div className="absolute inset-0 z-20 bg-gradient-to-t from-surface via-primary/30 to-black/60 pointer-events-none" />
 
               {/* Top Banner Overlay Controls & Badges */}
-              <div className="relative z-30 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-between items-start pt-6">
+              <div className="relative z-30 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-between items-start pt-20 sm:pt-24">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/90 backdrop-blur-md shadow-sm">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
                   <span className="font-micro-badge text-micro-badge text-primary uppercase font-bold">
