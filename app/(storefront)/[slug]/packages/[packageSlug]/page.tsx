@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { findCatalogPackage } from "@/lib/catalog-data";
+import { bookingStore } from "@/lib/booking-store";
 import {
   PackageDetailView,
   ScheduleOption,
@@ -57,16 +58,19 @@ export default async function PackageDetailPage({
     };
     packageData = {
       ...catalogItem,
-      trip_schedules: catalogItem.schedules.map((s) => ({
-        id: s.id,
-        departure_date: s.departureDate,
-        return_date: s.returnDate,
-        total_quota: s.totalQuota,
-        reserved_quota: s.reservedQuota,
-        booked_quota: s.bookedQuota,
-        price_per_pax: s.pricePerPax,
-        status: s.status,
-      })),
+      trip_schedules: catalogItem.schedules.map((s) => {
+        const liveQ = bookingStore.getScheduleQuota(s.id);
+        return {
+          id: s.id,
+          departure_date: s.departureDate,
+          return_date: s.returnDate,
+          total_quota: liveQ.total,
+          reserved_quota: liveQ.reserved,
+          booked_quota: liveQ.booked,
+          price_per_pax: s.pricePerPax,
+          status: s.status,
+        };
+      }),
     };
   }
 
@@ -77,9 +81,10 @@ export default async function PackageDetailPage({
   // Map dynamic trip schedules
   const rawSchedules = packageData.trip_schedules || [];
   const schedules: ScheduleOption[] = rawSchedules.map((sch: any) => {
+    const liveQ = bookingStore.getScheduleQuota(sch.id);
     const availableSeats = Math.max(
       0,
-      sch.total_quota - sch.reserved_quota - sch.booked_quota
+      liveQ.total - liveQ.reserved - liveQ.booked
     );
     const isSoldOut =
       availableSeats === 0 ||

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MaterialIcon } from "@/components/ui/icon";
@@ -162,16 +162,59 @@ export function PackageDetailView({
 }: PackageDetailViewProps) {
   const router = useRouter();
 
+  const [scheduleList, setScheduleList] = useState<ScheduleOption[]>(schedules);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string>(
     schedules[0]?.id || ""
   );
+
+  useEffect(() => {
+    setScheduleList(schedules);
+  }, [schedules]);
+
+  useEffect(() => {
+    let active = true;
+    async function refreshQuota() {
+      try {
+        const res = await fetch("/api/packages/quota");
+        if (res.ok) {
+          const data = await res.json();
+          if (active && data.schedules) {
+            setScheduleList((prev) =>
+              prev.map((sch) => {
+                const live = data.schedules[sch.id];
+                if (!live) return sch;
+                return {
+                  ...sch,
+                  availableSeats: live.availableSeats,
+                  isSoldOut: live.isSoldOut,
+                  statusBadge: live.statusBadge,
+                  status: live.isSoldOut
+                    ? "sold_out"
+                    : live.availableSeats <= 3
+                    ? "urgent"
+                    : "available",
+                };
+              })
+            );
+          }
+        }
+      } catch {
+        // silent fallback
+      }
+    }
+    refreshQuota();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const [paxCount, setPaxCount] = useState<number>(2);
   const [reviewFilter, setReviewFilter] = useState<"all" | "photo" | "star5">("all");
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const selectedSchedule =
-    schedules.find((s) => s.id === selectedScheduleId) || schedules[0] || null;
+    scheduleList.find((s) => s.id === selectedScheduleId) || scheduleList[0] || null;
 
   const pricePerPax = selectedSchedule?.pricePerPax || 450000;
   const originalPrice = Math.round(pricePerPax * 1.22);
@@ -654,13 +697,13 @@ export function PackageDetailView({
                         Pilih Jadwal Keberangkatan
                       </span>
                       <span className="text-xs font-semibold text-primary">
-                        {schedules.length} Pilihan Batch
+                        {scheduleList.length} Pilihan Batch
                       </span>
                     </label>
 
-                    {schedules.length > 0 ? (
+                    {scheduleList.length > 0 ? (
                       <div className="flex flex-col gap-2.5 max-h-64 overflow-y-auto pr-1">
-                        {schedules.map((schedule) => {
+                        {scheduleList.map((schedule) => {
                           const isSelected = schedule.id === selectedScheduleId;
 
                           if (schedule.isSoldOut) {

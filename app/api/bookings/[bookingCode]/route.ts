@@ -47,9 +47,32 @@ export async function PATCH(
     const status = body?.status || "PAID";
     const paidAt = new Date().toISOString();
 
-    // 1. Update in Supabase
+    // 1. Get current booking to know scheduleId, pax, and previous status
+    let scheduleId = "";
+    let totalPax = 1;
+    let prevStatus = "UNPAID";
+
+    const memoryBooking = bookingStore.getBookingByCode(bookingCode);
+    if (memoryBooking) {
+      scheduleId = memoryBooking.schedule_id;
+      totalPax = memoryBooking.total_pax || 1;
+      prevStatus = memoryBooking.payment_status;
+    }
+
+    // 2. Update in Supabase
     try {
       const supabase = await createClient();
+      const { data: dbBooking } = await (supabase.from("bookings") as any)
+        .select("schedule_id, total_pax, payment_status")
+        .eq("booking_code", bookingCode)
+        .maybeSingle();
+
+      if (dbBooking) {
+        if (!scheduleId && dbBooking.schedule_id) scheduleId = dbBooking.schedule_id;
+        if (dbBooking.total_pax) totalPax = dbBooking.total_pax;
+        if (dbBooking.payment_status) prevStatus = dbBooking.payment_status;
+      }
+
       await (supabase.from("bookings") as any)
         .update({
           payment_status: status,
@@ -57,11 +80,39 @@ export async function PATCH(
           updated_at: paidAt,
         })
         .eq("booking_code", bookingCode);
+
+      // Confirm or release quota in Supabase if not already in target status
+      if (status === "PAID" && prevStatus !== "PAID" && scheduleId) {
+        await (supabase.rpc as any)("confirm_trip_quota", {
+          p_schedule_id: scheduleId,
+          p_pax: totalPax,
+        });
+      } else if (
+        (status === "EXPIRED" || status === "CANCELLED") &&
+        prevStatus === "UNPAID" &&
+        scheduleId
+      ) {
+        await (supabase.rpc as any)("release_trip_quota", {
+          p_schedule_id: scheduleId,
+          p_pax: totalPax,
+        });
+      }
     } catch {
-      // Ignored if local db is offline
+      // Ignored if local db is offline or schedule not present
     }
 
-    // 2. Update in bookingStore
+    // 3. Update quota in bookingStore (idempotent check)
+    if (status === "PAID" && prevStatus !== "PAID" && scheduleId) {
+      bookingStore.confirmQuota(scheduleId, totalPax);
+    } else if (
+      (status === "EXPIRED" || status === "CANCELLED") &&
+      prevStatus === "UNPAID" &&
+      scheduleId
+    ) {
+      bookingStore.releaseQuota(scheduleId, totalPax);
+    }
+
+    // 4. Update in bookingStore
     bookingStore.updateBookingStatus(bookingCode, status, paidAt);
 
     return NextResponse.json({
@@ -69,6 +120,8 @@ export async function PATCH(
       message: "Status pembayaran berhasil diperbarui.",
       status,
       paidAt,
+      scheduleId,
+      totalPax,
     });
   } catch (error) {
     return NextResponse.json(

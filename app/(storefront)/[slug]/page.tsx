@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { findCatalogAgent } from "@/lib/catalog-data";
+import { bookingStore } from "@/lib/booking-store";
 import { formatRupiah } from "@/lib/utils";
 import { MaterialIcon } from "@/components/ui/icon";
 
@@ -60,16 +61,20 @@ export default async function StorefrontPage({
         cover_image_url: pkg.thumbnail_url,
         price_publish: pkg.pricePerPax,
         duration_days: pkg.duration_days,
-        trip_schedules: pkg.schedules.map((sch) => ({
-          id: sch.id,
-          price_per_pax: sch.pricePerPax || pkg.pricePerPax,
-          departure_date: sch.departureDate,
-          quota_remaining: sch.availableSeats,
-          total_quota: sch.totalQuota,
-          quota_total: sch.totalQuota,
-          reserved_quota: sch.reservedQuota || 0,
-          booked_quota: sch.bookedQuota || 0,
-        })),
+        trip_schedules: pkg.schedules.map((sch) => {
+          const liveQ = bookingStore.getScheduleQuota(sch.id);
+          const available = Math.max(0, liveQ.total - liveQ.reserved - liveQ.booked);
+          return {
+            id: sch.id,
+            price_per_pax: sch.pricePerPax || pkg.pricePerPax,
+            departure_date: sch.departureDate,
+            quota_remaining: available,
+            total_quota: liveQ.total,
+            quota_total: liveQ.total,
+            reserved_quota: liveQ.reserved,
+            booked_quota: liveQ.booked,
+          };
+        }),
       }));
     }
   }

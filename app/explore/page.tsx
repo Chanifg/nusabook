@@ -441,8 +441,56 @@ export default function MarketplaceExplorePage() {
     setSortBy("schedule");
   };
 
+  const [liveQuotas, setLiveQuotas] = useState<
+    Record<
+      string,
+      {
+        totalQuota: number;
+        availableQuota: number;
+        bookedQuota: number;
+        reservedQuota: number;
+        isSoldOut: boolean;
+        quotaLabel: string;
+        quotaStatus: "urgent" | "safe" | "warning";
+        occupancyPercent: number;
+      }
+    >
+  >({});
+
+  useEffect(() => {
+    let active = true;
+    async function fetchLiveQuotas() {
+      try {
+        const res = await fetch("/api/packages/quota");
+        if (res.ok) {
+          const data = await res.json();
+          if (active && data.packages) {
+            setLiveQuotas(data.packages);
+          }
+        }
+      } catch {
+        // silent fallback
+      }
+    }
+    fetchLiveQuotas();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const filteredPackages = useMemo(() => {
-    let result = EXPLORE_PACKAGES.filter((pkg) => {
+    let result = EXPLORE_PACKAGES.map((pkg) => {
+      const live = liveQuotas[pkg.slug];
+      if (!live) return pkg;
+      return {
+        ...pkg,
+        totalQuota: live.totalQuota,
+        availableQuota: live.availableQuota,
+        quotaLabel: live.quotaLabel,
+        quotaStatus: live.quotaStatus,
+        occupancyPercent: live.occupancyPercent,
+      };
+    }).filter((pkg) => {
       // Search Query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
