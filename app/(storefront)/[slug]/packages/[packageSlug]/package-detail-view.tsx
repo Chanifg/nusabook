@@ -634,7 +634,6 @@ export function PackageDetailView({
             <span className="font-body-semibold text-body-semibold text-primary font-bold">
               Nusabook UMKM Pariwisata
             </span>
-            <span className="font-caption text-caption text-outline">Program P2MW 2026</span>
           </div>
           <div className="flex gap-space-lg font-caption text-caption">
             <Link className="hover:text-on-surface transition-colors" href="/guide">

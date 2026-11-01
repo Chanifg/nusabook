@@ -1,8 +1,31 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
+
+// ─── Calendar Helpers ──────────────────────────────────────────────────────
+const MONTH_NAMES = [
+  "Januari","Februari","Maret","April","Mei","Juni",
+  "Juli","Agustus","September","Oktober","November","Desember",
+];
+const DAY_LABELS = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+function isInRange(d: Date, start: Date | null, end: Date | null) {
+  if (!start || !end) return false;
+  const t = d.getTime();
+  const s = new Date(start); s.setHours(0,0,0,0);
+  const e = new Date(end);   e.setHours(23,59,59,999);
+  return t >= s.getTime() && t <= e.getTime();
+}
+function formatShort(d: Date) {
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0,3)}`;
+}
 
 const HERO_SLIDES = [
   {
@@ -278,9 +301,55 @@ export default function MarketplaceExplorePage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
-  const [departureDate, setDepartureDate] = useState("18 Okt - 25 Okt");
   const [paxCount, setPaxCount] = useState(2);
   const [selectedTripType, setSelectedTripType] = useState("");
+
+  // Calendar date-range picker
+  const today = new Date();
+  const [calOpen, setCalOpen] = useState(false);
+  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [calMonth, setCalMonth] = useState(today.getMonth());
+  const [dateStart, setDateStart] = useState<Date | null>(new Date(2026, 9, 18));
+  const [dateEnd, setDateEnd]   = useState<Date | null>(new Date(2026, 9, 25));
+  const [hoverDate, setHoverDate] = useState<Date | null>(null);
+  const calRef = useRef<HTMLDivElement>(null);
+
+  // Close calendar on outside click
+  useEffect(() => {
+    if (!calOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (calRef.current && !calRef.current.contains(e.target as Node)) {
+        setCalOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [calOpen]);
+
+  const departureDateLabel = dateStart && dateEnd
+    ? `${formatShort(dateStart)} – ${formatShort(dateEnd)}`
+    : dateStart ? formatShort(dateStart) : "Pilih Jadwal";
+
+  // Build calendar grid days
+  const calDays = useMemo(() => {
+    const first = new Date(calYear, calMonth, 1).getDay();
+    const last  = new Date(calYear, calMonth + 1, 0).getDate();
+    const days: (Date | null)[] = Array(first).fill(null);
+    for (let d = 1; d <= last; d++) days.push(new Date(calYear, calMonth, d));
+    return days;
+  }, [calYear, calMonth]);
+
+  function handleCalDayClick(d: Date) {
+    if (!dateStart || (dateStart && dateEnd)) {
+      // Start new range
+      setDateStart(d);
+      setDateEnd(null);
+    } else {
+      // Complete range
+      if (d < dateStart) { setDateStart(d); setDateEnd(dateStart); }
+      else { setDateEnd(d); setCalOpen(false); }
+    }
+  }
 
   // Filters
   const [verifiedOnly, setVerifiedOnly] = useState(true);
@@ -294,7 +363,8 @@ export default function MarketplaceExplorePage() {
   const resetAllFilters = () => {
     setSearchQuery("");
     setSelectedCity("all");
-    setDepartureDate("18 Okt - 25 Okt");
+    setDateStart(null);
+    setDateEnd(null);
     setPaxCount(2);
     setSelectedTripType("");
     setVerifiedOnly(false);
@@ -395,7 +465,8 @@ export default function MarketplaceExplorePage() {
       {/* HEADER */}
       <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-space-md">
+          {/* LEFT: Logo + Live badge + active page pill */}
+          <div className="flex items-center gap-3">
             <Link className="flex items-center gap-space-xs" href="/">
               <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg">
                 N
@@ -408,28 +479,15 @@ export default function MarketplaceExplorePage() {
                 Live Sync Aktif
               </span>
             </div>
-          </div>
-
-          <nav className="hidden lg:flex items-center gap-space-lg text-sm font-semibold">
+            <span className="text-outline-variant hidden lg:block">|</span>
             <Link
-              className="text-primary font-bold transition-colors"
               href="/explore"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold transition-all shadow-sm"
             >
+              <MaterialIcon name="explore" className="text-[14px]" />
               Jelajah Wisata
             </Link>
-            <Link
-              className="text-on-surface-variant hover:text-on-surface transition-colors"
-              href="/pesona-merapi"
-            >
-              Etalase Paket
-            </Link>
-            <Link
-              className="text-on-surface-variant hover:text-on-surface transition-colors"
-              href="/dashboard"
-            >
-              Operator Backoffice
-            </Link>
-          </nav>
+          </div>
 
           <div className="flex items-center gap-space-md">
             <div className="relative">
@@ -660,18 +718,113 @@ export default function MarketplaceExplorePage() {
                     </div>
                   </div>
 
-                  {/* Tanggal Keberangkatan */}
-                  <div className="lg:col-span-2 flex flex-col gap-1.5">
+                  {/* Tanggal Keberangkatan — Kalender Picker */}
+                  <div className="lg:col-span-2 flex flex-col gap-1.5 relative" ref={calRef}>
                     <label className="font-micro-badge text-micro-badge text-on-surface-variant uppercase tracking-wider flex items-center gap-1 font-bold">
                       <MaterialIcon name="calendar_today" className="text-[15px] text-primary" />
                       Jadwal Trip
                     </label>
-                    <input
-                      className="w-full bg-surface-container-low text-on-surface font-body-regular text-body-regular rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all cursor-pointer"
-                      type="text"
-                      value={departureDate}
-                      onChange={(e) => setDepartureDate(e.target.value)}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setCalOpen((v) => !v)}
+                      className="w-full bg-surface-container-low text-on-surface font-body-regular text-body-regular rounded-lg px-3.5 py-2.5 text-left focus:outline-none focus:ring-2 focus:ring-primary transition-all flex items-center justify-between gap-2"
+                    >
+                      <span className={dateStart ? "text-on-surface" : "text-outline"}>
+                        {departureDateLabel}
+                      </span>
+                      <MaterialIcon name={calOpen ? "keyboard_arrow_up" : "keyboard_arrow_down"} className="text-outline text-[18px] shrink-0" />
+                    </button>
+
+                    {/* Inline Calendar Dropdown */}
+                    {calOpen && (
+                      <div className="absolute top-full left-0 z-50 mt-2 w-72 bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/20 p-4 select-none">
+                        {/* Calendar Header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+                              else setCalMonth(m => m - 1);
+                            }}
+                            className="w-7 h-7 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors"
+                          >
+                            <MaterialIcon name="chevron_left" className="text-base" />
+                          </button>
+                          <span className="font-body-semibold text-on-surface text-sm font-bold">
+                            {MONTH_NAMES[calMonth]} {calYear}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+                              else setCalMonth(m => m + 1);
+                            }}
+                            className="w-7 h-7 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors"
+                          >
+                            <MaterialIcon name="chevron_right" className="text-base" />
+                          </button>
+                        </div>
+
+                        {/* Day Labels */}
+                        <div className="grid grid-cols-7 mb-1">
+                          {DAY_LABELS.map(d => (
+                            <div key={d} className="text-center font-caption text-[10px] text-outline font-bold py-1">{d}</div>
+                          ))}
+                        </div>
+
+                        {/* Day Cells */}
+                        <div className="grid grid-cols-7 gap-y-0.5">
+                          {calDays.map((d, i) => {
+                            if (!d) return <div key={`e-${i}`} />;
+                            const isToday   = isSameDay(d, today);
+                            const isStart   = dateStart && isSameDay(d, dateStart);
+                            const isEnd     = dateEnd   && isSameDay(d, dateEnd);
+                            const inRange   = isInRange(d, dateStart, dateEnd);
+                            const inPreview = !dateEnd && dateStart && hoverDate && isInRange(d, dateStart, hoverDate);
+                            const isPast    = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                            return (
+                              <button
+                                key={d.toISOString()}
+                                type="button"
+                                disabled={isPast}
+                                onClick={() => handleCalDayClick(d)}
+                                onMouseEnter={() => setHoverDate(d)}
+                                onMouseLeave={() => setHoverDate(null)}
+                                className={[
+                                  "h-8 w-full text-[12px] font-body-semibold transition-all rounded-lg",
+                                  isPast ? "text-outline opacity-40 cursor-not-allowed" : "cursor-pointer",
+                                  isStart || isEnd
+                                    ? "bg-primary text-on-primary font-bold shadow-sm"
+                                    : inRange || inPreview
+                                    ? "bg-primary/15 text-primary rounded-none"
+                                    : isToday
+                                    ? "border border-primary text-primary"
+                                    : "hover:bg-surface-container text-on-surface",
+                                  (isStart && (inRange || inPreview)) ? "rounded-l-lg rounded-r-none" : "",
+                                  (isEnd   && (inRange)) ? "rounded-r-lg rounded-l-none" : "",
+                                ].join(" ")}
+                              >
+                                {d.getDate()}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="mt-3 pt-3 border-t border-outline-variant/20 flex items-center justify-between">
+                          <span className="font-caption text-caption text-outline text-[11px]">
+                            {dateStart && !dateEnd ? "Pilih tanggal akhir" : dateStart && dateEnd ? departureDateLabel : "Pilih tanggal mulai"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => { setDateStart(null); setDateEnd(null); }}
+                            className="text-[11px] font-bold text-secondary hover:underline"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Pax Counter */}
@@ -739,9 +892,9 @@ export default function MarketplaceExplorePage() {
 
           {/* 2-COLUMN MAIN CONTENT: FILTER SIDEBAR + TOUR PACKAGES GRID */}
           <section className="max-w-7xl mx-auto px-6 lg:px-12 py-10 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* STICKY FILTER SIDEBAR (LEFT) */}
-              <aside className="lg:col-span-3 lg:sticky lg:top-20 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start lg:h-[calc(100vh-5rem)]">
+              {/* STICKY FILTER SIDEBAR (LEFT) — scrolls independently */}
+              <aside className="lg:col-span-3 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-6 scrollbar-thin scrollbar-thumb-outline-variant/30 scrollbar-track-transparent">
                 <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm space-y-6">
                   {/* Filter Header */}
                   <div className="flex items-center justify-between pb-3">
@@ -843,8 +996,8 @@ export default function MarketplaceExplorePage() {
                 </div>
               </aside>
 
-              {/* RESULTS & TOUR CATALOG (RIGHT) */}
-              <div className="lg:col-span-9 space-y-6">
+              {/* RESULTS & TOUR CATALOG (RIGHT) — scrollable independently */}
+              <div className="lg:col-span-9 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-6 pr-1 scrollbar-thin scrollbar-thumb-outline-variant/30 scrollbar-track-transparent">
                 {/* Header Info Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
                   <div className="flex flex-col">
@@ -1027,7 +1180,7 @@ export default function MarketplaceExplorePage() {
                             </div>
                           </div>
                           <Link
-                            href={`/${pkg.agentSlug}/packages/${pkg.slug}`}
+                            href={`/${pkg.agentSlug}`}
                             className="px-4 py-2 bg-secondary-container hover:bg-[#e07106] text-surface-container-lowest font-body-semibold text-body-semibold rounded-lg shadow-sm transition-all flex items-center gap-1 font-bold"
                           >
                             <span>Pesan Sekarang</span>
