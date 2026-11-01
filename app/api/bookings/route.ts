@@ -45,10 +45,10 @@ export async function POST(request: Request) {
         p_pax: numPax,
       });
 
-      if (!error && typeof data === "boolean") {
-        quotaReserved = data;
+      if (!error && data === true) {
+        quotaReserved = true;
       } else {
-        // Fallback to in-memory atomic quota manager if Supabase is in local/mock mode
+        // Fallback to in-memory atomic quota manager if schedule is not in live DB or DB is offline
         quotaReserved = bookingStore.reserveQuota(scheduleId, numPax);
       }
     } catch {

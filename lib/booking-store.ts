@@ -1,3 +1,4 @@
+import { findCatalogPackageByScheduleId } from "./catalog-data";
 import type { Booking, BookingPassenger } from "@/types/database.types";
 
 export interface BookingWithPassengers extends Booking {
@@ -61,7 +62,16 @@ export const bookingStore = {
     if (pax <= 0) return false;
     let quota = globalStore.__nusabook_quota__!.get(scheduleId);
     if (!quota) {
-      quota = { total: 12, reserved: 0, booked: 0 };
+      const catalogMatch = findCatalogPackageByScheduleId(scheduleId);
+      if (catalogMatch) {
+        quota = {
+          total: catalogMatch.schedule.totalQuota,
+          reserved: catalogMatch.schedule.reservedQuota || 0,
+          booked: catalogMatch.schedule.bookedQuota || 0,
+        };
+      } else {
+        quota = { total: 12, reserved: 0, booked: 0 };
+      }
       globalStore.__nusabook_quota__!.set(scheduleId, quota);
     }
 
