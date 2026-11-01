@@ -318,3 +318,51 @@ test("Dev2-BOUNDARY-02: Manifest subfolder route is intact and untouched", () =>
   );
   assert.ok(manifestExists, "schedules directory must still exist");
 });
+
+// ------------------------------------------------------------------------------
+// DEFINITION OF DONE (DOD) VALIDATIONS
+// ------------------------------------------------------------------------------
+test("Dev2-DOD-01: schedules-list.tsx prevents past dates on departure date inputs and handlers", () => {
+  const src = fs.readFileSync(
+    path.join(ROOT, "components/dashboard/schedules-list.tsx"),
+    "utf-8"
+  );
+  assert.ok(
+    src.includes("formDepartureDate < today"),
+    "Schedule handler must prevent dates earlier than today"
+  );
+  assert.ok(
+    src.includes('min={new Date().toISOString().split("T")[0]}'),
+    "Departure date input must have min attribute set to today"
+  );
+});
+
+test("Dev2-DOD-02: schedules-list.tsx prevents negative and zero quota on inputs and batch generator", () => {
+  const src = fs.readFileSync(
+    path.join(ROOT, "components/dashboard/schedules-list.tsx"),
+    "utf-8"
+  );
+  assert.ok(
+    src.includes("formTotalQuota < 1"),
+    "Schedule handler must reject quota < 1"
+  );
+  assert.ok(
+    src.includes("batchTotalQuota < 1"),
+    "Batch generator must reject quota < 1"
+  );
+  assert.ok(
+    src.includes('min="1"'),
+    "Quota inputs must have min='1' attribute"
+  );
+});
+
+test("Dev2-DOD-03: package-form.tsx enforces positive duration days", () => {
+  const src = fs.readFileSync(
+    path.join(ROOT, "components/dashboard/package-form.tsx"),
+    "utf-8"
+  );
+  assert.ok(
+    src.includes('min="1"'),
+    "Duration days input must have min='1' attribute"
+  );
+});

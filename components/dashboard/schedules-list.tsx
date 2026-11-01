@@ -148,8 +148,13 @@ export function SchedulesList({
       setModalError("Pilih tanggal keberangkatan");
       return;
     }
+    const today = new Date().toISOString().split('T')[0];
+    if (formDepartureDate < today) {
+      setModalError('Tanggal keberangkatan tidak boleh tanggal lampau');
+      return;
+    }
     if (formTotalQuota < 1) {
-      setModalError("Kapasitas kuota minimal 1");
+      setModalError('Kapasitas kuota minimal 1');
       return;
     }
 
@@ -188,6 +193,20 @@ export function SchedulesList({
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSchedule) return;
+
+    if (!formDepartureDate) {
+      setModalError('Pilih tanggal keberangkatan');
+      return;
+    }
+    const today = new Date().toISOString().split('T')[0];
+    if (formDepartureDate < today) {
+      setModalError('Tanggal keberangkatan tidak boleh tanggal lampau');
+      return;
+    }
+    if (formTotalQuota < 1) {
+      setModalError('Kapasitas kuota minimal 1');
+      return;
+    }
 
     setIsSubmitting(true);
     setModalError(null);
@@ -968,6 +987,7 @@ export function SchedulesList({
                   <input
                     type="date"
                     value={formDepartureDate}
+                    min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setFormDepartureDate(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
                     required
@@ -1073,6 +1093,7 @@ export function SchedulesList({
                   <input
                     type="date"
                     value={formDepartureDate}
+                    min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setFormDepartureDate(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-on-surface border border-outline-variant/40 outline-none text-body-regular"
                     required
