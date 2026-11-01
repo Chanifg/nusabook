@@ -636,15 +636,20 @@ export function PackageDetailView({
             </span>
           </div>
           <div className="flex gap-space-lg font-caption text-caption">
-            <Link className="hover:text-on-surface transition-colors" href="/guide">
-              Panduan Operator
+            <Link className="hover:text-on-surface transition-colors" href="/explore">
+              Jelajah Destinasi
             </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/terms">
-              Syarat Escrow DP
+            <Link className="hover:text-on-surface transition-colors" href={`/${slug}`}>
+              Etalase Mitra
             </Link>
-            <Link className="hover:text-on-surface transition-colors" href="/safety">
-              Standar Keselamatan Bahari
-            </Link>
+            <a
+              className="hover:text-on-surface transition-colors"
+              href={waUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Bantuan WhatsApp
+            </a>
           </div>
           <div className="font-caption text-caption text-outline">
             © 2026 Nusabook Indonesia. Hak Cipta Dilindungi.
