@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
+import { createClient } from "@/lib/supabase/client";
 
 interface PassengerInput {
   fullName: string;
@@ -40,8 +41,11 @@ export default function BookingPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const pricePerPax = 450000;
-  const tripTitle = "Open Trip Bromo Golden Sunrise";
+  const [tripTitle, setTripTitle] = useState<string>("Memuat paket wisata...");
+  const [pricePerPax, setPricePerPax] = useState<number>(250000);
+  const [departureDateText, setDepartureDateText] = useState<string>("Sesuai Jadwal Pilihan");
+  const [agentBusinessName, setAgentBusinessName] = useState<string>("Mitra Travel Nusabook");
+  const [meetingPoint, setMeetingPoint] = useState<string>("");
 
   const [passengers, setPassengers] = useState<PassengerInput[]>(() =>
     Array.from({ length: initialPax }, () => ({
@@ -53,6 +57,65 @@ export default function BookingPage() {
       notes: "",
     }))
   );
+
+  // Fetch real trip schedule & package details
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchTripDetails() {
+      try {
+        const supabase = createClient();
+        let query = supabase
+          .from("trip_schedules")
+          .select("*, tour_packages(*, travel_agents(*))");
+
+        if (scheduleId && scheduleId !== "sched-1") {
+          query = query.eq("id", scheduleId);
+        } else {
+          query = query.eq("status", "OPEN").order("departure_date", { ascending: true }).limit(1);
+        }
+
+        const { data: scheduleData } = await query.maybeSingle();
+
+        if (scheduleData && isMounted) {
+          const pkg = (scheduleData as any).tour_packages;
+          const agent = pkg?.travel_agents;
+
+          if (pkg?.title) {
+            setTripTitle(pkg.title);
+          }
+          if (pkg?.meeting_point) {
+            setMeetingPoint(pkg.meeting_point);
+          }
+          if (agent?.business_name) {
+            setAgentBusinessName(agent.business_name);
+          }
+          if (scheduleData.price_per_pax) {
+            setPricePerPax(Number(scheduleData.price_per_pax));
+          }
+          if (scheduleData.departure_date) {
+            const dateObj = new Date(scheduleData.departure_date);
+            if (!isNaN(dateObj.getTime())) {
+              setDepartureDateText(
+                dateObj.toLocaleDateString("id-ID", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              );
+            }
+          }
+        }
+      } catch {
+        // Fallback default retained
+      }
+    }
+
+    fetchTripDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [scheduleId, slug]);
 
   // Adjust passengers list length if pax changes
   useEffect(() => {
@@ -840,7 +903,7 @@ export default function BookingPage() {
                       </h4>
                       <div className="flex items-center gap-1 mt-1">
                         <MaterialIcon name="verified" className="text-[14px] text-primary" />
-                        <span className="font-caption text-caption text-outline truncate">Pesona Nusantara Tour</span>
+                        <span className="font-caption text-caption text-outline truncate">{agentBusinessName}</span>
                       </div>
                     </div>
                   </div>
@@ -851,13 +914,13 @@ export default function BookingPage() {
                       <span className="text-outline flex items-center gap-1">
                         <MaterialIcon name="calendar_today" className="text-[16px]" /> Tanggal Trip
                       </span>
-                      <span className="font-body-semibold text-on-surface font-bold">Min, 18 Okt 2026</span>
+                      <span className="font-body-semibold text-on-surface font-bold">{departureDateText}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-outline flex items-center gap-1">
-                        <MaterialIcon name="schedule" className="text-[16px]" /> Waktu Tempuh
+                        <MaterialIcon name="schedule" className="text-[16px]" /> Waktu Keberangkatan
                       </span>
-                      <span className="font-body-semibold text-on-surface font-bold">00:00 - 13:00 WIB</span>
+                      <span className="font-body-semibold text-on-surface font-bold">Pagi (Sesuai Jadwal)</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-outline flex items-center gap-1">
@@ -871,10 +934,10 @@ export default function BookingPage() {
                       </span>
                       <span className="font-body-semibold text-on-surface truncate ml-2 font-bold">
                         {pickupLocation === "stasiun"
-                          ? "Stasiun Malang Kota Baru"
+                          ? (meetingPoint || "Stasiun / Titik Kumpul Agen")
                           : pickupLocation === "hotel"
-                          ? "Hotel (Malang Kota)"
-                          : "Terminal Arjosari"}
+                          ? "Hotel (Area Kota)"
+                          : "Terminal / Pool Agen"}
                       </span>
                     </div>
                   </div>

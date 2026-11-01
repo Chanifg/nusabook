@@ -11,3 +11,19 @@ test("Paket 2: Halaman booking tidak boleh memiliki data kontak atau peserta har
   assert.ok(!content.includes('"Reza Herdian"'), "Masih ada nama hardcoded Reza Herdian");
   assert.ok(!content.includes('"anindya.paramitha@gmail.com"'), "Masih ada email hardcoded");
 });
+
+test("Paket 2: Harga dan judul trip diambil secara dinamis dari database/API", () => {
+  const content = fs.readFileSync(
+    "app/(storefront)/[slug]/booking/page.tsx",
+    "utf8"
+  );
+  assert.ok(
+    !content.includes('const pricePerPax = 450000;'),
+    "Masih ada harga per pax hardcoded 450000"
+  );
+  assert.ok(
+    !content.includes('const tripTitle = "Open Trip Bromo Golden Sunrise";'),
+    "Masih ada judul trip hardcoded Bromo"
+  );
+});
+
