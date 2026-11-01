@@ -19,18 +19,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Only invoke Supabase auth session update on protected routes or when auth cookies exist
+  // Only invoke Supabase auth session update on strictly protected routes
+  // NEVER block public storefront, explore, package detail, checkout, or e-ticket routes
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/api/admin") ||
-    pathname.startsWith("/bookings");
+    pathname.startsWith("/api/admin");
 
-  const hasAuthCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.startsWith("sb-") || c.name === "user-role");
-
-  if (isProtectedRoute || hasAuthCookie) {
+  if (isProtectedRoute) {
     try {
       return await updateSession(request);
     } catch (error) {
