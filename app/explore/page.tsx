@@ -615,19 +615,7 @@ export default function MarketplaceExplorePage() {
                 Nusabook
               </span>
             </Link>
-            <div
-              className={`hidden md:inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full transition-colors ${
-                isScrolled
-                  ? "bg-surface-container-low text-on-surface-variant"
-                  : "bg-black/40 backdrop-blur-md text-white/90 border border-white/20"
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-micro-badge text-micro-badge font-bold">
-                Live Sync Aktif
-              </span>
-            </div>
-            <span className={isScrolled ? "text-outline-variant hidden lg:block" : "text-white/40 hidden lg:block"}>|</span>
+            
             <Link
               href="/explore"
               className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold transition-all shadow-sm"
@@ -754,13 +742,7 @@ export default function MarketplaceExplorePage() {
               <div className="absolute inset-0 z-20 bg-gradient-to-t from-surface via-primary/30 to-black/60 pointer-events-none" />
 
               {/* Top Banner Overlay Controls & Badges */}
-              <div className="relative z-30 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-between items-start pt-20 sm:pt-24">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/90 backdrop-blur-md shadow-sm">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                  <span className="font-micro-badge text-micro-badge text-primary uppercase font-bold">
-                    Official Nusabook Verified Agency
-                  </span>
-                </div>
+              <div className="relative z-30 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-end items-start pt-20 sm:pt-24">
 
                 {/* Slider Navigation Controls */}
                 <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg font-caption text-caption">

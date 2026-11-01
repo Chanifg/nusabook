@@ -99,13 +99,7 @@ export default async function StorefrontPage({
                 Nusabook
               </span>
             </Link>
-            <div className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-micro-badge text-micro-badge text-on-surface-variant font-bold">
-                Live Sync Aktif
-              </span>
-            </div>
-            <span className="text-outline-variant hidden lg:block">|</span>
+            
             <Link
               href="/explore"
               className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-primary hover:text-on-primary text-xs font-semibold transition-all"
@@ -159,13 +153,7 @@ export default async function StorefrontPage({
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-background via-primary/30 to-black/50" />
-            <div className="relative max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-between items-start pt-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface/90 backdrop-blur-md shadow-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                <span className="font-micro-badge text-micro-badge text-primary uppercase font-bold">
-                  Official Nusabook Verified Agency
-                </span>
-              </div>
+            <div className="relative max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-12 flex justify-end items-start pt-6">
               <div className="hidden sm:flex items-center gap-2 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg font-caption text-caption">
                 <MaterialIcon name="photo_camera" className="text-sm text-secondary-fixed" />
                 <span>Basecamp: {city}</span>
