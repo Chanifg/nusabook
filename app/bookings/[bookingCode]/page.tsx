@@ -38,6 +38,14 @@ export default function ETicketPage({
   const { bookingCode } = use(params);
   const [downloading, setDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [rating, setRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [selectedReviewTags, setSelectedReviewTags] = useState<string[]>([
+    "Tour Leader Ramah",
+    "Tepat Waktu",
+  ]);
+  const [reviewComment, setReviewComment] = useState<string>("");
+  const [isReviewSubmitted, setIsReviewSubmitted] = useState<boolean>(false);
 
   // Dynamic booking state
   const [customerName, setCustomerName] = useState<string>("Tamu Nusabook");
@@ -906,6 +914,146 @@ export default function ETicketPage({
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Section 4.5: Form Ulasan & Penilaian Pasca-Trip */}
+            <div className="w-full bg-surface-container-lowest rounded-xl shadow-md border border-slate-200/80 p-6 flex flex-col gap-4 print:hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-container-low pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                    <MaterialIcon name="grade" className="text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-on-surface text-base">
+                      Ulasan &amp; Penilaian Pasca-Trip
+                    </h3>
+                    <p className="text-xs text-on-surface-variant">
+                      Bagikan pengalaman nyata Anda bersama operator resmi {operatorName}.
+                    </p>
+                  </div>
+                </div>
+                <span className="bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full self-start sm:self-auto border border-emerald-200 flex items-center gap-1">
+                  <MaterialIcon name="verified" className="text-xs" />
+                  Ulasan Terverifikasi
+                </span>
+              </div>
+
+              {isReviewSubmitted ? (
+                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 font-bold">
+                    <MaterialIcon name="check" className="text-lg" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-emerald-900 text-sm block">
+                      Terima kasih atas ulasan bintang {rating} Anda!
+                    </span>
+                    <span className="text-xs text-emerald-800">
+                      Ulasan Anda telah dipublikasikan di halaman katalog {operatorName} untuk membantu wisatawan lain.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setIsReviewSubmitted(true);
+                  }}
+                  className="flex flex-col gap-4"
+                >
+                  {/* Star Rating Interactive Bar */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      Beri Skor Pengalaman (1 s/d 5 Bintang):
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const isFilled = (hoverRating || rating) >= star;
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            className="p-1 text-2xl transition-transform hover:scale-110 cursor-pointer"
+                            aria-label={"Beri " + star + " bintang"}
+                          >
+                            <span className={isFilled ? "text-amber-400" : "text-slate-300"}>
+                              ★
+                            </span>
+                          </button>
+                        );
+                      })}
+                      <span className="text-xs font-bold text-slate-700 ml-2">
+                        {rating === 5 ? "Sangat Memuaskan (5.0)" : rating === 4 ? "Bagus (4.0)" : rating === 3 ? "Cukup (3.0)" : "Perlu Evaluasi"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Highlight Chips */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      Aspek yang Paling Memuaskan:
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {[
+                        "Tour Leader Ramah",
+                        "Tepat Waktu",
+                        "Armada Jeep Prima",
+                        "Rute & Spot Indah",
+                        "Dokumentasi Keren",
+                        "Snack & Air Mineral Cukup",
+                      ].map((tag) => {
+                        const isSelected = selectedReviewTags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              setSelectedReviewTags((prev) =>
+                                isSelected
+                                  ? prev.filter((t) => t !== tag)
+                                  : [...prev, tag]
+                              );
+                            }}
+                            className={"px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer " + (
+                              isSelected
+                                ? "bg-primary text-on-primary shadow-xs font-bold"
+                                : "bg-surface-container hover:bg-surface-container-high text-on-surface-variant border border-outline-variant/30"
+                            )}
+                          >
+                            {tag}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Comment Textarea */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      Ceritakan Pengalaman Anda (Opsional):
+                    </span>
+                    <textarea
+                      rows={3}
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Bagaimana pelayanan driver, pemandu, dan kondisi destinasi selama perjalanan?"
+                      className="w-full rounded-xl border border-outline-variant/40 p-3 text-xs text-on-surface bg-surface-container-low focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end pt-1">
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-on-primary text-xs font-bold shadow-sm transition-all cursor-pointer active:scale-95"
+                    >
+                      <MaterialIcon name="send" className="text-sm" />
+                      <span>Kirim Ulasan Terverifikasi</span>
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
 
             {/* Section 5: Bottom Navigation / Action Links */}

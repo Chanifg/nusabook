@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MaterialIcon } from "@/components/ui/icon";
 import { CityChips } from "@/components/marketplace/city-chips";
 
@@ -352,8 +353,12 @@ function formatRupiah(amount: number): string {
 }
 
 export default function MarketplaceExplorePage() {
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
+  const [trackInput, setTrackInput] = useState("");
+  const [trackError, setTrackError] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Navbar scroll listener for transparent-to-solid transition
@@ -623,6 +628,22 @@ export default function MarketplaceExplorePage() {
               <MaterialIcon name="explore" className="text-[14px]" />
               Jelajah Wisata
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setIsTrackModalOpen(true);
+                setTrackError("");
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                isScrolled
+                  ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
+                  : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30"
+              }`}
+              title="Lacak atau Buka Kembali E-Tiket Anda"
+            >
+              <MaterialIcon name="confirmation_number" className="text-sm" />
+              <span>Cek Tiket Saya</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-space-md">
@@ -779,14 +800,13 @@ export default function MarketplaceExplorePage() {
 
             {/* Floating Card Content (Overlapping the banner, matching Etalase -mt-20 sm:-mt-24) */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 -mt-20 sm:-mt-24 relative z-30">
-              <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-xl border border-outline-variant/20 mb-8">
-                {/* Advanced Search Filter Bar Panel */}
-                {/* Trip Type Tabs */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4">
+              <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-[0_10px_30px_rgba(15,23,42,0.07)] border border-slate-200/70 mb-8">
+                {/* 1. Kategori Trip Tabs */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 border-b border-slate-100">
                   {[
-                    { id: "", label: "Semua Tipe", icon: "explore" },
-                    { id: "open_trip", label: "Open Trip (Gabungan)", icon: "groups" },
-                    { id: "private_trip", label: "Private Trip (Eksklusif)", icon: "stars" },
+                    { id: "", label: "Semua Kategori", icon: "travel_explore" },
+                    { id: "open_trip", label: "Open Trip Gabungan", icon: "groups" },
+                    { id: "private_trip", label: "Private Trip Eksklusif", icon: "stars" },
                     { id: "family", label: "Family & Outing", icon: "family_restroom" },
                   ].map((tab) => {
                     const isActive = selectedTripType === tab.id;
@@ -794,229 +814,228 @@ export default function MarketplaceExplorePage() {
                       <button
                         key={tab.id}
                         onClick={() => setSelectedTripType(tab.id)}
-                        className={`px-4 py-2 rounded-lg font-body-semibold text-body-semibold transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap ${
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                           isActive
-                            ? "bg-primary text-on-primary"
-                            : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
+                            ? "bg-[#003366] text-white shadow-xs"
+                            : "bg-slate-100/80 hover:bg-slate-200 text-slate-600 border border-slate-200/50"
                         }`}
                         type="button"
                       >
-                        <MaterialIcon name={tab.icon} className="text-[18px]" />
-                        {tab.label}
+                        <MaterialIcon name={tab.icon} className="text-base" />
+                        <span>{tab.label}</span>
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Inputs Form Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-                  {/* Destinasi Input */}
-                  <div className="lg:col-span-4 flex flex-col gap-1.5">
-                    <label className="font-micro-badge text-micro-badge text-on-surface-variant uppercase tracking-wider flex items-center gap-1 font-bold">
-                      <MaterialIcon name="pin_drop" className="text-[15px] text-primary" />
-                      Destinasi Impian
-                    </label>
-                    <div className="relative">
-                      <input
-                        className="w-full bg-surface-container-low text-on-surface font-body-regular text-body-regular rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all"
-                        placeholder="Ketik destinasi tujuan..."
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                      <span className="absolute right-3 top-3 material-symbols-outlined text-outline text-[18px]">
-                        travel_explore
+                {/* 2. Unified Floating Capsule Bar */}
+                <div className="rounded-2xl lg:rounded-full bg-slate-50/90 border border-slate-200 p-1.5 sm:p-2 shadow-inner">
+                  <div className="flex flex-col lg:flex-row items-stretch lg:items-center divide-y lg:divide-y-0 lg:divide-x divide-slate-200 gap-y-2 lg:gap-y-0">
+                    
+                    {/* Segment 1: Destinasi Impian */}
+                    <div className="flex-[1.3] px-4 py-2 hover:bg-white rounded-xl lg:rounded-l-full transition-all group cursor-text">
+                      <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-primary transition-colors flex items-center gap-1">
+                        <MaterialIcon name="pin_drop" className="text-xs text-primary" />
+                        Destinasi Tujuan
                       </span>
-                    </div>
-                  </div>
-
-                  {/* Kota Keberangkatan Dropdown */}
-                  <div className="lg:col-span-3 flex flex-col gap-1.5">
-                    <label className="font-micro-badge text-micro-badge text-on-surface-variant uppercase tracking-wider flex items-center gap-1 font-bold">
-                      <MaterialIcon name="directions_boat" className="text-[15px] text-primary" />
-                      Meeting Point
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={selectedCity}
-                        onChange={(e) => setSelectedCity(e.target.value)}
-                        className="w-full bg-surface-container-low text-on-surface font-body-regular text-body-regular rounded-lg px-3.5 py-2.5 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all cursor-pointer"
-                      >
-                        <option value="all">Semua Kota Asal</option>
-                        <option value="mlg-sby">Malang / Surabaya</option>
-                        <option value="bwx">Banyuwangi</option>
-                        <option value="smg-jpr">Semarang / Jepara</option>
-                        <option value="lbj">Labuan Bajo</option>
-                        <option value="yog-wsb">Yogyakarta / Wonosobo</option>
-                      </select>
-                      <span className="absolute right-3 top-3 material-symbols-outlined text-outline pointer-events-none text-[18px]">
-                        keyboard_arrow_down
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Tanggal Keberangkatan - Kalender Picker */}
-                  <div className="lg:col-span-2 flex flex-col gap-1.5 relative" ref={calRef}>
-                    <label className="font-micro-badge text-micro-badge text-on-surface-variant uppercase tracking-wider flex items-center gap-1 font-bold">
-                      <MaterialIcon name="calendar_today" className="text-[15px] text-primary" />
-                      Jadwal Trip
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setCalOpen((v) => !v)}
-                      className="w-full bg-surface-container-low text-on-surface font-body-regular text-body-regular rounded-lg px-3.5 py-2.5 text-left focus:outline-none focus:ring-2 focus:ring-primary transition-all flex items-center justify-between gap-2"
-                    >
-                      <span className={dateStart ? "text-on-surface" : "text-outline"}>
-                        {departureDateLabel}
-                      </span>
-                      <MaterialIcon name={calOpen ? "keyboard_arrow_up" : "keyboard_arrow_down"} className="text-outline text-[18px] shrink-0" />
-                    </button>
-
-                    {/* Inline Calendar Dropdown */}
-                    {calOpen && (
-                      <div className="absolute top-full left-0 z-50 mt-2 w-72 bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/20 p-4 select-none">
-                        {/* Calendar Header */}
-                        <div className="flex items-center justify-between mb-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
-                              else setCalMonth(m => m - 1);
-                            }}
-                            className="w-7 h-7 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors"
-                          >
-                            <MaterialIcon name="chevron_left" className="text-base" />
-                          </button>
-                          <span className="font-body-semibold text-on-surface text-sm font-bold">
-                            {MONTH_NAMES[calMonth]} {calYear}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
-                              else setCalMonth(m => m + 1);
-                            }}
-                            className="w-7 h-7 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors"
-                          >
-                            <MaterialIcon name="chevron_right" className="text-base" />
-                          </button>
-                        </div>
-
-                        {/* Day Labels */}
-                        <div className="grid grid-cols-7 mb-1">
-                          {DAY_LABELS.map(d => (
-                            <div key={d} className="text-center font-caption text-[10px] text-outline font-bold py-1">{d}</div>
-                          ))}
-                        </div>
-
-                        {/* Day Cells */}
-                        <div className="grid grid-cols-7 gap-y-0.5">
-                          {calDays.map((d, i) => {
-                            if (!d) return <div key={`e-${i}`} />;
-                            const isToday   = isSameDay(d, today);
-                            const isStart   = dateStart && isSameDay(d, dateStart);
-                            const isEnd     = dateEnd   && isSameDay(d, dateEnd);
-                            const inRange   = isInRange(d, dateStart, dateEnd);
-                            const inPreview = !dateEnd && dateStart && hoverDate && isInRange(d, dateStart, hoverDate);
-                            const isPast    = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                            return (
-                              <button
-                                key={d.toISOString()}
-                                type="button"
-                                disabled={isPast}
-                                onClick={() => handleCalDayClick(d)}
-                                onMouseEnter={() => setHoverDate(d)}
-                                onMouseLeave={() => setHoverDate(null)}
-                                className={[
-                                  "h-8 w-full text-[12px] font-body-semibold transition-all rounded-lg",
-                                  isPast ? "text-outline opacity-40 cursor-not-allowed" : "cursor-pointer",
-                                  isStart || isEnd
-                                    ? "bg-primary text-on-primary font-bold shadow-sm"
-                                    : inRange || inPreview
-                                    ? "bg-primary/15 text-primary rounded-none"
-                                    : isToday
-                                    ? "border border-primary text-primary"
-                                    : "hover:bg-surface-container text-on-surface",
-                                  (isStart && (inRange || inPreview)) ? "rounded-l-lg rounded-r-none" : "",
-                                  (isEnd   && (inRange)) ? "rounded-r-lg rounded-l-none" : "",
-                                ].join(" ")}
-                              >
-                                {d.getDate()}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="mt-3 pt-3 border-t border-outline-variant/20 flex items-center justify-between">
-                          <span className="font-caption text-caption text-outline text-[11px]">
-                            {dateStart && !dateEnd ? "Pilih tanggal akhir" : dateStart && dateEnd ? departureDateLabel : "Pilih tanggal mulai"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => { setDateStart(null); setDateEnd(null); }}
-                            className="text-[11px] font-bold text-secondary hover:underline"
-                          >
-                            Reset
-                          </button>
-                        </div>
+                      <div className="relative mt-0.5">
+                        <input
+                          className="w-full bg-transparent text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none"
+                          placeholder="Ketik destinasi impian..."
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Pax Counter */}
-                  <div className="lg:col-span-1 flex flex-col gap-1.5">
-                    <label className="font-micro-badge text-micro-badge text-on-surface-variant uppercase tracking-wider flex items-center gap-1 font-bold">
-                      <MaterialIcon name="person" className="text-[15px] text-primary" />
-                      Pax
-                    </label>
-                    <div className="flex items-center justify-between bg-surface-container-low rounded-lg px-2.5 py-2">
-                      <button
-                        className="text-primary hover:text-primary-container font-headline-sm leading-none font-bold"
-                        onClick={() => setPaxCount((prev) => Math.max(1, prev - 1))}
-                        type="button"
-                      >
-                        -
-                      </button>
-                      <span className="font-body-semibold text-body-semibold text-on-surface font-bold">
-                        {paxCount}
+                    {/* Segment 2: Meeting Point */}
+                    <div className="flex-1 px-4 py-2 hover:bg-white rounded-xl transition-all cursor-pointer group">
+                      <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-primary transition-colors flex items-center gap-1">
+                        <MaterialIcon name="directions_boat" className="text-xs text-primary" />
+                        Titik Kumpul
+                      </span>
+                      <div className="relative mt-0.5 flex items-center justify-between">
+                        <select
+                          value={selectedCity}
+                          onChange={(e) => setSelectedCity(e.target.value)}
+                          className="w-full bg-transparent text-sm font-bold text-slate-900 focus:outline-none appearance-none cursor-pointer pr-6"
+                        >
+                          <option value="all">Semua Kota Asal</option>
+                          <option value="mlg-sby">Malang / Surabaya</option>
+                          <option value="bwx">Banyuwangi</option>
+                          <option value="smg-jpr">Semarang / Jepara</option>
+                          <option value="lbj">Labuan Bajo</option>
+                          <option value="yog-wsb">Yogyakarta / Wonosobo</option>
+                        </select>
+                        <MaterialIcon name="expand_more" className="text-base text-slate-400 pointer-events-none absolute right-0" />
+                      </div>
+                    </div>
+
+                    {/* Segment 3: Tanggal Keberangkatan */}
+                    <div className="flex-1 px-4 py-2 hover:bg-white rounded-xl transition-all cursor-pointer group relative" ref={calRef}>
+                      <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-primary transition-colors flex items-center gap-1">
+                        <MaterialIcon name="calendar_today" className="text-xs text-primary" />
+                        Jadwal Trip
                       </span>
                       <button
-                        className="text-primary hover:text-primary-container font-headline-sm leading-none font-bold"
-                        onClick={() => setPaxCount((prev) => Math.min(20, prev + 1))}
                         type="button"
+                        onClick={() => setCalOpen((v) => !v)}
+                        className="w-full text-left text-sm font-bold text-slate-900 mt-0.5 flex items-center justify-between cursor-pointer"
                       >
-                        +
+                        <span className="truncate">{departureDateLabel}</span>
+                        <MaterialIcon name={calOpen ? "keyboard_arrow_up" : "keyboard_arrow_down"} className="text-base text-slate-400 shrink-0 ml-1" />
+                      </button>
+
+                      {/* Inline Calendar Dropdown */}
+                      {calOpen && (
+                        <div className="absolute top-full left-0 z-50 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 select-none">
+                          <div className="flex items-center justify-between mb-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+                                else setCalMonth(m => m - 1);
+                              }}
+                              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors"
+                            >
+                              <MaterialIcon name="chevron_left" className="text-base" />
+                            </button>
+                            <span className="text-xs font-bold text-slate-900">
+                              {MONTH_NAMES[calMonth]} {calYear}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+                                else setCalMonth(m => m + 1);
+                              }}
+                              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors"
+                            >
+                              <MaterialIcon name="chevron_right" className="text-base" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-7 mb-1 text-center text-[10px] font-bold text-slate-400">
+                            {DAY_LABELS.map(d => (
+                              <div key={d} className="py-1">{d}</div>
+                            ))}
+                          </div>
+
+                          <div className="grid grid-cols-7 gap-y-0.5">
+                            {calDays.map((d, i) => {
+                              if (!d) return <div key={`e-${i}`} />;
+                              const isToday   = isSameDay(d, today);
+                              const isStart   = dateStart && isSameDay(d, dateStart);
+                              const isEnd     = dateEnd   && isSameDay(d, dateEnd);
+                              const inRange   = isInRange(d, dateStart, dateEnd);
+                              const inPreview = !dateEnd && dateStart && hoverDate && isInRange(d, dateStart, hoverDate);
+                              const isPast    = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                              return (
+                                <button
+                                  key={d.toISOString()}
+                                  type="button"
+                                  disabled={isPast}
+                                  onClick={() => handleCalDayClick(d)}
+                                  onMouseEnter={() => setHoverDate(d)}
+                                  onMouseLeave={() => setHoverDate(null)}
+                                  className={[
+                                    "h-7 w-full text-[11px] font-semibold transition-all rounded-lg",
+                                    isPast ? "text-slate-300 opacity-40 cursor-not-allowed" : "cursor-pointer",
+                                    isStart || isEnd
+                                      ? "bg-primary text-white font-bold shadow-xs"
+                                      : inRange || inPreview
+                                      ? "bg-primary/10 text-primary rounded-none"
+                                      : isToday
+                                      ? "border border-primary text-primary"
+                                      : "hover:bg-slate-100 text-slate-800",
+                                    (isStart && (inRange || inPreview)) ? "rounded-l-lg rounded-r-none" : "",
+                                    (isEnd   && (inRange)) ? "rounded-r-lg rounded-l-none" : "",
+                                  ].join(" ")}
+                                >
+                                  {d.getDate()}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500 font-medium truncate pr-2">
+                              {dateStart && !dateEnd ? "Pilih tgl akhir" : departureDateLabel}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => { setDateStart(null); setDateEnd(null); }}
+                              className="font-bold text-orange-600 hover:underline shrink-0"
+                            >
+                              Reset
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Segment 4: Peserta (Pax) */}
+                    <div className="flex-1 px-4 py-2 hover:bg-white rounded-xl transition-all group">
+                      <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 group-hover:text-primary transition-colors flex items-center gap-1">
+                        <MaterialIcon name="groups" className="text-xs text-primary" />
+                        Jumlah Peserta
+                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <button
+                          type="button"
+                          className="w-6 h-6 rounded-full bg-slate-200/80 hover:bg-slate-300 flex items-center justify-center font-bold text-slate-700 disabled:opacity-30 cursor-pointer text-xs"
+                          onClick={() => setPaxCount((prev) => Math.max(1, prev - 1))}
+                          disabled={paxCount <= 1}
+                          title="Kurangi Pax"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm font-bold text-slate-900 min-w-[45px] text-center">
+                          {paxCount} Pax
+                        </span>
+                        <button
+                          type="button"
+                          className="w-6 h-6 rounded-full bg-slate-200/80 hover:bg-slate-300 flex items-center justify-center font-bold text-slate-700 cursor-pointer text-xs"
+                          onClick={() => setPaxCount((prev) => Math.min(20, prev + 1))}
+                          title="Tambah Pax"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Segment 5: Tombol Cari Kuota */}
+                    <div className="px-2 py-1.5 shrink-0 flex items-center justify-center">
+                      <button
+                        type="button"
+                        className="w-full lg:w-auto h-11 px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl lg:rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer"
+                      >
+                        <MaterialIcon name="search" className="text-lg" />
+                        <span>Cari Kuota</span>
                       </button>
                     </div>
-                  </div>
 
-                  {/* CTA Cari Jadwal */}
-                  <div className="lg:col-span-2">
-                    <button
-                      className="w-full bg-secondary-container hover:bg-[#e07106] active:scale-[0.98] text-surface-container-lowest font-body-semibold text-body-semibold rounded-lg px-4 py-3 flex items-center justify-center gap-2 shadow-md transition-all font-bold"
-                      type="button"
-                    >
-                      <MaterialIcon name="search" className="text-[20px]" />
-                      <span>Cari Kuota</span>
-                    </button>
                   </div>
                 </div>
 
-                {/* Trending Quick Filters */}
-                <div className="mt-4 pt-3 flex flex-wrap items-center gap-2">
-                  <span className="font-caption text-caption text-outline mr-1">Tren Pencarian:</span>
+                {/* 3. Tren Populer */}
+                <div className="mt-3.5 pt-2 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 font-bold text-slate-500 text-[11px] uppercase tracking-wider mr-1">
+                    <MaterialIcon name="local_fire_department" className="text-sm text-orange-500" />
+                    Tren Populer:
+                  </span>
                   {[
-                    { label: "Bromo Sunrise Midnight", query: "Bromo" },
-                    { label: "Phinisi Komodo 3D2N", query: "Komodo" },
-                    { label: "Snorkeling Menjangan", query: "Menjangan" },
+                    { label: "Bromo Sunrise", query: "Bromo" },
+                    { label: "Phinisi Komodo", query: "Komodo" },
                     { label: "Kawah Ijen Blue Fire", query: "Ijen" },
+                    { label: "Snorkeling Menjangan", query: "Menjangan" },
                     { label: "Karimunjawa Bahari", query: "Karimunjawa" },
                   ].map((trend) => (
                     <button
                       key={trend.label}
                       onClick={() => setSearchQuery(trend.query)}
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-caption font-body-regular bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition-colors"
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
                       type="button"
                     >
                       {trend.label}
@@ -1416,6 +1435,102 @@ export default function MarketplaceExplorePage() {
           <div className="font-caption text-caption text-outline">© 2026 Nusabook Indonesia. Hak Cipta Dilindungi.</div>
         </div>
       </footer>
+      {/* Modal Lacak & Cek E-Tiket Saya */}
+      {isTrackModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
+                  <MaterialIcon name="confirmation_number" className="text-lg" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-base">
+                  Cek &amp; Buka E-Tiket Saya
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTrackModalOpen(false);
+                  setTrackError("");
+                }}
+                className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer"
+              >
+                <MaterialIcon name="close" className="text-lg" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const clean = trackInput.trim().toUpperCase();
+                if (!clean) {
+                  setTrackError("Mohon masukkan kode reservasi Anda.");
+                  return;
+                }
+                router.push(`/bookings/${clean}`);
+              }}
+              className="flex flex-col gap-3"
+            >
+              <p className="text-xs text-slate-600">
+                Lupa atau menutup tab tiket Anda? Masukkan <strong>Kode Reservasi</strong> di bawah ini untuk membuka E-Tiket &amp; instruksi keberangkatan.
+              </p>
+
+              <div className="flex flex-col gap-1">
+                <input
+                  type="text"
+                  placeholder="Contoh: NSB-20261018-001"
+                  value={trackInput}
+                  onChange={(e) => setTrackInput(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 p-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary uppercase tracking-wider placeholder:normal-case placeholder:font-normal placeholder:tracking-normal"
+                  required
+                />
+                {trackError && (
+                  <span className="text-xs font-semibold text-rose-600 mt-1">
+                    {trackError}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-slate-500">
+                <span>Coba kode reservasi:</span>
+                <button
+                  type="button"
+                  onClick={() => setTrackInput("NSB-20261018-001")}
+                  className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-primary font-bold cursor-pointer font-mono"
+                >
+                  NSB-20261018-001
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTrackInput("NSB-20261018-QRVM")}
+                  className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-primary font-bold cursor-pointer font-mono"
+                >
+                  NSB-20261018-QRVM
+                </button>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsTrackModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Tutup
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <MaterialIcon name="arrow_forward" className="text-base" />
+                  <span>Buka Tiket</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
