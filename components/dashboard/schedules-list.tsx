@@ -19,6 +19,11 @@ interface SchedulesListProps {
   packages: PackageOption[];
 }
 
+const CAL_MONTH_NAMES = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+];
+
 export function SchedulesList({
   initialSchedules,
   packages,
@@ -31,6 +36,8 @@ export function SchedulesList({
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [packageFilter, setPackageFilter] = useState<string>("ALL");
   const [activeTab, setActiveTab] = useState<"table" | "calendar">("table");
+  const [calMonth, setCalMonth] = useState<number>(9); // 9 = Oktober
+  const [calYear, setCalYear] = useState<number>(2026);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -649,7 +656,196 @@ export function SchedulesList({
         </div>
       </section>
 
-      {/* Table Container */}
+      {/* Calendar Grid View vs Table View */}
+      {activeTab === "calendar" ? (
+        <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col border border-outline-variant/20 p-space-md sm:p-space-lg gap-space-md">
+          {/* Calendar Controls */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md pb-space-md border-b border-surface-container-low">
+            <div className="flex items-center gap-space-sm">
+              <div className="flex items-center bg-surface-container-low rounded-xl p-1 border border-outline-variant/30">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (calMonth === 0) {
+                      setCalMonth(11);
+                      setCalYear((y) => y - 1);
+                    } else {
+                      setCalMonth((m) => m - 1);
+                    }
+                  }}
+                  className="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors"
+                  title="Bulan Sebelumnya"
+                >
+                  <MaterialIcon name="chevron_left" className="text-xl" />
+                </button>
+                <span className="font-headline-sm text-base sm:text-lg font-bold text-on-surface px-3 min-w-[150px] text-center">
+                  {CAL_MONTH_NAMES[calMonth]} {calYear}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (calMonth === 11) {
+                      setCalMonth(0);
+                      setCalYear((y) => y + 1);
+                    } else {
+                      setCalMonth((m) => m + 1);
+                    }
+                  }}
+                  className="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors"
+                  title="Bulan Berikutnya"
+                >
+                  <MaterialIcon name="chevron_right" className="text-xl" />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCalMonth(9);
+                  setCalYear(2026);
+                }}
+                className="px-3 py-1.5 rounded-lg border border-outline-variant/40 hover:bg-surface-container-low text-xs font-semibold text-primary transition-colors"
+              >
+                Reset ke Okt 2026
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap text-xs text-on-surface-variant">
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Kuota Aman
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Kritis (&le; 2 Kursi)
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-400" /> Penuh (Sold Out)
+              </span>
+            </div>
+          </div>
+
+          {/* Calendar Weekday Headers */}
+          <div className="grid grid-cols-7 gap-1 text-center font-caption text-caption uppercase text-on-surface-variant font-bold">
+            {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"].map((dayName) => (
+              <div key={dayName} className="py-2 bg-surface-container-low rounded-lg text-xs">
+                {dayName}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Days Matrix */}
+          {(() => {
+            const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
+            const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+            const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+
+            return (
+              <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                {Array.from({ length: totalCells }).map((_, idx) => {
+                  const dayNum = idx - startOffset + 1;
+                  const isCurrentMonth = dayNum >= 1 && dayNum <= daysInMonth;
+
+                  if (!isCurrentMonth) {
+                    return (
+                      <div
+                        key={idx}
+                        className="min-h-[100px] sm:min-h-[120px] rounded-xl bg-surface-container-low/30 border border-outline-variant/10 p-2 opacity-30"
+                      />
+                    );
+                  }
+
+                  const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+                  const daySchedules = filteredSchedules.filter((s) => s.departure_date === dateStr);
+                  const isToday =
+                    calYear === 2026 && calMonth === 9 && dayNum === 18;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`min-h-[100px] sm:min-h-[120px] rounded-xl border p-2 flex flex-col justify-between transition-all bg-surface-container-lowest ${
+                        isToday
+                          ? "border-primary ring-2 ring-primary/20 bg-primary-fixed/5"
+                          : "border-outline-variant/30 hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            isToday
+                              ? "bg-primary text-on-primary font-black"
+                              : "text-on-surface"
+                          }`}
+                        >
+                          {dayNum}
+                        </span>
+                        {daySchedules.length > 0 && (
+                          <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                            {daySchedules.length} Batch
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-1 overflow-y-auto max-h-[90px]">
+                        {daySchedules.map((sch) => {
+                          const sisa = Math.max(0, sch.total_quota - sch.reserved_quota - sch.booked_quota);
+                          const isFull = sisa === 0 || sch.status === "SOLD_OUT";
+                          const isCritical = !isFull && sisa <= 2;
+
+                          return (
+                            <Link
+                              key={sch.id}
+                              href={`/dashboard/schedules/${sch.id}/manifest`}
+                              className={`p-1.5 rounded-lg border text-left block text-[11px] transition-all hover:scale-[1.02] shadow-xs ${
+                                isFull
+                                  ? "bg-slate-100 border-slate-200 text-slate-700"
+                                  : isCritical
+                                  ? "bg-amber-50 border-amber-200 text-amber-900"
+                                  : "bg-emerald-50 border-emerald-200 text-emerald-900"
+                              }`}
+                              title="Klik untuk membuka Manifes & Presensi Penumpang"
+                            >
+                              <div className="font-bold truncate text-[10px] sm:text-[11px]">
+                                {sch.tour_package?.title || "Paket Wisata"}
+                              </div>
+                              <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold mt-0.5">
+                                <span>00:15 WIB</span>
+                                <span className="font-bold">
+                                  {isFull
+                                    ? "Full"
+                                    : isCritical
+                                    ? `Sisa ${sisa}`
+                                    : `${sch.booked_quota}/${sch.total_quota}`}
+                                </span>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+
+                      {daySchedules.length === 0 && (
+                        <div className="flex items-center justify-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormDepartureDate(dateStr);
+                              setIsAddModalOpen(true);
+                            }}
+                            className="w-full py-1 text-[10px] text-slate-400 hover:text-primary hover:bg-surface-container-low rounded transition-colors flex items-center justify-center gap-1 opacity-0 hover:opacity-100 focus:opacity-100"
+                            title="Buka jadwal di tanggal ini"
+                          >
+                            <MaterialIcon name="add" className="text-xs" />
+                            <span>Buka Slot</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </section>
+      ) : (
       <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col border border-outline-variant/20">
         {/* Table Header Toolbar */}
         <div className="p-space-md bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
@@ -932,6 +1128,7 @@ export function SchedulesList({
           </table>
         </div>
       </section>
+      )}
 
       {/* Modal: Tambah Batch Jadwal */}
       {isAddModalOpen && (

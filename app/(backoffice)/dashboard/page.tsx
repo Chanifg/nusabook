@@ -164,6 +164,14 @@ export default async function DashboardPage() {
 
         {/* Quick Actions Toolbar */}
         <div className="flex items-center gap-space-sm flex-wrap z-10 shrink-0">
+          <a
+            href="/api/financials/export"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-body-semibold text-body-semibold transition-all shadow-sm"
+            title="Unduh Rekap Finansial dan Buku Kas dalam format CSV atau Excel"
+          >
+            <MaterialIcon name="table_chart" className="text-lg text-emerald-600" />
+            Rekap Keuangan (CSV)
+          </a>
           <Link
             href="/dashboard/schedules"
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-body-semibold text-body-semibold transition-all shadow-sm"

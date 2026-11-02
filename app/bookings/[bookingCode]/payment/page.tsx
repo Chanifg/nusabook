@@ -311,8 +311,42 @@ export default function PaymentInstructionPage({
     }
 
     loadBooking();
+
+    // Auto-polling verifikasi mutasi bank / QRIS setiap 4 detik
+    const pollInterval = setInterval(async () => {
+      if (!isMounted) return;
+      try {
+        const supabase = createClient();
+        const { data: checkData } = await supabase
+          .from("bookings")
+          .select("payment_status")
+          .eq("booking_code", bookingCode)
+          .maybeSingle();
+
+        if (checkData && checkData.payment_status === "PAID" && isMounted) {
+          clearInterval(pollInterval);
+          router.push(`/bookings/${bookingCode}`);
+        }
+      } catch {
+        // Fallback polling via API lokal
+        try {
+          const res = await fetch(`/api/bookings/${bookingCode}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.booking && json.booking.payment_status === "PAID" && isMounted) {
+              clearInterval(pollInterval);
+              router.push(`/bookings/${bookingCode}`);
+            }
+          }
+        } catch {
+          // silent fallback
+        }
+      }
+    }, 4000);
+
     return () => {
       isMounted = false;
+      clearInterval(pollInterval);
     };
   }, [bookingCode, router]);
 
@@ -971,6 +1005,14 @@ export default function PaymentInstructionPage({
                       {checkLabel}
                     </span>
                   </button>
+
+                  <div className="flex items-center justify-center gap-2 py-1 text-xs text-slate-500 font-medium">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>Sinkronisasi otomatis aktif: Tiket langsung terbit begitu dana masuk</span>
+                  </div>
 
                   {/* Cancel Button */}
                   <button

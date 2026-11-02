@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PassengerTable, PassengerManifestData } from "@/components/manifest/passenger-table";
 import { PrintButton } from "@/components/manifest/print-button";
+import { BroadcastModal } from "@/components/manifest/broadcast-modal";
 import { MaterialIcon } from "@/components/ui/icon";
 
 interface ManifestPageProps {
@@ -249,20 +250,14 @@ export default async function ManifestPage({ params }: ManifestPageProps) {
                 <span>Unduh CSV</span>
               </a>
 
-              {/* Tombol Broadcast WhatsApp */}
-              <a
-                href={`https://wa.me/?text=Halo%20Peserta%20${encodeURIComponent(
-                  scheduleDetails.title
-                )}%2C%20mohon%20bersiap%20di%20meeting%20point%20${encodeURIComponent(
-                  scheduleDetails.meetingPoint
-                )}.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors shadow-xs"
-              >
-                <MaterialIcon name="chat" className="text-base" />
-                <span>Broadcast WA</span>
-              </a>
+              {/* Tombol Broadcast WhatsApp Interaktif */}
+              <BroadcastModal
+                scheduleTitle={scheduleDetails.title}
+                departureDate={scheduleDetails.departureDate}
+                departureTime={scheduleDetails.departureTime}
+                meetingPoint={scheduleDetails.meetingPoint}
+                passengers={MOCK_PASSENGERS}
+              />
             </div>
           </div>
 
