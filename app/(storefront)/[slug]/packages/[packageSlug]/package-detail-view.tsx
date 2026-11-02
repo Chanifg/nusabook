@@ -149,6 +149,26 @@ function getDestinationGallery(slug: string, packageSlug: string, title: string)
   ];
 }
 
+
+const FAQ_ITEMS = [
+  {
+    q: "Bagaimana kebijakan pembatalan dan pengembalian dana (refund)?",
+    a: "Pembatalan lebih dari 3 hari sebelum jadwal keberangkatan berhak menerima pengembalian dana penuh atau opsi reschedule tanpa biaya tambahan. Pembatalan dalam kurun 1 hingga 3 hari dikenakan biaya administrasi 25%. Pembatalan pada hari H tidak dapat direfund sesuai ketentuan operasional operator.",
+  },
+  {
+    q: "Kapan saya akan dimasukkan ke dalam WhatsApp Group trip?",
+    a: "Tautan undangan WhatsApp Group otomatis tersedia di E-Ticket Anda setelah pembayaran terverifikasi. Tim Tour Leader juga akan menghubungi nomor kontak Anda selambat-lambatnya H-1 keberangkatan pukul 18.00 WIB untuk koordinasi titik kumpul.",
+  },
+  {
+    q: "Apakah paket ini sudah mencakup asuransi perjalanan?",
+    a: "Ya, setiap tiket resmi yang diterbitkan melalui platform Nusabook telah terproteksi asuransi perjalanan resmi Jasa Raharja dan mematuhi regulasi perlindungan data pribadi UU PDP No. 27/2022.",
+  },
+  {
+    q: "Bagaimana jika terjadi cuaca ekstrem atau force majeure?",
+    a: "Keselamatan peserta adalah prioritas utama. Jika terjadi penutupan kawasan wisata oleh pihak berwenang atau cuaca ekstrem, operator akan menjadwalkan ulang trip atau mengembalikan dana sesuai kesepakatan bersama.",
+  },
+];
+
 function formatRupiah(amount: number): string {
   return "Rp " + amount.toLocaleString("id-ID");
 }
@@ -212,6 +232,7 @@ export function PackageDetailView({
   const [reviewFilter, setReviewFilter] = useState<"all" | "photo" | "star5">("all");
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const selectedSchedule =
     scheduleList.find((s) => s.id === selectedScheduleId) || scheduleList[0] || null;
@@ -269,7 +290,10 @@ export function PackageDetailView({
     }
   };
 
-  const subtotal = paxCount * pricePerPax;
+  const rawTotal = paxCount * pricePerPax;
+  const groupDiscountPercent = paxCount >= 5 ? 10 : paxCount >= 3 ? 5 : 0;
+  const groupDiscountAmount = Math.round((rawTotal * groupDiscountPercent) / 100);
+  const subtotal = rawTotal - groupDiscountAmount;
 
   const handleBooking = () => {
     router.push(
@@ -651,6 +675,48 @@ export function PackageDetailView({
                   })()}
                 </div>
 
+                {/* FAQ & Kebijakan Perjalanan Section */}
+                <div className="bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-low shadow-sm">
+                  <div className="flex items-center justify-between mb-space-md">
+                    <h2 className="font-headline-sm text-headline-sm font-bold text-on-surface flex items-center gap-2">
+                      <MaterialIcon name="help_outline" className="text-primary text-xl" />
+                      <span>Pertanyaan Umum (FAQ) &amp; Kebijakan Trip</span>
+                    </h2>
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      Garansi Transparan
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {FAQ_ITEMS.map((item, idx) => {
+                      const isOpen = openFaqIndex === idx;
+                      return (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-outline-variant/30 overflow-hidden transition-all bg-surface-container-lowest"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                            className="w-full p-4 text-left font-body-semibold text-sm font-bold text-on-surface flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer"
+                          >
+                            <span>{item.q}</span>
+                            <MaterialIcon
+                              name={isOpen ? "expand_less" : "expand_more"}
+                              className="text-primary text-xl shrink-0 ml-2"
+                            />
+                          </button>
+                          {isOpen && (
+                            <div className="px-4 pb-4 pt-1 text-xs text-on-surface-variant font-body-regular border-t border-surface-container-low leading-relaxed bg-surface-container-lowest">
+                              {item.a}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Escrow Guarantee Highlight */}
                 <div className="bg-surface-container-low rounded-2xl p-space-md flex items-center gap-4 border border-outline-variant/30">
                   <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0">
@@ -812,6 +878,16 @@ export function PackageDetailView({
                       </button>
                     </div>
                   </div>
+
+                  {groupDiscountAmount > 0 && (
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+                      <span className="flex items-center gap-1.5">
+                        <MaterialIcon name="loyalty" className="text-emerald-600 text-base" />
+                        Diskon Rombongan ({groupDiscountPercent}%)
+                      </span>
+                      <span>-{formatRupiah(groupDiscountAmount)}</span>
+                    </div>
+                  )}
 
                   {/* Total calculation */}
                   <div className="pt-3 border-t border-surface-container flex items-center justify-between">

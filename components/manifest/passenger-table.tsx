@@ -36,6 +36,45 @@ export function PassengerTable({
   const [activeTab, setActiveTab] = useState<"all" | "checked" | "pending">("all");
   const [revealedNiks, setRevealedNiks] = useState<Record<string, boolean>>({});
   const [viewMode, setViewMode] = useState<"auto" | "table" | "card">("auto");
+  const [quickScanCode, setQuickScanCode] = useState("");
+  const [scanFeedback, setScanFeedback] = useState<{ message: string; isSuccess: boolean } | null>(null);
+
+  const handleQuickCheckin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = quickScanCode.trim().toLowerCase();
+    if (!query) return;
+
+    const matched = passengers.find(
+      (p) =>
+        (p.bookingCode && p.bookingCode.toLowerCase() === query) ||
+        (p.idCardNumber && p.idCardNumber.includes(query)) ||
+        p.fullName.toLowerCase().includes(query)
+    );
+
+    if (matched) {
+      if (matched.isCheckedIn) {
+        setScanFeedback({
+          message: `Peserta ${matched.fullName} (${matched.bookingCode || "Booking"}) sudah tercatat presensi sebelumnya.`,
+          isSuccess: false,
+        });
+      } else {
+        const now = new Date().toISOString();
+        handleCheckinToggle(matched.id, true, now);
+        setScanFeedback({
+          message: `Check-in BERHASIL: ${matched.fullName} (${matched.bookingCode || "Tiket"}) telah tercatat hadir!`,
+          isSuccess: true,
+        });
+      }
+    } else {
+      setScanFeedback({
+        message: `Kode tiket atau NIK "${quickScanCode}" tidak ditemukan di manifes jadwal ini.`,
+        isSuccess: false,
+      });
+    }
+
+    setQuickScanCode("");
+    setTimeout(() => setScanFeedback(null), 4000);
+  };
 
   // Handler toggle presensi saat tombol CheckinButton diklik
   const handleCheckinToggle = (
@@ -183,6 +222,49 @@ export function PassengerTable({
             {stats.present} dari {stats.total} peserta siap berangkat
           </p>
         </div>
+      </div>
+
+      {/* Field QR / Kode Booking Quick Check-in Bar */}
+      <div className="bg-surface-container-lowest rounded-xl border border-primary/20 p-4 shadow-sm">
+        <form onSubmit={handleQuickCheckin} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider shrink-0">
+            <MaterialIcon name="qr_code_scanner" className="text-xl" />
+            <span>Check-in Cepat:</span>
+          </div>
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={quickScanCode}
+              onChange={(e) => setQuickScanCode(e.target.value)}
+              placeholder="Scan QR / ketik Kode Booking (misal: NSB-...) atau Nama Peserta..."
+              className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-on-surface"
+            />
+            <MaterialIcon name="search" className="absolute left-2.5 top-2.5 text-base text-outline" />
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary font-bold text-xs sm:text-sm rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <MaterialIcon name="how_to_reg" className="text-base" />
+            <span>Presensi Kilat</span>
+          </button>
+        </form>
+
+        {scanFeedback && (
+          <div
+            className={`mt-3 p-3 rounded-lg text-xs font-bold flex items-center gap-2 animate-fade-in ${
+              scanFeedback.isSuccess
+                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                : "bg-orange-50 text-orange-800 border border-orange-200"
+            }`}
+          >
+            <MaterialIcon
+              name={scanFeedback.isSuccess ? "check_circle" : "info"}
+              className="text-base shrink-0"
+            />
+            <span>{scanFeedback.message}</span>
+          </div>
+        )}
       </div>
 
       {/* Bagian Utama: Tab Filter, Search Bar, & Opsi Tampilan */}

@@ -280,7 +280,10 @@ export default function BookingPage() {
     });
   };
 
-  const subtotal = pax * pricePerPax;
+  const baseSubtotal = pax * pricePerPax;
+  const groupDiscountPercent = pax >= 5 ? 10 : pax >= 3 ? 5 : 0;
+  const groupDiscountAmount = Math.round(baseSubtotal * (groupDiscountPercent / 100));
+  const subtotal = baseSubtotal - groupDiscountAmount;
 
   return (
     <div className="bg-background font-body-regular text-on-surface antialiased min-h-screen flex flex-col">

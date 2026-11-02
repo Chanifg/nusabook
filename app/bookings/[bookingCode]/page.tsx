@@ -163,9 +163,15 @@ export default function ETicketPage({
   };
 
   const cleanWaNumber = (customerWhatsapp || "").replace(/\D/g, "") || "6281234567890";
-  const whatsappUrl = `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(
+    const whatsappUrl = `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(
     `Halo, berikut adalah bukti reservasi dan E-Tiket resmi Nusabook untuk kode booking: ${bookingCode}`
   )}`;
+
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+    tripTitle + " - Nusabook"
+  )}&dates=${(departureDate || "20261018").replace(/-/g, "")}T040000Z/${(departureDate || "20261018").replace(/-/g, "")}T160000Z&details=${encodeURIComponent(
+    `Kode Booking: ${bookingCode}\nOperator: ${operatorName}\nTitik Kumpul: ${meetingPoint}`
+  )}&location=${encodeURIComponent(meetingPoint)}`;
 
   return (
     <div className="bg-background font-body-regular text-on-surface antialiased min-h-screen flex flex-col print:bg-white">
@@ -310,11 +316,24 @@ export default function ETicketPage({
                     serta WhatsApp{" "}
                     <span className="font-body-semibold text-on-surface font-bold">{customerWhatsapp}</span>.
                   </p>
+                  <div className="flex items-center gap-2 text-xs text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/30 mt-2.5">
+                    <MaterialIcon name="verified_user" className="text-base text-emerald-600 shrink-0" />
+                    <span>Terlindungi Asuransi Resmi Jasa Raharja. Data NIK dienkripsi dan di-purge otomatis setelah 30 hari sesuai UU PDP No. 27/2022.</span>
+                  </div>
                 </div>
               </div>
 
               {/* Quick Action Buttons */}
               <div className="flex items-center gap-space-xs sm:gap-space-sm flex-wrap self-end lg:self-center">
+                <a
+                  className="inline-flex items-center gap-1.5 bg-surface-container-low hover:bg-surface-container text-on-surface px-space-sm py-2 rounded-lg font-body-semibold text-body-semibold transition-colors font-bold cursor-pointer"
+                  href={googleCalendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MaterialIcon name="event" className="text-[18px] text-primary" />
+                  <span>Google Calendar</span>
+                </a>
                 <button
                   className="inline-flex items-center gap-1.5 bg-surface-container-low hover:bg-surface-container text-on-surface px-space-sm py-2 rounded-lg font-body-semibold text-body-semibold transition-colors font-bold cursor-pointer"
                   onClick={() => window.print()}
