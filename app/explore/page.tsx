@@ -644,6 +644,18 @@ export default function MarketplaceExplorePage() {
               <MaterialIcon name="confirmation_number" className="text-sm" />
               <span>Cek Tiket Saya</span>
             </button>
+            <Link
+              href="/register"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm ${
+                isScrolled
+                  ? "bg-orange-500 hover:bg-orange-600 text-white"
+                  : "bg-orange-500 hover:bg-orange-600 text-white"
+              }`}
+              title="Pendaftaran Agen Tour & Travel Baru"
+            >
+              <MaterialIcon name="handshake" className="text-sm" />
+              <span>Gabung Mitra</span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-space-md">
@@ -716,6 +728,14 @@ export default function MarketplaceExplorePage() {
                     >
                       <MaterialIcon name="dashboard" className="text-base text-primary" />
                       <span>Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-secondary hover:bg-surface-container-low font-body-semibold transition-colors font-bold"
+                    >
+                      <MaterialIcon name="person_add" className="text-base text-secondary" />
+                      <span>Daftar Mitra Baru</span>
                     </Link>
                     <Link
                       href="/login"
