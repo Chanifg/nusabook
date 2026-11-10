@@ -7,6 +7,7 @@ export async function middleware(request: NextRequest) {
   // Hanya panggil updateSession pada rute privat yang memerlukan autentikasi
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/account") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/api/admin");
 

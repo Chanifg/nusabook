@@ -644,6 +644,17 @@ export default function MarketplaceExplorePage() {
               <MaterialIcon name="confirmation_number" className="text-sm" />
               <span>Cek Tiket Saya</span>
             </button>
+            <Link
+              href="/account"
+              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm ${
+                isScrolled
+                  ? "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+                  : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30"
+              }`}
+            >
+              <MaterialIcon name="person" className="text-sm" />
+              <span>Akun Pelanggan</span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-space-md">

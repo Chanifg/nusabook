@@ -1060,7 +1060,7 @@ export default function ETicketPage({
             <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-space-md pt-space-sm pb-space-lg print:hidden">
               <Link
                 className="inline-flex items-center gap-1.5 text-on-surface-variant hover:text-primary font-body-semibold text-body-semibold transition-colors font-bold"
-                href="/dashboard"
+                href="/account"
               >
                 <MaterialIcon name="receipt_long" className="text-[18px]" />
                 <span>Buka Pesanan Saya & Riwayat Tiket</span>

@@ -6,14 +6,17 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/types/database.types";
 import { MaterialIcon } from "@/components/ui/icon";
+import { saveCustomerSession } from "@/lib/customer-session";
 
 export default function RegisterPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  const [accountType, setAccountType] = useState<"customer" | "agent_owner">("customer");
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Section 1: Account Info
+  // Section 1: Account Info (Shared by Customer & Agent)
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -21,7 +24,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Section 2: Business Info
+  // Section 2: Business Info (Agent Only)
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
   const [isSlugManual, setIsSlugManual] = useState(false);
@@ -40,7 +43,22 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isConfirmPending, setIsConfirmPending] = useState(false);
 
-  // Helper to generate slug from business name
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get("role");
+      if (roleParam === "agent" || roleParam === "agent_owner") {
+        setAccountType("agent_owner");
+      } else if (roleParam === "customer") {
+        setAccountType("customer");
+      }
+      const redirectParam = params.get("redirect");
+      if (redirectParam && redirectParam.startsWith("/")) {
+        setRedirectTarget(redirectParam);
+      }
+    }
+  }, []);
+
   const generateSlug = (text: string) => {
     return text
       .toLowerCase()
@@ -49,16 +67,14 @@ export default function RegisterPage() {
       .replace(/[\s-]+/g, "-");
   };
 
-  // Auto-generate slug if not manually edited
   useEffect(() => {
     if (!isSlugManual && businessName.trim()) {
       setSlug(generateSlug(businessName));
     }
   }, [businessName, isSlugManual]);
 
-  // Check slug availability in database
   useEffect(() => {
-    if (!slug.trim()) {
+    if (accountType !== "agent_owner" || !slug.trim()) {
       setIsSlugAvailable(null);
       return;
     }
@@ -86,9 +102,8 @@ export default function RegisterPage() {
 
     const timeout = setTimeout(checkAvailability, 400);
     return () => clearTimeout(timeout);
-  }, [slug]);
+  }, [slug, accountType]);
 
-  // Step 1 Validation
   const validateStep1 = () => {
     setErrorMessage(null);
     if (!fullName.trim() || !email.trim() || !phoneNumber.trim() || !password || !confirmPassword) {
@@ -121,11 +136,71 @@ export default function RegisterPage() {
     return true;
   };
 
-  // Step 2 Validation & Submit
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
+    // ALUR 1: Pendaftaran Pelanggan / Wisatawan (1 Langkah Langsung Aktif)
+    if (accountType === "customer") {
+      if (!validateStep1()) return;
+      setIsLoading(true);
+
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password,
+          options: {
+            data: {
+              full_name: fullName.trim(),
+              phone_number: phoneNumber.trim(),
+              role: "customer",
+            },
+          },
+        });
+
+        const customerId = authData?.user?.id || `cust-${Date.now()}`;
+
+        if (!authError && authData?.user && authData.session) {
+          await supabase.from("profiles").insert({
+            id: customerId,
+            full_name: fullName.trim(),
+            phone_number: phoneNumber.trim(),
+            role: "customer" as UserRole,
+          });
+        }
+
+        // Save customer session for immediate portal & checkout auto-fill
+        saveCustomerSession({
+          id: customerId,
+          fullName: fullName.trim(),
+          email: email.trim(),
+          phoneNumber: phoneNumber.trim(),
+          role: "customer",
+          city: "Indonesia",
+          whatsappReminderEnabled: true,
+        });
+
+        router.push(redirectTarget || "/account");
+        router.refresh();
+        return;
+      } catch {
+        // Fallback local customer registration
+        saveCustomerSession({
+          id: `cust-${Date.now()}`,
+          fullName: fullName.trim(),
+          email: email.trim(),
+          phoneNumber: phoneNumber.trim(),
+          role: "customer",
+          city: "Indonesia",
+          whatsappReminderEnabled: true,
+        });
+        router.push(redirectTarget || "/account");
+        router.refresh();
+        return;
+      }
+    }
+
+    // ALUR 2: Pendaftaran Mitra Agen Travel (2 Langkah)
     if (step === 1) {
       if (validateStep1()) {
         if (!businessWhatsapp) {
@@ -139,7 +214,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // Step 2 Validations
     if (
       !businessName.trim() ||
       !slug.trim() ||
@@ -162,7 +236,6 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 1. Create user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
@@ -193,7 +266,6 @@ export default function RegisterPage() {
 
       const userId = authData.user.id;
 
-      // 2. Insert into profiles table
       const { error: profileError } = await supabase.from("profiles").insert({
         id: userId,
         full_name: fullName.trim(),
@@ -202,13 +274,11 @@ export default function RegisterPage() {
       });
 
       if (profileError) {
-        console.error("Profile creation error:", profileError);
         setErrorMessage("Gagal membuat profil pengguna. Silakan coba kembali atau hubungi bantuan.");
         setIsLoading(false);
         return;
       }
 
-      // 3. Insert into travel_agents table
       const { error: agentError } = await supabase.from("travel_agents").insert({
         owner_id: userId,
         business_name: businessName.trim(),
@@ -225,13 +295,11 @@ export default function RegisterPage() {
       });
 
       if (agentError) {
-        console.error("Travel agent creation error:", agentError);
         setErrorMessage("Akun pengguna berhasil dibuat, namun data agen travel belum tersimpan. Silakan login ke dashboard untuk melengkapi profil bisnis Anda.");
         setIsLoading(false);
         return;
       }
 
-      // 4. Redirect to dashboard
       router.push("/dashboard");
       router.refresh();
     } catch {
@@ -256,41 +324,83 @@ export default function RegisterPage() {
               Nusabook
             </span>
             <span className="text-[10px] font-bold tracking-wide uppercase text-on-surface-variant">
-              Backoffice Mitra
+              {accountType === "customer" ? "Akun Wisatawan" : "Backoffice Mitra"}
             </span>
           </div>
         </Link>
 
         <h2 className="mt-5 text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-          Pendaftaran Agen Tour & Travel Baru
+          {accountType === "customer"
+            ? "Daftar Akun Wisatawan NusaBook"
+            : "Pendaftaran Agen Tour & Travel Baru"}
         </h2>
         <p className="mt-1.5 text-sm text-on-surface-variant">
-          Langkah mudah mendigitalkan operasional dan storefront wisata Anda dalam 2 tahap.
+          {accountType === "customer"
+            ? "Simpan E-Tiket otomatis, kelola daftar penumpang keluarga, dan nikmati checkout cepat 1-klik."
+            : "Langkah mudah mendigitalkan operasional dan storefront wisata Anda dalam 2 tahap."}
         </p>
 
-        {/* Step Indicator */}
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <div
-            className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-              step === 1
+        {/* Role Switcher */}
+        <div className="mt-6 max-w-md mx-auto grid grid-cols-2 gap-1.5 p-1.5 rounded-xl bg-surface-container">
+          <button
+            type="button"
+            onClick={() => {
+              setAccountType("customer");
+              setStep(1);
+              setErrorMessage(null);
+            }}
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              accountType === "customer"
                 ? "bg-primary text-on-primary shadow-sm"
-                : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            <span>1. Informasi Akun</span>
-            {step === 2 && <MaterialIcon name="check_circle" className="text-xs" />}
-          </div>
-          <div className="h-0.5 w-8 bg-outline-variant/30" />
-          <div
-            className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-              step === 2
+            <MaterialIcon name="person" className="text-base" />
+            <span>Wisatawan (Pelanggan)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAccountType("agent_owner");
+              setStep(1);
+              setErrorMessage(null);
+            }}
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              accountType === "agent_owner"
                 ? "bg-primary text-on-primary shadow-sm"
-                : "bg-surface-container-high text-on-surface-variant"
+                : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            <span>2. Informasi Bisnis</span>
-          </div>
+            <MaterialIcon name="storefront" className="text-base" />
+            <span>Mitra Agen Travel</span>
+          </button>
         </div>
+
+        {/* Step Indicator (Only for Agent 2-Step Registration) */}
+        {accountType === "agent_owner" && (
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <div
+              className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                step === 1
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+              }`}
+            >
+              <span>1. Informasi Akun</span>
+              {step === 2 && <MaterialIcon name="check_circle" className="text-xs" />}
+            </div>
+            <div className="h-0.5 w-8 bg-outline-variant/30" />
+            <div
+              className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                step === 2
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "bg-surface-container-high text-on-surface-variant"
+              }`}
+            >
+              <span>2. Informasi Bisnis</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Form Container */}
@@ -305,7 +415,8 @@ export default function RegisterPage() {
                 Pendaftaran Berhasil!
               </h3>
               <p className="text-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
-                Tautan konfirmasi telah dikirim ke alamat email <span className="font-semibold text-on-surface">{email}</span>. Silakan buka kotak masuk email Anda dan klik tautan untuk mengaktifkan akun sebelum masuk ke panel mitra.
+                Tautan konfirmasi telah dikirim ke alamat email{" "}
+                <span className="font-semibold text-on-surface">{email}</span>. Silakan buka kotak masuk email Anda dan klik tautan untuk mengaktifkan akun.
               </p>
               <div className="pt-4">
                 <Link
@@ -333,7 +444,9 @@ export default function RegisterPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-on-surface uppercase tracking-wider mb-1">
-                        Nama Lengkap Pemilik *
+                        {accountType === "customer"
+                          ? "Nama Lengkap Sesuai KTP *"
+                          : "Nama Lengkap Pemilik *"}
                       </label>
                       <div className="relative rounded-xl shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-on-surface-variant/60">
@@ -344,7 +457,9 @@ export default function RegisterPage() {
                           required
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          placeholder="Budi Santoso"
+                          placeholder={
+                            accountType === "customer" ? "Anindya Paramitha" : "Budi Santoso"
+                          }
                           className="block w-full rounded-xl border border-outline-variant/40 bg-surface pl-11 pr-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
@@ -364,7 +479,11 @@ export default function RegisterPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="budi@travelanda.com"
+                            placeholder={
+                              accountType === "customer"
+                                ? "anindya@gmail.com"
+                                : "budi@travelanda.com"
+                            }
                             className="block w-full rounded-xl border border-outline-variant/40 bg-surface pl-11 pr-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                           />
                         </div>
@@ -372,7 +491,9 @@ export default function RegisterPage() {
 
                       <div>
                         <label className="block text-xs font-semibold text-on-surface uppercase tracking-wider mb-1">
-                          Nomor WhatsApp Pemilik *
+                          {accountType === "customer"
+                            ? "Nomor WhatsApp Aktif *"
+                            : "Nomor WhatsApp Pemilik *"}
                         </label>
                         <div className="relative rounded-xl shadow-sm">
                           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-on-surface-variant/60">
@@ -440,20 +561,44 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div className="pt-4">
+                    {accountType === "customer" && (
+                      <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-start gap-2.5 text-xs text-on-surface-variant">
+                        <MaterialIcon name="verified_user" className="text-primary text-lg shrink-0 mt-0.5" />
+                        <span>
+                          Dengan membuat Akun Wisatawan, seluruh E-Tiket, pengingat WhatsApp H-1, dan daftar penumpang tersimpan Anda akan terhubung secara otomatis.
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="pt-2">
                       <button
                         type="submit"
-                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-sm hover:bg-primary-hover transition"
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-sm hover:bg-primary-hover transition disabled:opacity-60 cursor-pointer"
                       >
-                        <span>Lanjutkan ke Informasi Bisnis</span>
-                        <MaterialIcon name="arrow_forward" className="text-base" />
+                        {isLoading ? (
+                          <>
+                            <MaterialIcon name="progress_activity" className="text-base animate-spin" />
+                            <span>Membuat Akun...</span>
+                          </>
+                        ) : accountType === "customer" ? (
+                          <>
+                            <span>Daftar & Buka Portal Wisatawan</span>
+                            <MaterialIcon name="check_circle" className="text-base" />
+                          </>
+                        ) : (
+                          <>
+                            <span>Lanjutkan ke Informasi Bisnis</span>
+                            <MaterialIcon name="arrow_forward" className="text-base" />
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* STEP 2: Business Info */}
-                {step === 2 && (
+                {/* STEP 2: Business Info (Agent Only) */}
+                {accountType === "agent_owner" && step === 2 && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -537,7 +682,6 @@ export default function RegisterPage() {
                         </div>
                       </div>
 
-                      {/* URL Preview */}
                       <div className="mt-1.5 flex items-center gap-1.5 text-xs text-on-surface-variant bg-surface-container-low border border-outline-variant/30 rounded-lg px-3 py-1.5">
                         <MaterialIcon name="auto_awesome" className="text-sm text-secondary" />
                         <span>Preview Link: </span>
@@ -689,9 +833,9 @@ export default function RegisterPage() {
               {/* Login Link */}
               <div className="mt-6 border-t border-outline-variant/20 pt-6 text-center">
                 <p className="text-sm text-on-surface-variant">
-                  Sudah memiliki akun mitra?{" "}
+                  Sudah memiliki akun?{" "}
                   <Link
-                    href="/login"
+                    href={`/login?role=${accountType === "customer" ? "customer" : "agent"}`}
                     className="font-bold text-secondary hover:underline transition-colors"
                   >
                     Masuk di Sini

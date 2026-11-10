@@ -32,6 +32,10 @@ export default async function BackofficeLayout({
     .eq("id", user.id)
     .maybeSingle();
 
+  if (profile?.role === "customer") {
+    redirect("/account");
+  }
+
   const { data: agent } = await supabase
     .from("travel_agents")
     .select("business_name, slug, is_verified, is_active")

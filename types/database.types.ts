@@ -1,4 +1,4 @@
-export type UserRole = 'superadmin' | 'agent_owner' | 'agent_staff';
+export type UserRole = 'superadmin' | 'agent_owner' | 'agent_staff' | 'customer';
 export type PackageCategory = 'open_trip' | 'private_trip';
 export type ScheduleStatus = 'OPEN' | 'CLOSED' | 'SOLD_OUT' | 'CANCELLED';
 export type BookingStatus = 'UNPAID' | 'PAID' | 'EXPIRED' | 'CANCELLED' | 'REFUNDED';
@@ -222,6 +222,7 @@ export type Database = {
           booking_code: string;
           agent_id: string;
           schedule_id: string;
+          customer_id?: string | null;
           customer_name: string;
           customer_email: string;
           customer_whatsapp: string;
@@ -244,6 +245,7 @@ export type Database = {
           booking_code: string;
           agent_id: string;
           schedule_id: string;
+          customer_id?: string | null;
           customer_name: string;
           customer_email: string;
           customer_whatsapp: string;
@@ -266,6 +268,7 @@ export type Database = {
           booking_code?: string;
           agent_id?: string;
           schedule_id?: string;
+          customer_id?: string | null;
           customer_name?: string;
           customer_email?: string;
           customer_whatsapp?: string;
@@ -282,6 +285,42 @@ export type Database = {
           is_manual_entry?: boolean;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      saved_passengers: {
+        Row: {
+          id: string;
+          customer_id: string;
+          full_name: string;
+          id_card_number: string | null;
+          gender: 'MALE' | 'FEMALE' | null;
+          phone_number: string | null;
+          emergency_contact: string | null;
+          special_notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          full_name: string;
+          id_card_number?: string | null;
+          gender?: 'MALE' | 'FEMALE' | null;
+          phone_number?: string | null;
+          emergency_contact?: string | null;
+          special_notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          full_name?: string;
+          id_card_number?: string | null;
+          gender?: 'MALE' | 'FEMALE' | null;
+          phone_number?: string | null;
+          emergency_contact?: string | null;
+          special_notes?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };

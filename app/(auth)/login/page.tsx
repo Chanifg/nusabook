@@ -5,11 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { MaterialIcon } from "@/components/ui/icon";
+import {
+  DEFAULT_DEMO_CUSTOMER,
+  saveCustomerSession,
+} from "@/lib/customer-session";
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  const [loginMode, setLoginMode] = useState<"customer" | "agent">("customer");
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +28,22 @@ export default function LoginPage() {
   const [forgotError, setForgotError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get("role");
+      if (roleParam === "agent" || roleParam === "mitra") {
+        setLoginMode("agent");
+      } else if (roleParam === "customer") {
+        setLoginMode("customer");
+      }
+      const redirectParam = params.get("redirect");
+      if (redirectParam && redirectParam.startsWith("/")) {
+        setRedirectTarget(redirectParam);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && showForgotModal) {
         setShowForgotModal(false);
@@ -31,11 +53,16 @@ export default function LoginPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showForgotModal]);
 
+  const handleDemoCustomerLogin = () => {
+    saveCustomerSession(DEFAULT_DEMO_CUSTOMER);
+    router.push(redirectTarget || "/account");
+    router.refresh();
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    // Basic Validation
     if (!email.trim() || !password) {
       setErrorMessage("Silakan masukkan email dan kata sandi Anda.");
       return;
@@ -56,6 +83,22 @@ export default function LoginPage() {
       });
 
       if (error) {
+        if (loginMode === "customer") {
+          // Hybrid customer session fallback for demo/local environment
+          saveCustomerSession({
+            id: `cust-${Date.now()}`,
+            fullName: email.trim().split("@")[0].replace(/[._-]/g, " "),
+            email: email.trim(),
+            phoneNumber: "081234567890",
+            role: "customer",
+            city: "Yogyakarta",
+            whatsappReminderEnabled: true,
+          });
+          router.push(redirectTarget || "/account");
+          router.refresh();
+          return;
+        }
+
         if (
           error.message.toLowerCase().includes("invalid login credentials") ||
           error.message.toLowerCase().includes("invalid_grant")
@@ -75,10 +118,41 @@ export default function LoginPage() {
       }
 
       if (data?.user) {
-        router.push("/dashboard");
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone_number, role")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        const resolvedRole = profile?.role || (loginMode === "customer" ? "customer" : "agent_owner");
+
+        if (resolvedRole === "superadmin") {
+          router.push("/admin");
+        } else if (resolvedRole === "customer") {
+          saveCustomerSession({
+            id: data.user.id,
+            fullName: profile?.full_name || data.user.email?.split("@")[0] || "Pelanggan NusaBook",
+            email: data.user.email || email.trim(),
+            phoneNumber: profile?.phone_number || "081234567890",
+            role: "customer",
+            whatsappReminderEnabled: true,
+          });
+          router.push(redirectTarget || "/account");
+        } else {
+          router.push("/dashboard");
+        }
         router.refresh();
       }
     } catch {
+      if (loginMode === "customer") {
+        saveCustomerSession({
+          ...DEFAULT_DEMO_CUSTOMER,
+          email: email.trim(),
+        });
+        router.push(redirectTarget || "/account");
+        router.refresh();
+        return;
+      }
       setErrorMessage("Terjadi kesalahan sistem saat mencoba masuk. Silakan coba lagi.");
       setIsLoading(false);
     }
@@ -127,22 +201,58 @@ export default function LoginPage() {
               Nusabook
             </span>
             <span className="text-[10px] font-bold tracking-wide uppercase text-on-surface-variant">
-              Backoffice Mitra
+              {loginMode === "customer" ? "Portal Wisatawan" : "Backoffice Mitra"}
             </span>
           </div>
         </Link>
 
         <h2 className="mt-6 text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-          Masuk ke Panel Mitra
+          {loginMode === "customer" ? "Masuk ke Akun Wisatawan" : "Masuk ke Panel Mitra"}
         </h2>
         <p className="mt-2 text-sm text-on-surface-variant">
-          Kelola katalog paket wisata, jadwal keberangkatan, dan pembukuan usaha Anda.
+          {loginMode === "customer"
+            ? "Akses E-Tiket resmi, riwayat perjalanan, dan daftar penumpang tersimpan untuk checkout 1-klik."
+            : "Kelola katalog paket wisata, jadwal keberangkatan, dan pembukuan usaha Anda."}
         </p>
       </div>
 
       {/* Main Card */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-surface-container-lowest py-8 px-6 shadow-sm border border-outline-variant/30 rounded-2xl sm:px-10">
+          {/* Role Switcher Tabs */}
+          <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-xl bg-surface-container mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode("customer");
+                setErrorMessage(null);
+              }}
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                loginMode === "customer"
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <MaterialIcon name="confirmation_number" className="text-base" />
+              <span>Wisatawan (Pelanggan)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode("agent");
+                setErrorMessage(null);
+              }}
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                loginMode === "agent"
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <MaterialIcon name="storefront" className="text-base" />
+              <span>Mitra Agen Travel</span>
+            </button>
+          </div>
+
           {/* Error Banner */}
           {errorMessage && (
             <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-800 flex items-start gap-3">
@@ -172,7 +282,11 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@travelanda.com"
+                  placeholder={
+                    loginMode === "customer"
+                      ? "anindya.paramitha@gmail.com"
+                      : "nama@travelanda.com"
+                  }
                   className="block w-full rounded-xl border border-outline-variant/40 bg-surface pl-11 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition"
                 />
               </div>
@@ -234,7 +348,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-60 transition duration-150"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-60 transition duration-150 cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -243,7 +357,11 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <span>Masuk ke Dashboard</span>
+                    <span>
+                      {loginMode === "customer"
+                        ? "Masuk ke Portal Wisatawan"
+                        : "Masuk ke Dashboard Mitra"}
+                    </span>
                     <MaterialIcon name="arrow_forward" className="text-base" />
                   </>
                 )}
@@ -251,15 +369,31 @@ export default function LoginPage() {
             </div>
           </form>
 
+          {/* Instant Demo Access for Customer */}
+          {loginMode === "customer" && (
+            <div className="mt-4 pt-4 border-t border-outline-variant/20">
+              <button
+                type="button"
+                onClick={handleDemoCustomerLogin}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-secondary-fixed/40 hover:bg-secondary-fixed/70 text-secondary px-4 py-2.5 text-xs font-bold border border-secondary/20 transition cursor-pointer"
+              >
+                <MaterialIcon name="bolt" className="text-base" />
+                <span>Masuk Instan Akun Demo Wisatawan (Anindya Paramitha)</span>
+              </button>
+            </div>
+          )}
+
           {/* Registration Link */}
           <div className="mt-6 border-t border-outline-variant/20 pt-6 text-center">
             <p className="text-sm text-on-surface-variant">
-              Belum memiliki akun mitra tour & travel?{" "}
+              {loginMode === "customer"
+                ? "Belum memiliki akun wisatawan?"
+                : "Belum memiliki akun mitra tour & travel?"}{" "}
               <Link
-                href="/register"
+                href={`/register?role=${loginMode}`}
                 className="font-bold text-secondary hover:underline transition-colors"
               >
-                Daftar Agen Baru
+                {loginMode === "customer" ? "Daftar Akun Pelanggan" : "Daftar Agen Baru"}
               </Link>
             </p>
           </div>
@@ -313,7 +447,7 @@ export default function LoginPage() {
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="nama@travelanda.com"
+                    placeholder="nama@email.com"
                     className="w-full rounded-xl border border-outline-variant/40 bg-surface px-3.5 py-2 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>

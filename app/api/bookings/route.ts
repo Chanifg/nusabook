@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       scheduleId,
+      customerId = null,
       customerName,
       customerEmail,
       customerWhatsapp,
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
       booking_code: bookingCode,
       agent_id: "11111111-1111-1111-1111-111111111111",
       schedule_id: scheduleId,
+      customer_id: customerId,
       customer_name: customerName,
       customer_email: customerEmail,
       customer_whatsapp: customerWhatsapp,
@@ -133,6 +135,7 @@ export async function POST(request: Request) {
         booking_code: bookingRecord.booking_code,
         agent_id: bookingRecord.agent_id,
         schedule_id: bookingRecord.schedule_id,
+        customer_id: bookingRecord.customer_id,
         customer_name: bookingRecord.customer_name,
         customer_email: bookingRecord.customer_email,
         customer_whatsapp: bookingRecord.customer_whatsapp,

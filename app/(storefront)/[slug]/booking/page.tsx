@@ -6,6 +6,15 @@ import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/icon";
 import { createClient } from "@/lib/supabase/client";
 import { findCatalogPackageByScheduleId, findCatalogAgent, CATALOG_PACKAGES } from "@/lib/catalog-data";
+import {
+  DEFAULT_DEMO_CUSTOMER,
+  getCustomerSession,
+  saveCustomerSession,
+  getSavedTravelers,
+  addCustomerBooking,
+  type CustomerProfileSession,
+  type SavedTravelerItem,
+} from "@/lib/customer-session";
 
 interface PassengerInput {
   fullName: string;
@@ -30,6 +39,8 @@ export default function BookingPage() {
 
   const [pax, setPax] = useState<number>(initialPax);
   const [isSelfPassenger, setIsSelfPassenger] = useState<boolean>(true);
+  const [loggedCustomer, setLoggedCustomer] = useState<CustomerProfileSession | null>(null);
+  const [savedTravelers, setSavedTravelers] = useState<SavedTravelerItem[]>([]);
   const [customerName, setCustomerName] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
   const [customerWhatsapp, setCustomerWhatsapp] = useState<string>("");
@@ -58,6 +69,60 @@ export default function BookingPage() {
       notes: "",
     }))
   );
+
+  // Load Customer Session & Saved Travelers for 1-Click Auto-Fill
+  useEffect(() => {
+    const session = getCustomerSession();
+    const travelersList = getSavedTravelers();
+    setSavedTravelers(travelersList);
+    if (session) {
+      setLoggedCustomer(session);
+      setCustomerName((prev) => prev || session.fullName);
+      setCustomerEmail((prev) => prev || session.email);
+      setCustomerWhatsapp((prev) => prev || session.phoneNumber);
+    }
+  }, []);
+
+  const handleApplyDemoCustomer = () => {
+    saveCustomerSession(DEFAULT_DEMO_CUSTOMER);
+    const travelersList = getSavedTravelers();
+    setLoggedCustomer(DEFAULT_DEMO_CUSTOMER);
+    setSavedTravelers(travelersList);
+    setCustomerName(DEFAULT_DEMO_CUSTOMER.fullName);
+    setCustomerEmail(DEFAULT_DEMO_CUSTOMER.email);
+    setCustomerWhatsapp(DEFAULT_DEMO_CUSTOMER.phoneNumber);
+    if (travelersList.length > 0) {
+      setPassengers((prev) =>
+        prev.map((p, idx) => {
+          const match = travelersList[idx];
+          if (!match) return p;
+          return {
+            ...p,
+            fullName: match.fullName,
+            idCardNumber: match.idCardNumber,
+            gender: match.gender,
+            emergencyContact: match.emergencyContact,
+            notes: match.specialNotes || "",
+          };
+        })
+      );
+    }
+  };
+
+  const handleApplySavedTraveler = (passengerIdx: number, traveler: SavedTravelerItem) => {
+    setPassengers((prev) => {
+      const updated = [...prev];
+      updated[passengerIdx] = {
+        ...updated[passengerIdx],
+        fullName: traveler.fullName,
+        idCardNumber: traveler.idCardNumber,
+        gender: traveler.gender,
+        emergencyContact: traveler.emergencyContact,
+        notes: traveler.specialNotes || updated[passengerIdx].notes,
+      };
+      return updated;
+    });
+  };
 
   // Fetch real trip schedule & package details
   useEffect(() => {
@@ -254,6 +319,7 @@ export default function BookingPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             scheduleId,
+            customerId: loggedCustomer?.id || null,
             customerName,
             customerEmail,
             customerWhatsapp,
@@ -272,6 +338,20 @@ export default function BookingPage() {
           setErrorMsg(data.error || "Gagal memproses reservasi.");
           return;
         }
+
+        addCustomerBooking({
+          bookingCode: data.bookingCode,
+          tripTitle,
+          operatorName: agentBusinessName,
+          departureDate: departureDateText,
+          meetingPoint: meetingPoint || "Titik Kumpul Utama",
+          totalPax: pax,
+          totalAmount: pax * pricePerPax,
+          paymentStatus: "UNPAID",
+          agentSlug: slug,
+          packageSlug: searchParams.get("trip") || "sunrise-lava-tour-merapi",
+          createdAt: new Date().toISOString(),
+        });
 
         router.push(data.redirectUrl || `/bookings/${data.bookingCode}/payment`);
       } catch {
@@ -439,6 +519,74 @@ export default function BookingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
               {/* LEFT COLUMN: Forms, Passengers Manifest, Pickups & Payment */}
               <div className="lg:col-span-8 flex flex-col gap-space-xl">
+                {/* Banner Integrasi Akun Pelanggan (Guest vs Logged-In Auto-Fill) */}
+                <div className="bg-surface-container-lowest rounded-xl p-space-md border border-primary/25 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {loggedCustomer ? (
+                    <>
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center font-bold text-sm shrink-0">
+                          {loggedCustomer.fullName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-primary">
+                              Terhubung dengan Akun Wisatawan: {loggedCustomer.fullName}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                              Auto-Fill Aktif
+                            </span>
+                          </div>
+                          <p className="text-xs text-on-surface-variant mt-0.5">
+                            E-Tiket resmi akan otomatis tersimpan di menu{" "}
+                            <Link href="/account" className="font-bold text-primary underline">
+                              Pesanan &amp; E-Tiket Saya
+                            </Link>.
+                          </p>
+                        </div>
+                      </div>
+                      <Link
+                        href="/account"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary text-xs font-bold shrink-0"
+                      >
+                        <MaterialIcon name="manage_accounts" className="text-sm" />
+                        <span>Buka Portal Akun</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <MaterialIcon name="person_check" className="text-xl" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-on-surface block">
+                            Punya Akun Wisatawan NusaBook? (Guest Checkout Tetap Tersedia)
+                          </span>
+                          <p className="text-xs text-on-surface-variant">
+                            Masuk untuk mengisi kontak &amp; 16 digit NIK dari <strong>Penumpang Tersimpan</strong> dalam 1 klik.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={handleApplyDemoCustomer}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-secondary-fixed/50 hover:bg-secondary-fixed text-secondary text-xs font-bold cursor-pointer"
+                        >
+                          <MaterialIcon name="bolt" className="text-sm" />
+                          <span>Auto-Fill Akun Pelanggan</span>
+                        </button>
+                        <Link
+                          href={`/login?role=customer&redirect=${encodeURIComponent(`/${slug}/booking?scheduleId=${scheduleId}&pax=${pax}`)}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-bold"
+                        >
+                          <span>Masuk Akun</span>
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 {/* Section A: Data Pemesan (Kontak Utama) */}
                 <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
                   <div className="flex items-start justify-between pb-space-md mb-space-md bg-surface-container-low/40 -mx-space-lg -mt-space-lg p-space-lg rounded-t-xl">
@@ -577,6 +725,28 @@ export default function BookingPage() {
                             </span>
                           </div>
                         </div>
+
+                        {/* 1-Click Auto-Fill from Saved Travelers */}
+                        {savedTravelers.length > 0 && (
+                          <div className="mb-space-md p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-[11px] font-bold text-on-surface-variant flex items-center gap-1">
+                              <MaterialIcon name="groups" className="text-sm text-primary" />
+                              <span>Isi Cepat dari Penumpang Tersimpan:</span>
+                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {savedTravelers.map((trv) => (
+                                <button
+                                  key={trv.id}
+                                  type="button"
+                                  onClick={() => handleApplySavedTraveler(idx, trv)}
+                                  className="px-2.5 py-1 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-on-primary text-[11px] font-bold transition-colors cursor-pointer"
+                                >
+                                  + {trv.fullName}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md">
                           {/* Name */}
